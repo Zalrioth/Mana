@@ -2,9 +2,9 @@
 #ifndef TRANSVOXEL_SYSTEM_HPP_
 #define TRANSVOXEL_SYSTEM_HPP_
 
-//#include <noise/noise.h>
+#include <noise/noise.h>
 
-// using namespace noise;
+using namespace noise;
 
 // Local Headers
 #include "core/enginesettings.hpp"
@@ -14,7 +14,7 @@
 
 // System Headers
 #define GLEW_STATIC
-#include <GL/glew.h>  // This must appear before freeglut.h
+#include <GL/glew.h> // This must appear before freeglut.h
 #include <GLFW/glfw3.h>
 
 // Standard Headers
@@ -26,54 +26,54 @@
 #endif
 
 struct Voxel {
-  float isovalue = 0;
+    float isovalue = 0;
 };
 
 struct VoxelCube {
-  glm::vec3 pos;
-  float isovalue;
+    glm::vec3 pos;
+    float isovalue;
 };
 
 class TransvoxelSystem {
- private:
-  // Scene* tempScene;
-  const int size;
-  std::vector<Voxel> volumeData;
-  GLuint VBO, VAO;
-  GLuint volumeVBO, volumeVAO;
-  Shader* volumeShader = nullptr;
-  std::vector<float> trianglesVector;
-  std::vector<float> normalsVector;
-  float t = 0;
-  int shapeIndex = 1;
-  int voxelScale = 2;
-  int editingIsovalue = 10;
-  float cameraSpeedFactor = 1.0f;
-  bool isRotating = false;
-  bool isWireFrame = false;
-  bool isCursorDisabled = true;
-  bool lodSmoothing = true;
-  bool usingTransvoxels = true;
-  void updateIsovalues(int x, int y, int z, float isovalue, int radius);
-  VoxelCube voxelForVolumePos(int x, int y, int z);
-  glm::vec3 gradientForPoint(int x, int y, int z);
-  glm::vec3 interpolateVertex(float isorange, VoxelCube v1, VoxelCube v2);
-  glm::vec3 interpolateNormal(int x, int y, int z, int isorange, int corner1,
-                              int corner2);
-  glm::vec3 interpolateTransNormal(int x, int y, int z, int isorange,
-                                   int corner1, int corner2);
-  void setupVolumeIsovalues();
-  void computeTrianglesForVoxel(int x, int y, int z);
-  void computeTrianglesForTransvoxel(int x, int y, int z);
-  void setupVolumeData();
-  void resetVolumeData();
-  void setupVolumeTriangles();
-  float getIsovalueFor3DSimplexNoise(int x, int y, int z);
+private:
+    // Scene* tempScene;
+    const int size;
+    std::vector<Voxel> volumeData;
+    GLuint VBO, VAO;
+    GLuint volumeVBO, volumeVAO;
+    Shader* volumeShader = nullptr;
+    std::vector<float> trianglesVector;
+    std::vector<float> normalsVector;
+    float t = 0;
+    int shapeIndex = 1;
+    int voxelScale = 2;
+    int editingIsovalue = 10;
+    float cameraSpeedFactor = 1.0f;
+    bool isRotating = false;
+    bool isWireFrame = false;
+    bool isCursorDisabled = true;
+    bool lodSmoothing = true;
+    bool usingTransvoxels = true;
+    void updateIsovalues(int x, int y, int z, float isovalue, int radius);
+    VoxelCube voxelForVolumePos(int x, int y, int z);
+    glm::vec3 gradientForPoint(int x, int y, int z);
+    glm::vec3 interpolateVertex(float isorange, VoxelCube v1, VoxelCube v2);
+    glm::vec3 interpolateNormal(int x, int y, int z, int isorange, int corner1,
+        int corner2);
+    glm::vec3 interpolateTransNormal(int x, int y, int z, int isorange,
+        int corner1, int corner2);
+    void setupVolumeIsovalues();
+    void computeTrianglesForVoxel(int x, int y, int z);
+    void computeTrianglesForTransvoxel(int x, int y, int z);
+    void setupVolumeData();
+    void resetVolumeData();
+    void setupVolumeTriangles();
+    float getIsovalueFor3DSimplexNoise(int x, int y, int z);
 
- public:
-  TransvoxelSystem(int size);
-  ~TransvoxelSystem();
-  void drawVolumeData(EngineSettings* engineSettings, float aspect);
+public:
+    TransvoxelSystem(int size);
+    ~TransvoxelSystem();
+    void drawVolumeData(EngineSettings* engineSettings, float aspect);
 };
 
-#endif  // TRANSVOXEL_SYSTEM_HPP_
+#endif // TRANSVOXEL_SYSTEM_HPP_

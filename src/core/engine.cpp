@@ -6,90 +6,43 @@
 // https://pybullet.org/Bullet/phpBB3/viewtopic.php?t=11302
 // https://learnopengl.com/Model-Loading/Model
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void processInput(GLFWwindow* window);
-
 // camera
 double xPosition = 0;
 double yPosition = 0;
 double yScroll = 0;
 
-// glfw: whenever the window size changed (by OS or user resize) this callback
-// function executes
-// ---------------------------------------------------------------------------------------------
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-    // make sure the viewport matches the new window dimensions; note that width
-    // and height will be significantly larger than specified on retina displays.
-    glViewport(0, 0, width, height);
-}
-
-// glfw: whenever the mouse moves, this callback is called
-// -------------------------------------------------------
-void mouse_callback(GLFWwindow* window, double xpos, double ypos)
-{
-    xPosition = xpos;
-    yPosition = ypos;
-}
-
-// glfw: whenever the mouse scroll wheel scrolls, this callback is called
-// ----------------------------------------------------------------------
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
-    yScroll = yoffset;
-}
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 Engine::Engine(std::string title)
 {
     this->engineSettings = new EngineSettings(title);
-
-    int openGLError = this->setupOpenGL();
-
-    switch (openGLError) {
-    default:
-        break;
-    case 1:
-        std::cerr << "ERROR: could not start GLFW3\n"
-                  << std::endl;
-        return;
-    case 2:
-        std::cerr << "ERROR: could not open window with GLFW3\n"
-                  << std::endl;
-        return;
-    }
-}
-
-Engine::~Engine() { delete this->engineSettings; }
-
-void Engine::setScene(Scene* scene) { this->scene = scene; }
-
-EngineSettings* Engine::getEngineSettings() { return this->engineSettings; }
-
-#include <iostream>
-int Engine::setupOpenGL()
-{
-    if (!glfwInit())
-        return 1;
-
     this->engineSettings->window = new Window(true, 1280, 720);
-    int windowError = this->engineSettings->window->setupWindow();
-    if (windowError != 0)
-        return windowError;
-
-    // lastX = this->engineSettings->window->width / 2.0f;
-    // lastY = this->engineSettings->window->width / 2.0f;
+    this->engineSettings->gGBuffer = new GBuffer(this->engineSettings->window->width, this->engineSettings->window->height);
+    this->engineSettings->gPostProcess = new PostProcess(this->engineSettings->window->width, this->engineSettings->window->height);
 
     glfwMakeContextCurrent(this->engineSettings->window->glWindow);
     glfwSetFramebufferSizeCallback(this->engineSettings->window->glWindow, framebuffer_size_callback);
     glfwSetCursorPosCallback(this->engineSettings->window->glWindow, mouse_callback);
     glfwSetScrollCallback(this->engineSettings->window->glWindow, scroll_callback);
     glfwSetInputMode(this->engineSettings->window->glWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+}
 
-    // this->engineSettings->shaderPrograms = new ShaderPrograms();
+Engine::~Engine()
+{
 
-    return 0;
+    delete this->engineSettings;
+}
+
+void Engine::setScene(Scene* scene)
+{
+    this->scene = scene;
+}
+
+EngineSettings* Engine::getEngineSettings()
+{
+    return this->engineSettings;
 }
 
 void Engine::run()
@@ -143,11 +96,10 @@ void Engine::run()
 
         if (getTime() - timer > 1.0) {
             timer++;
-            std::cout << "Draw FPS: " << frames << std::endl;
-            std::cout << "Target FPS: " << targetFps << std::endl;
-            std::cout << "Average FPS: " << this->engineSettings->averageFps
-                      << std::endl;
-            std::cout << "Update FPS: " << updates << std::endl;
+            //std::cout << "Draw FPS: " << frames << std::endl;
+            //std::cout << "Target FPS: " << targetFps << std::endl;
+            //std::cout << "Average FPS: " << this->engineSettings->averageFps << std::endl;
+            //std::cout << "Update FPS: " << updates << std::endl;
 
             fps = frames;
 
@@ -169,4 +121,29 @@ void Engine::run()
             sleep(limitDrawFPS * 1000);
         }
     }
+}
+
+// glfw: whenever the window size changed (by OS or user resize) this callback
+// function executes
+// ---------------------------------------------------------------------------------------------
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+    // make sure the viewport matches the new window dimensions; note that width
+    // and height will be significantly larger than specified on retina displays.
+    glViewport(0, 0, width, height);
+}
+
+// glfw: whenever the mouse moves, this callback is called
+// -------------------------------------------------------
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+    xPosition = xpos;
+    yPosition = ypos;
+}
+
+// glfw: whenever the mouse scroll wheel scrolls, this callback is called
+// ----------------------------------------------------------------------
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    yScroll = yoffset;
 }

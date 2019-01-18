@@ -5,11 +5,11 @@
 #include "core/enginesettings.hpp"
 
 class Scene {
- public:
-  Scene(){};
-  virtual ~Scene(){};
-  virtual void update(EngineSettings *engineSettings, float deltaTime) = 0;
-  virtual void render(EngineSettings *engineSettings) = 0;
+public:
+    Scene(){};
+    virtual ~Scene(){};
+    virtual void update(EngineSettings* engineSettings, float deltaTime) = 0;
+    virtual void render(EngineSettings* engineSettings) = 0;
 };
 
-#endif  // SCENE_HPP_
+#endif // SCENE_HPP_

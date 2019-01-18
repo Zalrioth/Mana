@@ -5,23 +5,24 @@
 #include <assimp/cimport.h>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+#include <iostream>
 #include <string>
 
 #include "core/enginesettings.hpp"
 #include "core/scene.hpp"
+#include "graphics/graphicsutils.hpp"
 
 class Engine {
- private:
-  int setupOpenGL();
-  Scene* scene = nullptr;
-  EngineSettings* engineSettings = nullptr;
+private:
+    Scene* scene = nullptr;
+    EngineSettings* engineSettings = nullptr;
 
- public:
-  Engine(std::string title);
-  ~Engine();
-  void setScene(Scene* scene);
-  void run();
-  EngineSettings* getEngineSettings();
+public:
+    Engine(std::string title);
+    ~Engine();
+    void setScene(Scene* scene);
+    void run();
+    EngineSettings* getEngineSettings();
 };
 
-#endif  // ENGINE_HPP_
+#endif // ENGINE_HPP_
