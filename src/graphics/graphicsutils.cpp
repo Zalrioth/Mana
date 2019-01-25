@@ -49,8 +49,6 @@ GLuint createFBO()
 {
     GLuint fbo;
     glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     return fbo;
 }
