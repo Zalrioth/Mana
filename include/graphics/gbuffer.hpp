@@ -7,14 +7,18 @@
 #include <GLFW/glfw3.h>
 
 #include "graphics/graphicsutils.hpp"
+#include "graphics/shader.hpp"
 
 class GBuffer {
+
+private:
+    GLuint VAO;
 
 public:
     GBuffer(int width, int height);
     ~GBuffer();
     void start();
-    void stop();
+    void stop(glm::mat4 projectionMatrix);
     void clear();
     GLuint gGBufferFBO;
     GLuint gColorTexture;
@@ -22,6 +26,7 @@ public:
     GLuint gLinearDepthTexture;
     GLuint gPositionTexture;
     GLuint gDepthTexture;
+    Shader* positionDepthShader = nullptr;
 };
 
 #endif // GBUFFER_HPP_

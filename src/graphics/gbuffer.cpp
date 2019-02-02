@@ -3,24 +3,20 @@
 GBuffer::GBuffer(int width, int height)
 {
     this->gGBufferFBO = createFBO();
-    //glGenFramebuffers(1, &this->gGBufferFBO);
     this->gColorTexture = createTexture(width, height);
     this->gNormalTexture = createTexture(width, height);
     this->gLinearDepthTexture = createTexture(width, height);
     this->gPositionTexture = createFloatingTexture(width, height);
     this->gDepthTexture = createDepthTexture(width, height);
-    //glBindFramebuffer(GL_FRAMEBUFFER, this->gGBufferFBO);
-    //glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->gColorTexture, 0);
-    //glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, this->gNormalTexture, 0);
-    //glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, this->gLinearDepthTexture, 0);
-    //glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, this->gPositionTexture, 0);
-    //glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this->gDepthTexture, 0);
-    //glBindFramebuffer(GL_FRAMEBUFFER, 0);
     attachTextureNum(this->gGBufferFBO, this->gColorTexture, 0);
     attachTextureNum(this->gGBufferFBO, this->gNormalTexture, 1);
     attachTextureNum(this->gGBufferFBO, this->gLinearDepthTexture, 2);
     attachTextureNum(this->gGBufferFBO, this->gPositionTexture, 3);
     attachDepthTexture(this->gGBufferFBO, this->gDepthTexture);
+
+    glGenVertexArrays(1, &this->VAO);
+
+    this->positionDepthShader = new Shader("assets/shaders/positiondepth.vs", "assets/shaders/positiondepth.fs");
 }
 
 GBuffer::~GBuffer()
@@ -42,8 +38,57 @@ void GBuffer::start()
     glClearColor(bkColor[0], bkColor[1], bkColor[2], bkColor[3]);
 }
 
-void GBuffer::stop()
+void GBuffer::stop(glm::mat4 projectionMatrix)
 {
+    // Create position/depth
+    //invProjMatrix;
+    //glm::mat4 invProjectionMatrix; // Front(glm::vec3(0.0f, 0.0f, -1.0f))
+    //glm::inverse(engineSettings->projectionMatrix, invProjectionMatrix);
+    //glm::mat4 invProjectionMatrix = glm::inverse(projectionMatrix);
+
+    //this->positionDepthShader->use();
+
+    //this->positionDepthShader->setMat4("invProjMatrix", invProjectionMatrix);
+    //glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    //glDrawBuffer(GL_BACK);
+
+    //glEnable(GL_TEXTURE_2D);
+
+    /*const GLenum buffers[]{ GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
+    glDrawBuffers(2, buffers);
+
+    float bkColor[4];
+    glGetFloatv(GL_COLOR_CLEAR_VALUE, bkColor);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClearColor(bkColor[0], bkColor[1], bkColor[2], bkColor[3]);
+
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendEquation(GL_FUNC_ADD);*/
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, this->gDepthTexture);
+
+    glDisable(GL_DEPTH_TEST);
+
+    this->positionDepthShader->use();
+
+    //glUniform1i(glGetUniformLocation(this->ourShader->ID, "uColorTexture"), 0);
+
+    glm::mat4 invProjectionMatrix = glm::inverse(projectionMatrix);
+    this->positionDepthShader->setMat4("invProjMatrix", invProjectionMatrix);
+    glUniform1i(glGetUniformLocation(this->positionDepthShader->ID, "gDepthTexture"), 0);
+
+    glBindVertexArray(this->VAO);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindVertexArray(0);
+
+    glEnable(GL_DEPTH_TEST);
+    //glDisable(GL_BLEND);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDrawBuffer(GL_BACK);
 }

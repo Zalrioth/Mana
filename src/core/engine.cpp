@@ -74,11 +74,8 @@ void Engine::run()
             deltaTime--;
         }
 
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
         this->engineSettings->projectionMatrix = glm::perspective(glm::radians(this->engineSettings->camera->Zoom),
-            (float)this->engineSettings->window->width / (float)this->engineSettings->window->height, 0.1f, 100.0f);
+            (float)this->engineSettings->window->width / (float)this->engineSettings->window->height, 0.01f, 1000.0f);
         this->engineSettings->viewMatrix = this->engineSettings->camera->GetViewMatrix();
         this->scene->render(this->engineSettings);
 

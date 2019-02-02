@@ -20,8 +20,6 @@ void BlitEffect::render(GLuint texture)
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     glBlendEquation(GL_FUNC_ADD);
 
-    int colorLocation = glGetUniformLocation(this->ourShader->ID, "uColorTexture");
-
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
 
@@ -31,7 +29,7 @@ void BlitEffect::render(GLuint texture)
 
     //glUniform1i(glGetUniformLocation(this->ourShader->ID, "uColorTexture"), 0);
 
-    glUniform1i(colorLocation, 0);
+    glUniform1i(glGetUniformLocation(this->ourShader->ID, "uColorTexture"), 0);
 
     glBindVertexArray(this->VAO);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
