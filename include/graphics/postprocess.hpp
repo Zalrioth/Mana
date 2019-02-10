@@ -13,6 +13,12 @@ class PostProcess {
 public:
     PostProcess(int width, int height);
     ~PostProcess();
+    void swapTexture();
+    GLuint getTexture();
+    GLuint getDrawTexture();
+    void start();
+    void stop();
+    void clearAll();
     GLuint gPostProcessFBO;
     GLuint gPingTexture;
     GLuint gPongTexture;

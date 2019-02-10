@@ -30,50 +30,16 @@ void GBuffer::start()
 
     const GLenum buffers[]{ GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
     glDrawBuffers(4, buffers);
-
-    float bkColor[4];
-    glGetFloatv(GL_COLOR_CLEAR_VALUE, bkColor);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glClearColor(bkColor[0], bkColor[1], bkColor[2], bkColor[3]);
 }
 
 void GBuffer::stop(glm::mat4 projectionMatrix)
 {
-    // Create position/depth
-    //invProjMatrix;
-    //glm::mat4 invProjectionMatrix; // Front(glm::vec3(0.0f, 0.0f, -1.0f))
-    //glm::inverse(engineSettings->projectionMatrix, invProjectionMatrix);
-    //glm::mat4 invProjectionMatrix = glm::inverse(projectionMatrix);
-
-    //this->positionDepthShader->use();
-
-    //this->positionDepthShader->setMat4("invProjMatrix", invProjectionMatrix);
-    //glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    //glDrawBuffer(GL_BACK);
-
-    //glEnable(GL_TEXTURE_2D);
-
-    /*const GLenum buffers[]{ GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
-    glDrawBuffers(2, buffers);
-
-    float bkColor[4];
-    glGetFloatv(GL_COLOR_CLEAR_VALUE, bkColor);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glClearColor(bkColor[0], bkColor[1], bkColor[2], bkColor[3]);
-
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    glBlendEquation(GL_FUNC_ADD);*/
-
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->gDepthTexture);
 
     glDisable(GL_DEPTH_TEST);
 
     this->positionDepthShader->use();
-
-    //glUniform1i(glGetUniformLocation(this->ourShader->ID, "uColorTexture"), 0);
 
     glm::mat4 invProjectionMatrix = glm::inverse(projectionMatrix);
     this->positionDepthShader->setMat4("invProjMatrix", invProjectionMatrix);
@@ -84,7 +50,6 @@ void GBuffer::stop(glm::mat4 projectionMatrix)
     glBindVertexArray(0);
 
     glEnable(GL_DEPTH_TEST);
-    //glDisable(GL_BLEND);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -95,4 +60,9 @@ void GBuffer::stop(glm::mat4 projectionMatrix)
 
 void GBuffer::clear()
 {
+    float bkColor[4];
+    glGetFloatv(GL_COLOR_CLEAR_VALUE, bkColor);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClearColor(bkColor[0], bkColor[1], bkColor[2], bkColor[3]);
 }

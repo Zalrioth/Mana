@@ -1,33 +1,31 @@
-#include "graphics/bliteffect.hpp"
+#include "graphics/effects/ssaoeffect.hpp"
 
-BlitEffect::BlitEffect()
+SSAOEffect::SSAOEffect()
 {
-    this->ourShader = new Shader("assets/shaders/blit.vs", "assets/shaders/blit.fs");
+    this->ssaoShader = new Shader("assets/shaders/ssao.vs", "assets/shaders/ssao.fs");
+    this->ssaoBlurShader = new Shader("assets/shaders/ssaoblur.vs", "assets/shaders/ssaoblur.fs");
 
     // MIGHT NOT NEED THIS HARDCODED IN SHADER
     glGenVertexArrays(1, &this->VAO);
 }
 
-BlitEffect::~BlitEffect()
+SSAOEffect::~SSAOEffect()
 {
+    delete this->ssaoShader;
+    delete this->ssaoBlurShader;
 }
 
-void BlitEffect::render(GLuint texture)
+void SSAOEffect::render(GBuffer* gBuffer, PostProcess* postProcess)
 {
-    //glEnable(GL_TEXTURE_2D);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     glBlendEquation(GL_FUNC_ADD);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    glBindTexture(GL_TEXTURE_2D, postProcess->getDrawTexture());
 
     glDisable(GL_DEPTH_TEST);
 
     this->ourShader->use();
-
-    //glUniform1i(glGetUniformLocation(this->ourShader->ID, "uColorTexture"), 0);
 
     glUniform1i(glGetUniformLocation(this->ourShader->ID, "uColorTexture"), 0);
 
@@ -40,6 +38,8 @@ void BlitEffect::render(GLuint texture)
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
+
+    postProcess->swapTexture();
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

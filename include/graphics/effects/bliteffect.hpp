@@ -2,7 +2,7 @@
 #ifndef BLIT_EFFECT_HPP_
 #define BLIT_EFFECT_HPP_
 
-#include "graphics/effect.hpp"
+#include "graphics/effects/effect.hpp"
 
 class BlitEffect : public Effect {
 
