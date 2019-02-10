@@ -7,7 +7,8 @@
 #include <GLFW/glfw3.h>
 
 GLuint createTexture(int width, int height);
-int createFloatingTexture(int width, int height);
+GLuint createTexture16f(int width, int height);
+GLuint createFloatingTexture(int width, int height);
 GLuint createDepthTexture(int width, int height);
 GLuint createFBO();
 void attachTextureNum(int fbo, int texture, int num);

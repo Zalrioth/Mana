@@ -21,7 +21,7 @@ void SSAOEffect::render(GBuffer* gBuffer, PostProcess* postProcess)
     glBlendEquation(GL_FUNC_ADD);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, postProcess->getDrawTexture());
+    glBindTexture(GL_TEXTURE_2D, postProcess->getTexture());
 
     glDisable(GL_DEPTH_TEST);
 

@@ -13,9 +13,11 @@ private:
     Shader* bloomShader = nullptr;
     Shader* bloomThresholdShader = nullptr;
     Shader* bloomBlurShader = nullptr;
+    GLuint gBloomPingPongFBO[2];
+    GLuint gBloomPingPongTexture[2];
 
 public:
-    BloomEffect();
+    BloomEffect(int width, int height);
     ~BloomEffect();
     void render(GBuffer* gBuffer, PostProcess* postProcess);
 };
