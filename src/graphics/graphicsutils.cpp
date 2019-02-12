@@ -81,3 +81,8 @@ void attachDepthTexture(int fbo, int texture)
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, texture, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
+
+float generateFloat()
+{
+    return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+}

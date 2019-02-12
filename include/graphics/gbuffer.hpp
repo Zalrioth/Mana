@@ -27,6 +27,8 @@ public:
     GLuint gPositionTexture;
     GLuint gDepthTexture;
     Shader* positionDepthShader = nullptr;
+    glm::mat4 projectionMatrix;
+    glm::mat4 invProjectionMatrix;
 };
 
 #endif // GBUFFER_HPP_

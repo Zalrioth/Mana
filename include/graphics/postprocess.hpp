@@ -16,11 +16,11 @@ public:
     void start();
     void stop();
     void clear();
-    void swapTexture();
+    void swapBuffer();
+    GLuint getBuffer();
     GLuint getTexture();
-    GLuint gPostProcessFBO;
-    GLuint gPingTexture;
-    GLuint gPongTexture;
+    GLuint gPostProcessFBO[2];
+    GLuint gPingPongTexture[2];
     bool pingPong = false;
 };
 

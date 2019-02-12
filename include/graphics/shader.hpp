@@ -6,6 +6,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <vector>
 
 #include <fstream>
 #include <iostream>
@@ -132,6 +133,10 @@ public:
     void setVec3(const std::string& name, float x, float y, float z) const
     {
         glUniform3f(glGetUniformLocation(ID, name.c_str()), x, y, z);
+    }
+    void setVec3a(const std::string& name, std::vector<glm::vec3> vec) const
+    {
+        glUniform3fv(glGetUniformLocation(ID, name.c_str()), vec.size(), reinterpret_cast<GLfloat*>(&vec[0]));
     }
     // ------------------------------------------------------------------------
     void setVec4(const std::string& name, const glm::vec4& value) const

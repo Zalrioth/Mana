@@ -97,5 +97,5 @@ void BloomEffect::render(GBuffer* gBuffer, PostProcess* postProcess)
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    postProcess->swapTexture();
+    postProcess->swapBuffer();
 }

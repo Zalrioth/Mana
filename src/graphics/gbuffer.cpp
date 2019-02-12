@@ -41,7 +41,8 @@ void GBuffer::stop(glm::mat4 projectionMatrix)
 
     this->positionDepthShader->use();
 
-    glm::mat4 invProjectionMatrix = glm::inverse(projectionMatrix);
+    this->projectionMatrix = projectionMatrix;
+    this->invProjectionMatrix = glm::inverse(projectionMatrix);
     this->positionDepthShader->setMat4("invProjMatrix", invProjectionMatrix);
     glUniform1i(glGetUniformLocation(this->positionDepthShader->ID, "gDepthTexture"), 0);
 

@@ -27,6 +27,8 @@ Engine::Engine(std::string title)
     glfwSetCursorPosCallback(this->engineSettings->window->glWindow, mouse_callback);
     glfwSetScrollCallback(this->engineSettings->window->glWindow, scroll_callback);
     glfwSetInputMode(this->engineSettings->window->glWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    srand(time(NULL));
 }
 
 Engine::~Engine()

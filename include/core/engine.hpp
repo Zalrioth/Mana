@@ -6,6 +6,7 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #include <iostream>
+#include <stdlib.h>
 #include <string>
 
 #include "core/enginesettings.hpp"
