@@ -6,13 +6,10 @@
 
 class Effect {
 
-protected:
-    Shader* ourShader = nullptr;
-
 public:
     Effect(){};
-    virtual ~Effect() { delete ourShader; };
-    virtual void render() {};
+    virtual ~Effect(){};
+    virtual void render(){};
 };
 
 #endif // EFFECT_HPP_

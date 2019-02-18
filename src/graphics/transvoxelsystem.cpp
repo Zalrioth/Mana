@@ -177,6 +177,16 @@ glm::vec3 TransvoxelSystem::interpolateTransNormal(int x, int y, int z,
 
 void TransvoxelSystem::setupVolumeIsovalues()
 {
+    // Frequency: increasing shrinks noise map
+    // Scale: increasing shrinks sample step
+    //module::Perlin myModule;
+    //module::RidgedMulti myModule;
+    //module::Voronoi myModule;
+
+    //TODO: Implement user seed this is just to get random noise
+    this->myModule.SetSeed(time(NULL));
+    this->myModule.SetOctaveCount(4);
+    this->myModule.SetFrequency(4.0);
 #pragma omp parallel for collapse(3)
     for (int x = 0; x < size; x++) {
         for (int y = 0; y < size; y++) {
@@ -723,54 +733,9 @@ void TransvoxelSystem::resetVolumeData()
 
 float TransvoxelSystem::getIsovalueFor3DSimplexNoise(int x, int y, int z)
 {
-    // Frequency: increasing shrinks noise map
-    // Scale: increasing shrinks sample step
-    module::Perlin myModule;
-    myModule.SetOctaveCount(4);
-    myModule.SetFrequency(4.0);
-
     float scale = size;
-    float isovalue = myModule.GetValue(x / scale, y / scale, z / scale);
-    //isovalue = std::pow(isovalue, 5);
-    //float isovalue = 1;
+    float isovalue = this->myModule.GetValue(x / scale, y / scale, z / scale);
     return isovalue;
-
-    /*float range = 256.0f;
-    float halfScale = (this->size / range / 2);
-
-    // Set map values
-    float frequency = 5.0f;
-    float initialHeight = 40.0f / frequency;
-    float octaves = 5;
-    //    for (int z = 0; z < VOLUME_SIZE; z++) {
-    //        for (int y = 0; y < VOLUME_SIZE; y++) {
-    //            for (int x = 0; x < VOLUME_SIZE; x++) {
-    float nx = ((float)x / range - halfScale) * frequency;
-    float ny = ((float)y / range - halfScale) * frequency;
-    float nz = ((float)z / range - halfScale) * frequency;
-
-    float scale = pow(2, 1);
-    float isovalue = initialHeight / scale * (0.4 + myModule.GetValue(scale * nx, scale * ny, scale * nz));
-
-    // Increase octaves for more detailed terrain
-    for (int oct = 1; oct < octaves; oct++) {
-        float scale = pow(2, oct);
-        isovalue += isovalue / scale * (0.4 + myModule.GetValue(scale * nx, scale * ny, scale * nz));
-    }
-    //            map[y][x] = pow(map[y][x], 1.2);
-    isovalue = (isovalue >= 0) ? pow(isovalue, 1.3) : 0;
-    //            map[y][x] = -std::fabsf(map[y][x]);
-
-    scale = pow(2, 5);
-    isovalue += isovalue / scale * (0.4 + myModule.GetValue(scale * nx * 5, scale * ny * 5, scale * nz * 5));
-    //            }
-    //        }
-    //    }
-
-    isovalue += pow((float)y / this->size, 2) * 25.0f - 5.0f;
-    //    printf("isovalue: %f\n", isovalue);
-
-    return isovalue;*/
 }
 
 void TransvoxelSystem::drawVolumeData(EngineSettings* engineSettings, float aspect)
@@ -779,10 +744,12 @@ void TransvoxelSystem::drawVolumeData(EngineSettings* engineSettings, float aspe
     this->volumeShader->setMat4("P", engineSettings->projectionMatrix);
     this->volumeShader->setMat4("V", engineSettings->viewMatrix);
 
-    glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f));
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(-size / 2.0f, -size / 2.0f, -size / 2.0f));
-    modelMatrix = glm::scale(modelMatrix, glm::vec3(0.5, 0.5, 0.5));
-    this->volumeShader->setMat4("M", modelMatrix);
+    this->modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f));
+    this->modelMatrix = glm::translate(this->modelMatrix, glm::vec3(-size / 2.0f, -size / 2.0f, -size / 2.0f));
+    this->modelMatrix = glm::translate(this->modelMatrix, glm::vec3(10, 10, -10));
+    this->modelMatrix = glm::scale(this->modelMatrix, glm::vec3(0.5, 0.5, 0.5));
+    this->volumeShader->setMat4("M", this->modelMatrix);
+
     glBindVertexArray(volumeVAO);
     glDrawArrays(GL_TRIANGLES, 0, trianglesVector.size());
     glBindVertexArray(0);

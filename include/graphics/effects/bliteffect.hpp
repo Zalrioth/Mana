@@ -8,6 +8,7 @@ class BlitEffect : public Effect {
 
 private:
     GLuint VAO;
+    Shader* blitShader = nullptr;
 
 public:
     BlitEffect();

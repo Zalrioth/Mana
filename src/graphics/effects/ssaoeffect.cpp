@@ -1,6 +1,8 @@
 #include "graphics/effects/ssaoeffect.hpp"
 
+//https://learnopengl.com/Advanced-Lighting/SSAO
 //https://gamedev.stackexchange.com/questions/86621/how-can-i-pass-a-stdvectorvector3f-to-my-shader
+//https://forum.facepunch.com/games/odkn/PSA-raise-your-SSAO-bias/1/
 
 SSAOEffect::SSAOEffect(int width, int height)
 {

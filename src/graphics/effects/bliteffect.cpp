@@ -2,7 +2,7 @@
 
 BlitEffect::BlitEffect()
 {
-    this->ourShader = new Shader("assets/shaders/blit.vs", "assets/shaders/blit.fs");
+    this->blitShader = new Shader("assets/shaders/blit.vs", "assets/shaders/blit.fs");
 
     // MIGHT NOT NEED THIS HARDCODED IN SHADER
     glGenVertexArrays(1, &this->VAO);
@@ -25,11 +25,11 @@ void BlitEffect::render(GLuint texture)
 
     glDisable(GL_DEPTH_TEST);
 
-    this->ourShader->use();
+    this->blitShader->use();
 
     //glUniform1i(glGetUniformLocation(this->ourShader->ID, "uColorTexture"), 0);
 
-    glUniform1i(glGetUniformLocation(this->ourShader->ID, "uColorTexture"), 0);
+    glUniform1i(glGetUniformLocation(this->blitShader->ID, "uColorTexture"), 0);
 
     glBindVertexArray(this->VAO);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);

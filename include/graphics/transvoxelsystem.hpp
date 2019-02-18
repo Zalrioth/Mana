@@ -2,6 +2,7 @@
 #ifndef TRANSVOXEL_SYSTEM_HPP_
 #define TRANSVOXEL_SYSTEM_HPP_
 
+#include <noise/module/modulebase.h>
 #include <noise/noise.h>
 
 using namespace noise;
@@ -37,13 +38,7 @@ struct VoxelCube {
 class TransvoxelSystem {
 private:
     // Scene* tempScene;
-    const int size;
-    std::vector<Voxel> volumeData;
-    GLuint VBO, VAO;
-    GLuint volumeVBO, volumeVAO;
     Shader* volumeShader = nullptr;
-    std::vector<float> trianglesVector;
-    std::vector<float> normalsVector;
     float t = 0;
     int shapeIndex = 1;
     int voxelScale = 2;
@@ -58,10 +53,8 @@ private:
     VoxelCube voxelForVolumePos(int x, int y, int z);
     glm::vec3 gradientForPoint(int x, int y, int z);
     glm::vec3 interpolateVertex(float isorange, VoxelCube v1, VoxelCube v2);
-    glm::vec3 interpolateNormal(int x, int y, int z, int isorange, int corner1,
-        int corner2);
-    glm::vec3 interpolateTransNormal(int x, int y, int z, int isorange,
-        int corner1, int corner2);
+    glm::vec3 interpolateNormal(int x, int y, int z, int isorange, int corner1, int corner2);
+    glm::vec3 interpolateTransNormal(int x, int y, int z, int isorange, int corner1, int corner2);
     void setupVolumeIsovalues();
     void computeTrianglesForVoxel(int x, int y, int z);
     void computeTrianglesForTransvoxel(int x, int y, int z);
@@ -69,11 +62,19 @@ private:
     void resetVolumeData();
     void setupVolumeTriangles();
     float getIsovalueFor3DSimplexNoise(int x, int y, int z);
+    module::Perlin myModule;
 
 public:
     TransvoxelSystem(int size);
     ~TransvoxelSystem();
     void drawVolumeData(EngineSettings* engineSettings, float aspect);
+    const int size;
+    std::vector<Voxel> volumeData;
+    GLuint VBO, VAO;
+    GLuint volumeVBO, volumeVAO;
+    std::vector<float> trianglesVector;
+    std::vector<float> normalsVector;
+    glm::mat4 modelMatrix;
 };
 
 #endif // TRANSVOXEL_SYSTEM_HPP_
