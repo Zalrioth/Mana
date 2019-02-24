@@ -51,6 +51,7 @@ SET(includeList
         ${includePath}glfw-3.2.1/include
         ${includePath}glew-2.1.0/include
         ${includePath}glm-0.9.9.3
+        ${includePath}VulkanSDK/1.1.85.0/Include
         ${includePath}assimp-4.1.0/include
         ${CMAKE_CURRENT_SOURCE_DIR}/../build/buildmana/buildassimp/include
         ${includePath}cpython-3.7.2/PC

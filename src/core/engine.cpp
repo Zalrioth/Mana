@@ -1,10 +1,11 @@
 #include "core/engine.hpp"
 
-// http://web.eecs.umich.edu/~sugih/courses/eecs487/glfw-howto/
-// https://stackoverflow.com/questions/22231740/opengl32-lib-not-linking-properly
-// http://antongerdelan.net/opengl/hellotriangle.html
-// https://pybullet.org/Bullet/phpBB3/viewtopic.php?t=11302
-// https://learnopengl.com/Model-Loading/Model
+//http://web.eecs.umich.edu/~sugih/courses/eecs487/glfw-howto/
+//https://stackoverflow.com/questions/22231740/opengl32-lib-not-linking-properly
+//http://antongerdelan.net/opengl/hellotriangle.html
+//https://pybullet.org/Bullet/phpBB3/viewtopic.php?t=11302
+//https://learnopengl.com/Model-Loading/Model
+//https://www.glfw.org/docs/latest/vulkan_guide.html
 
 // camera
 double xPosition = 0;
@@ -27,6 +28,11 @@ Engine::Engine(std::string title)
     glfwSetCursorPosCallback(this->engineSettings->window->glWindow, mouse_callback);
     glfwSetScrollCallback(this->engineSettings->window->glWindow, scroll_callback);
     glfwSetInputMode(this->engineSettings->window->glWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    if (glfwVulkanSupported()) {
+        // Vulkan is available, at least for compute
+        std::cout << "Vulkan support found" << std::endl;
+    }
 
     srand(time(NULL));
 }
