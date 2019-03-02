@@ -8,6 +8,7 @@
 #include <stdlib.h>
 
 GLuint createTexture(int width, int height);
+GLuint createTexture3D(int width, int height, int depth);
 GLuint createTexture16f(int width, int height);
 GLuint createFloatingTexture(int width, int height);
 GLuint createDepthTexture(int width, int height);

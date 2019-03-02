@@ -18,7 +18,7 @@ private:
     GLuint gSSAOTexture;
     GLuint gNoiseTexture;
     std::vector<glm::vec3> ssaoKernel;
-    GLuint creatSSAONoiseTexture();
+    GLuint createSSAONoiseTexture();
     float lerp(float a, float b, float f);
 
 public:

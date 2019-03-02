@@ -16,7 +16,7 @@ SSAOEffect::SSAOEffect(int width, int height)
     this->gSSAOTexture = createTexture16f(width, height);
     attachTextureNum(this->gSSAOFBO, this->gSSAOTexture, 0);
 
-    this->gNoiseTexture = this->creatSSAONoiseTexture();
+    this->gNoiseTexture = this->createSSAONoiseTexture();
 
     for (unsigned int i = 0; i < 64; ++i) {
         glm::vec3 sample(generateFloat() * 2.0 - 1.0, generateFloat() * 2.0 - 1.0, generateFloat());
@@ -110,7 +110,7 @@ void SSAOEffect::render(GBuffer* gBuffer, PostProcess* postProcess)
     postProcess->swapBuffer();
 }
 
-GLuint SSAOEffect::creatSSAONoiseTexture()
+GLuint SSAOEffect::createSSAONoiseTexture()
 {
     std::vector<glm::vec3> ssaoNoise;
     for (int i = 0; i < 16; i++) {
