@@ -17,6 +17,7 @@ void BlitEffect::render(GLuint texture)
     //glEnable(GL_TEXTURE_2D);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+    //glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     glBlendEquation(GL_FUNC_ADD);
 

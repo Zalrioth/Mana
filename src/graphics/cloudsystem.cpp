@@ -20,7 +20,7 @@ CloudSystem::CloudSystem(int width, int height)
     this->gCopyFrameTexture[0] = createTexture(width, height);
     this->gCopyFrameTexture[1] = createTexture(width, height);
     attachTextureNum(this->gCopyFrameFBO, this->gCopyFrameTexture[0], 0);
-    attachTextureNum(this->gCopyFrameFBO, this->gCopyFrameTexture[1], 0);
+    attachTextureNum(this->gCopyFrameFBO, this->gCopyFrameTexture[1], 1);
 
     this->coverage = 0.45;
 
@@ -31,11 +31,34 @@ CloudSystem::CloudSystem(int width, int height)
 
 GLuint CloudSystem::createPerlinTexture()
 {
+    module::Perlin myModule;
+
+    myModule.SetSeed(time(NULL));
+    //myModule.EnableSeamless(true);
+    //myModule.SetOctaveCount(4);
+    //myModule.SetFrequency(4.0);
+
+    //myModule.SetOctaveCount(1);
+    //myModule.SetFrequency(1.0);
+
+    int size = 128;
+    float scale = size;
+
     std::vector<glm::vec3> perlinNoise;
-    for (int i = 0; i < 128 * 128 * 128; i++) {
-        glm::vec3 noise(generateFloat() * 2.0 - 1.0, generateFloat() * 2.0 - 1.0, 0.0f);
-        perlinNoise.push_back(noise);
+    for (int x = 0; x < size; x++) {
+        for (int y = 0; y < size; y++) {
+            for (int z = 0; z < size; z++) {
+                float value = myModule.GetValue((x + 0.5f) / scale, (y + 0.5f) / scale, (z + 0.5f) / scale);
+                value = (value + 1.0f) / 2.0f;
+                glm::vec3 noiseVec = glm::vec3(value, value, value);
+                perlinNoise.push_back(noiseVec);
+            }
+        }
     }
+    //for (int i = 0; i < 128 * 128 * 128; i++) {
+    //    glm::vec3 noise(generateFloat() * 2.0 - 1.0, generateFloat() * 2.0 - 1.0, 0.0f);
+    //    perlinNoise.push_back(noise);
+    //}
     GLuint texture_id;
     glGenTextures(1, &texture_id);
     glBindTexture(GL_TEXTURE_3D, texture_id);
@@ -44,18 +67,38 @@ GLuint CloudSystem::createPerlinTexture()
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB, 128, 128, 128, 0, GL_RGB, GL_UNSIGNED_BYTE, &perlinNoise[0]);
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB16F, 128, 128, 128, 0, GL_RGB, GL_FLOAT, &perlinNoise[0]);
     glBindTexture(GL_TEXTURE_3D, 0);
     return texture_id;
 }
 
 GLuint CloudSystem::createWorleyTexture()
 {
+    module::Voronoi myModule;
+
+    myModule.SetSeed(time(NULL));
+    myModule.SetFrequency(4.0);
+    //myModule.EnableSeamless(true);
+
+    int size = 32;
+    float scale = size / 2.0f;
+
     std::vector<glm::vec3> worleyNoise;
-    for (int i = 0; i < 32 * 32 * 32; i++) {
-        glm::vec3 noise(generateFloat() * 2.0 - 1.0, generateFloat() * 2.0 - 1.0, 0.0f);
-        worleyNoise.push_back(noise);
+    for (int x = 0; x < size; x++) {
+        for (int y = 0; y < size; y++) {
+            for (int z = 0; z < size; z++) {
+                float value = myModule.GetValue((x + 0.5f) / scale, (y + 0.5f) / scale, (z + 0.5f) / scale);
+                value = (value + 1.0f) / 2.0f;
+                glm::vec3 noiseVec = glm::vec3(value, value, value);
+                worleyNoise.push_back(noiseVec);
+            }
+        }
     }
+    //std::vector<glm::vec3> worleyNoise;
+    //for (int i = 0; i < 32 * 32 * 32; i++) {
+    //    glm::vec3 noise(generateFloat() * 2.0 - 1.0, generateFloat() * 2.0 - 1.0, 0.0f);
+    //    worleyNoise.push_back(noise);
+    //}
     GLuint texture_id;
     glGenTextures(1, &texture_id);
     glBindTexture(GL_TEXTURE_3D, texture_id);
@@ -64,26 +107,50 @@ GLuint CloudSystem::createWorleyTexture()
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB, 32, 32, 32, 0, GL_RGB, GL_UNSIGNED_BYTE, &worleyNoise[0]);
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB16F, 32, 32, 32, 0, GL_RGB, GL_FLOAT, &worleyNoise[0]);
     glBindTexture(GL_TEXTURE_3D, 0);
     return texture_id;
 }
 
 GLuint CloudSystem::createWeatherTexture()
 {
+    module::Perlin myModule;
+
+    myModule.SetSeed(time(NULL));
+    myModule.SetOctaveCount(4);
+    myModule.SetFrequency(4.0);
+    //myModule.EnableSeamless(true);
+
+    //myModule.SetOctaveCount(1);
+    //myModule.SetFrequency(1.0);
+
+    int size = 1024;
+    float scale = size / 4.0f;
+
     std::vector<glm::vec3> weatherNoise;
-    for (int i = 0; i < 1024 * 1024; i++) {
-        glm::vec3 noise(generateFloat() * 2.0 - 1.0, generateFloat() * 2.0 - 1.0, 0.0f);
-        weatherNoise.push_back(noise);
+    for (int x = 0; x < size; x++) {
+        for (int y = 0; y < size; y++) {
+            float value = myModule.GetValue((x + 0.5f) / scale, (y + 0.5f) / scale, (1.0f + 0.5f) / scale);
+            value = (value + 1.0f) / 2.0f;
+            value *= 0.25f;
+            glm::vec3 noiseVec = glm::vec3(value, value, value);
+            weatherNoise.push_back(noiseVec);
+        }
     }
+
+    //std::vector<glm::vec3> weatherNoise;
+    //for (int i = 0; i < 1024 * 1024; i++) {
+    //    glm::vec3 noise(generateFloat() * 2.0 - 1.0, generateFloat() * 2.0 - 1.0, 0.0f);
+    //    weatherNoise.push_back(noise);
+    //}
     GLuint noiseTexture;
     glGenTextures(1, &noiseTexture);
     glBindTexture(GL_TEXTURE_2D, noiseTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 1024, 1024, 0, GL_RGB, GL_FLOAT, &weatherNoise[0]);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 1024, 1024, 0, GL_RGB, GL_FLOAT, &weatherNoise[0]);
     glBindTexture(GL_TEXTURE_2D, 0);
     return noiseTexture;
 }
@@ -94,7 +161,6 @@ CloudSystem::~CloudSystem()
 
 void CloudSystem::render(EngineSettings* engineSettings)
 {
-    engineSettings->gPostProcess->stop();
     glBindFramebuffer(GL_FRAMEBUFFER, this->gCloudFBO);
 
     const GLenum buffers[]{ GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
@@ -117,8 +183,8 @@ void CloudSystem::render(EngineSettings* engineSettings)
     this->volumetricCloudShader->setFloat("FOV", engineSettings->camera->Zoom);
     //this->volumetricCloudShader->setVec3("lightDirection", glm::normalize(s->lightPos - s->cam.Position));
     //this->volumetricCloudShader->setVec3("lightColor", s->lightColor);
-    this->volumetricCloudShader->setVec3("lightDirection", glm::vec3(1, 1, 1));
-    this->volumetricCloudShader->setVec3("lightColor", glm::vec3(1, 0, 0));
+    this->volumetricCloudShader->setVec3("lightDirection", glm::vec3(0.5f, 0.5f, 0.5f));
+    this->volumetricCloudShader->setVec3("lightColor", glm::vec3(1.0, 1.0, 1.0));
     this->volumetricCloudShader->setFloat("coverage_multiplier", coverage);
     this->volumetricCloudShader->setInt("frameIter", this->frameIter);
     glm::mat4 vp = engineSettings->projectionMatrix * engineSettings->viewMatrix;
@@ -204,6 +270,4 @@ void CloudSystem::render(EngineSettings* engineSettings)
 
     //increment frame counter mod 16, for temporal reprojection
     frameIter = (frameIter + 1) % 16;
-
-    engineSettings->gPostProcess->start();
 }

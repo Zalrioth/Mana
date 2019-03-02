@@ -4,6 +4,10 @@
 
 #include "core/enginesettings.hpp"
 #include <glm/glm.hpp>
+#include <noise/module/modulebase.h>
+#include <noise/noise.h>
+
+using namespace noise;
 
 class CloudSystem {
 
