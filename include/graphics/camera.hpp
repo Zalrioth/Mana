@@ -2,7 +2,7 @@
 #ifndef CAMERA_HPP_
 #define CAMERA_HPP_
 
-#include <GL/glew.h> // This must appear before freeglut.h
+//#include <GL/glew.h> // This must appear before freeglut.h
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>

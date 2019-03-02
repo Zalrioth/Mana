@@ -20,19 +20,14 @@ Engine::Engine(std::string title)
 {
     this->engineSettings = new EngineSettings(title);
     this->engineSettings->window = new Window(true, 1280, 720);
-    this->engineSettings->gGBuffer = new GBuffer(this->engineSettings->window->width, this->engineSettings->window->height);
-    this->engineSettings->gPostProcess = new PostProcess(this->engineSettings->window->width, this->engineSettings->window->height);
+    //this->engineSettings->gGBuffer = new GBuffer(this->engineSettings->window->width, this->engineSettings->window->height);
+    //this->engineSettings->gPostProcess = new PostProcess(this->engineSettings->window->width, this->engineSettings->window->height);
 
     glfwMakeContextCurrent(this->engineSettings->window->glWindow);
     glfwSetFramebufferSizeCallback(this->engineSettings->window->glWindow, framebuffer_size_callback);
     glfwSetCursorPosCallback(this->engineSettings->window->glWindow, mouse_callback);
     glfwSetScrollCallback(this->engineSettings->window->glWindow, scroll_callback);
     glfwSetInputMode(this->engineSettings->window->glWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-    if (glfwVulkanSupported()) {
-        // Vulkan is available, at least for compute
-        std::cout << "Vulkan support found" << std::endl;
-    }
 
     srand(time(NULL));
 }

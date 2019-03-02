@@ -31,31 +31,31 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(${includePath}glfw-3.2.1 buildglfw)
 
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-add_subdirectory(${includePath}glew-2.1.0/build/cmake buildglew)
+#set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+#add_subdirectory(${includePath}glew-2.1.0/build/cmake buildglew)
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 add_subdirectory(${includePath}assimp-4.1.0 buildassimp)
 
-set(LIBNOISE_VERSION "1.0.0-cmake" )
-set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
-set(BUILD_LIBNOISE_DOCUMENTATION OFF CACHE BOOL "" FORCE)
-set(BUILD_LIBNOISE_UTILS ON CACHE BOOL "" FORCE)
-set(BUILD_LIBNOISE_EXAMPLES OFF CACHE BOOL "" FORCE)
-add_subdirectory(${includePath}libnoise-master/src buildlibnoise)
+#set(LIBNOISE_VERSION "1.0.0-cmake" )
+#set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
+#set(BUILD_LIBNOISE_DOCUMENTATION OFF CACHE BOOL "" FORCE)
+#set(BUILD_LIBNOISE_UTILS ON CACHE BOOL "" FORCE)
+#set(BUILD_LIBNOISE_EXAMPLES OFF CACHE BOOL "" FORCE)
+#add_subdirectory(${includePath}libnoise-master/src buildlibnoise)
 
 SET(includeList
         ${includePath}grindstone/Mana/include
         ${includePath}glfw-3.2.1/include
-        ${includePath}glew-2.1.0/include
-        ${includePath}glm-0.9.9.3
+        #${includePath}glew-2.1.0/include
+        #${includePath}glm-0.9.9.3
         ${includePath}VulkanSDK/1.1.85.0/Include
         ${includePath}assimp-4.1.0/include
         ${CMAKE_CURRENT_SOURCE_DIR}/../build/buildmana/buildassimp/include
         ${includePath}cpython-3.7.2/PC
-        ${includePath}cpython-3.7.2/Include
-        ${includePath}libnoise-master/src)
+        ${includePath}cpython-3.7.2/Include)
+        #${includePath}libnoise-master/src)
 
 target_include_directories(Mana PUBLIC ${includeList})
