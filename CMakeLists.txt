@@ -7,25 +7,34 @@ project(Mana VERSION 0.1.0)
 #https://stackoverflow.com/questions/47303810/how-to-get-clang-with-openmp-working-on-msvc-2015?rq=1
 #https://stackoverflow.com/questions/35064093/openmp-runs-single-threaded-on-my-mac
 #https://stackoverflow.com/questions/46414660/macos-cmake-and-openmp
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Xclang -fopenmp")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Xclang -fopenmp")
+#https://stackoverflow.com/questions/12399422/how-to-set-linker-flags-for-openmp-in-cmakes-try-compile-function
+#https://stackoverflow.com/questions/9160335/os-specific-instructions-in-cmake-how-to
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_DEBUG_POSTFIX "")
 
-#NOTE: Something like this might be needed for OpenMP on Linux/Mac
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
-#
-#set(OpenMP_CXX_FLAGS OpenMP_CXX_FLAGS="-Xclang -fopenmp")
-#set(OpenMP_C_FLAGS OpenMP_C_FLAGS="-Xclang -fopenmp")
-#
-#find_package(OpenMP)
-#if (OPENMP_FOUND)
-#    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-#    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-#endif()
+if (WIN32)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Xclang -fopenmp")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Xclang -fopenmp")
+endif (WIN32)
+
+# NOTE: Something like this might be needed for OpenMP on Linux/Mac
+if(APPLE)
+        find_package(OpenMP)
+        if (OPENMP_FOUND)
+                set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+                set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+        endif()
+endif()
+
+if(UNIX AND NOT APPLE)
+        # for Linux, BSD, Solaris, Minix
+        find_package(OpenMP)
+        if (OPENMP_FOUND)
+                set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+                set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+        endif()
+endif()
 
 file(GLOB_RECURSE mana_SRC
         include/*.h
