@@ -1,6 +1,6 @@
 # Mana - Mana's Also Not (an) Ancronym
 
-A simple cross-platform OpenGL graphics engine.
+A simple cross-platform Vulkan graphics engine.
 
 ## Getting Started
 
