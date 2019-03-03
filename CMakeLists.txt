@@ -4,12 +4,9 @@ project(Mana VERSION 0.1.0)
 #https://stackoverflow.com/questions/3201154/automatically-add-all-files-in-a-folder-to-a-target-using-cmake
 #https://bytefreaks.net/programming-2/manually-set-the-cmake-output-folder
 #https://stackoverflow.com/questions/49672264/cmake-add-d-suffix-for-debug-build-of-static-library
-
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
-
-set(OpenMP_CXX_FLAGS OpenMP_CXX_FLAGS="-Xclang -fopenmp")
-set(OpenMP_C_FLAGS OpenMP_C_FLAGS="-Xclang -fopenmp")
+#https://stackoverflow.com/questions/47303810/how-to-get-clang-with-openmp-working-on-msvc-2015?rq=1
+#https://stackoverflow.com/questions/35064093/openmp-runs-single-threaded-on-my-mac
+#https://stackoverflow.com/questions/46414660/macos-cmake-and-openmp
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Xclang -fopenmp")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Xclang -fopenmp")
@@ -17,11 +14,18 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Xclang -fopenmp")
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_DEBUG_POSTFIX "")
 
-find_package(OpenMP)
-if (OPENMP_FOUND)
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-endif()
+#NOTE: Something like this might be needed for OpenMP on Linux/Mac
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+#
+#set(OpenMP_CXX_FLAGS OpenMP_CXX_FLAGS="-Xclang -fopenmp")
+#set(OpenMP_C_FLAGS OpenMP_C_FLAGS="-Xclang -fopenmp")
+#
+#find_package(OpenMP)
+#if (OPENMP_FOUND)
+#    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+#    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+#endif()
 
 file(GLOB_RECURSE mana_SRC
         include/*.h

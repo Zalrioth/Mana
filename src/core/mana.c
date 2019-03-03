@@ -20,12 +20,12 @@ int init()
 
     printf("Num of CPU: %d\n", omp_get_num_procs());
 
-    omp_set_num_threads(4);
+    /*omp_set_num_threads(4);
 
-#pragma omp parallel num_threads(40)
+    #pragma omp parallel num_threads(4)
     {
         printf("thread %d\n", omp_get_thread_num());
-    }
+    }*/
 
     /*omp_set_num_threads(omp_get_num_procs());
 
@@ -35,7 +35,7 @@ int init()
         printf("hello openmp!\n");
     }*/
 
-    /*int nthreads, tid;
+    int nthreads, tid;
 
 #pragma omp parallel private(nthreads, tid)
     {
@@ -46,8 +46,7 @@ int init()
             nthreads = omp_get_num_threads();
             printf("Number of threads = %d\n", nthreads);
         }
-
-    }*/
+    }
 
     return 0;
 }
