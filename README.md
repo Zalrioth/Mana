@@ -9,35 +9,32 @@ Note: You may need to change CMake include directory paths.
 
 ### Prerequisites
 
-* [GLM](https://github.com/g-truc/glm) - OpenGL Mathematics library
-* [GLFW](https://github.com/glfw/glfw) - Vulkan helper library
-* [Assimp](https://github.com/assimp/assimp) - Model loading library
+* [Assimp](https://github.com/assimp/assimp/) - Model loading library
+* [Chaos](https://github.com/Zalrioth/Chaos/) - GPU physics library
+* [GLFW](https://github.com/glfw/glfw/) - Vulkan helper library
+* [Vulkan](https://www.lunarg.com/vulkan-sdk/) - Vulkan SDK, or you can use your own
 
 ### Setting Up a Project
 
-Create a new class that extends application and override update/render
+Mana supports any langauge that can call foreign functions. Here's an example in Python:
 
 ```
-class Game : public Application {
- public:
-  Game();
-  ~Game();
-  void update(float deltaTime);
-  void render();
-};
-```
+from ctypes import *
 
-Create a new instance of your game
+mana = cdll.LoadLibrary("Mana.dll")
 
-```
-  Application* game = new Game();
 
-  try {
-    game->run();
-  } catch (const std::exception& e) {
-    std::cerr << e.what() << std::endl;
-    return EXIT_FAILURE;
-  }
+def game():
+    print("Loading Game")
 
-  return EXIT_SUCCESS;
+    # Mana engine critical stuff
+    mana.init()
+    mana.new_window()
+
+    while mana.should_close() is not True:
+        mana.update()
+
+    mana.close_window()
+    mana.cleanup()
+
 ```

@@ -8,6 +8,8 @@ project(Mana VERSION 0.1.0)
 #https://stackoverflow.com/questions/35064093/openmp-runs-single-threaded-on-my-mac
 #https://stackoverflow.com/questions/46414660/macos-cmake-and-openmp
 #https://stackoverflow.com/questions/12399422/how-to-set-linker-flags-for-openmp-in-cmakes-try-compile-function
+#https://stackoverflow.com/questions/54749207/openmp-on-windows-with-clang-and-cmake
+#https://stackoverflow.com/questions/37969440/clang-openmp-and-cmake
 #https://stackoverflow.com/questions/9160335/os-specific-instructions-in-cmake-how-to
 
 set(CMAKE_CXX_STANDARD 14)
@@ -75,8 +77,6 @@ SET(includeList
         ${includePath}glfw-3.2.1/include
         ${includePath}VulkanSDK/1.1.85.0/Include
         ${includePath}assimp-4.1.0/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/../build/buildmana/buildassimp/include
-        ${includePath}cpython-3.7.2/PC
-        ${includePath}cpython-3.7.2/Include)
+        ${CMAKE_CURRENT_SOURCE_DIR}/../build/buildmana/buildassimp/include)
 
 target_include_directories(Mana PUBLIC ${includeList})
