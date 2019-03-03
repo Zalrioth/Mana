@@ -11,6 +11,7 @@ project(Mana VERSION 0.1.0)
 #https://stackoverflow.com/questions/54749207/openmp-on-windows-with-clang-and-cmake
 #https://stackoverflow.com/questions/37969440/clang-openmp-and-cmake
 #https://stackoverflow.com/questions/9160335/os-specific-instructions-in-cmake-how-to
+#https://stackoverflow.com/questions/41182827/disable-werror-for-one-of-cmakelists-txt
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_DEBUG_POSTFIX "")
@@ -47,12 +48,16 @@ file(GLOB_RECURSE mana_SRC
 add_library(Mana SHARED ${mana_SRC})
 
 set(includePath ${CMAKE_CURRENT_SOURCE_DIR}/../../)
+
 set_target_properties(Mana
   PROPERTIES
   ARCHIVE_OUTPUT_DIRECTORY ${includePath}grindstone/build/buildgrindstone
   LIBRARY_OUTPUT_DIRECTORY ${includePath}grindstone/build/buildgrindstone
   RUNTIME_OUTPUT_DIRECTORY ${includePath}grindstone/build/buildgrindstone
 )
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")
 
 set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
@@ -64,6 +69,9 @@ set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 add_subdirectory(${includePath}assimp-4.1.0 buildassimp)
+
+string(REPLACE " -w" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+string(REPLACE " -w" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 
 target_link_libraries(Mana ${includePath}grindstone/build/buildmana/Manad.lib
         ${includePath}cpython-3.7.2/PCbuild/amd64/python37_d.lib
