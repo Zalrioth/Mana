@@ -15,7 +15,7 @@ struct Window {
     GLFWwindow* glfwWindow;
 } window;
 
-void init_window(struct Window* gameWindow);
+int init_window(struct Window* gameWindow);
 void delete_window(struct Window* gameWindow);
 void create_glfw_window(struct Window* gameWindow);
 

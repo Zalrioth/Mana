@@ -5,8 +5,23 @@ project(Mana VERSION 0.1.0)
 #https://bytefreaks.net/programming-2/manually-set-the-cmake-output-folder
 #https://stackoverflow.com/questions/49672264/cmake-add-d-suffix-for-debug-build-of-static-library
 
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+
+set(OpenMP_CXX_FLAGS OpenMP_CXX_FLAGS="-Xclang -fopenmp")
+set(OpenMP_C_FLAGS OpenMP_C_FLAGS="-Xclang -fopenmp")
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Xclang -fopenmp")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Xclang -fopenmp")
+
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_DEBUG_POSTFIX "")
+
+find_package(OpenMP)
+if (OPENMP_FOUND)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
 
 file(GLOB_RECURSE mana_SRC
         include/*.h
@@ -38,6 +53,7 @@ add_subdirectory(${includePath}assimp-4.1.0 buildassimp)
 target_link_libraries(Mana ${includePath}grindstone/build/buildmana/Manad.lib
         ${includePath}cpython-3.7.2/PCbuild/amd64/python37_d.lib
         ${includePath}VulkanSDK/1.1.85.0/Lib/vulkan-1.lib
+        ${includePath}llvm/lib/libomp.lib
         glfw
         assimp)
 

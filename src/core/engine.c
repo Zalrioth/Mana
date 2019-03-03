@@ -1,8 +1,18 @@
 #include "core/engine.h"
 
-void init_engine(struct Engine* engine)
+int init_engine(struct Engine* engine)
 {
-    init_window(&engine->window);
+    int windowError = init_window(&engine->window);
+    switch (windowError) {
+    default:
+        break;
+    case (1):
+        printf("Error initializing GLFW!\n");
+        return 1;
+    case (2):
+        printf("Vulkan support not found!\n");
+        return 1;
+    }
 
     engine->fpsCounter.limitUpdateFPS = 1.0 / 60.0;
     // maybe cap fps at 144 for limit? 30, 60, 120, 144
@@ -19,6 +29,8 @@ void init_engine(struct Engine* engine)
     engine->fpsCounter.timer = engine->fpsCounter.lastTime;
     for (int loopNum = 0; loopNum < FPS_COUNT; loopNum++)
         engine->fpsCounter.fpsPast[loopNum] = engine->fpsCounter.fps;
+
+    return 0;
 }
 
 void delete_engine(struct Engine* engine)

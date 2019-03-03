@@ -1,16 +1,14 @@
 #include "core/window.h"
 
-void init_window(struct Window* window)
+int init_window(struct Window* window)
 {
-    if (!glfwInit()) {
-        printf("Error initializing GLFW!\n");
-        exit(1);
-    }
+    if (!glfwInit())
+        return 1;
 
-    if (!glfwVulkanSupported()) {
-        printf("Vulkan support not found!\n");
-        exit(1);
-    }
+    if (!glfwVulkanSupported())
+        return 2;
+
+    return 0;
 }
 
 void delete_window(struct Window* window)
@@ -59,7 +57,7 @@ void create_glfw_window(struct Window* window)
     //
     //if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS)
     //    throw std::runtime_error("failed to create instance!");
-
+    //
     //uint32_t extensionCount = 0;
     //vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
     //

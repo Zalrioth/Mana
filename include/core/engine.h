@@ -33,7 +33,7 @@ struct Engine {
 };
 
 double get_time();
-void init_engine(struct Engine* engine);
+int init_engine(struct Engine* engine);
 void delete_engine(struct Engine* engine);
 void update_engine(struct Engine* engine);
 void logic(double deltaTime);
