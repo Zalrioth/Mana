@@ -6,7 +6,7 @@
 #include "core/engine.h"
 
 EXPORT int init();
-EXPORT int new_window();
+EXPORT int new_window(int width, int height);
 EXPORT void update();
 EXPORT bool should_close();
 EXPORT void close_window();

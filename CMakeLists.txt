@@ -12,6 +12,7 @@ project(Mana VERSION 0.1.0)
 #https://stackoverflow.com/questions/37969440/clang-openmp-and-cmake
 #https://stackoverflow.com/questions/9160335/os-specific-instructions-in-cmake-how-to
 #https://stackoverflow.com/questions/41182827/disable-werror-for-one-of-cmakelists-txt
+#https://stackoverflow.com/questions/1452671/disable-all-gcc-warnings
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_DEBUG_POSTFIX "")

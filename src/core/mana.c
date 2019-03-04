@@ -18,7 +18,7 @@ int init()
         return 1;
     }
 
-    printf("Num of CPU: %d\n", omp_get_num_procs());
+    //printf("Num of CPU: %d\n", omp_get_num_procs());
 
     /*omp_set_num_threads(4);
 
@@ -35,7 +35,7 @@ int init()
         printf("hello openmp!\n");
     }*/
 
-    int nthreads, tid;
+    /*int nthreads, tid;
 
 #pragma omp parallel private(nthreads, tid)
     {
@@ -46,19 +46,44 @@ int init()
             nthreads = omp_get_num_threads();
             printf("Number of threads = %d\n", nthreads);
         }
+    }*/
+
+    return 0;
+}
+
+int new_window(int width, int height)
+{
+    int newWindowError = create_glfw_window(&engine.window, width, height);
+    switch (newWindowError) {
+    default:
+        break;
+    case (1):
+        glfwTerminate();
+        printf("Error creating GLFW window!\n");
+        return 1;
+    case (2):
+        printf("Failed to create Vulkan instance!\n");
+        return 1;
+    case (3):
+        printf("Failed to create window surface!\n");
+        return 1;
+    case (4):
+        printf("Failed to find GPUs with Vulkan support!\n");
+        return 1;
+    case (5):
+        printf("Failed to find a suitable GPU!\n");
+        return 1;
+    case (6):
+        printf("Failed to create logical device!\n");
+        return 1;
     }
 
     return 0;
 }
 
-int new_window()
-{
-    create_glfw_window(&engine.window);
-}
-
 void update()
 {
-    update_engine(&engine.window);
+    update_engine(&engine);
 }
 
 bool should_close()
@@ -68,7 +93,8 @@ bool should_close()
 
 void close_window()
 {
-    glfwTerminate();
+    delete_window(&engine.window);
+    //glfwTerminate();
 }
 
 void cleanup()
