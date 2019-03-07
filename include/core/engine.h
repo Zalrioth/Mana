@@ -2,8 +2,6 @@
 #ifndef ENGINE_H_
 #define ENGINE_H_
 
-#include "datastructures/vector.h"
-
 #include "core/common.h"
 #include "core/window.h"
 
@@ -29,7 +27,6 @@ struct FPSCounter {
 struct Engine {
     struct Window window;
     struct FPSCounter fpsCounter;
-    vector entities;
 };
 
 double get_time();
@@ -37,6 +34,5 @@ int init_engine(struct Engine* engine);
 void delete_engine(struct Engine* engine);
 void update_engine(struct Engine* engine);
 void logic(double deltaTime);
-//vector_init(&entities);
 
 #endif // ENGINE_H_

@@ -17,19 +17,19 @@
 #define VECTOR_TOTAL(vec) vector_total(&vec)
 #define VECTOR_FREE(vec) vector_free(&vec)
 
-typedef struct vector {
+struct vector {
     void** items;
     int capacity;
     int total;
-} vector;
+};
 
-void vector_init(vector*);
-int vector_total(vector*);
-static void vector_resize(vector*, int);
-void vector_add(vector*, void*);
-void vector_set(vector*, int, void*);
-void* vector_get(vector*, int);
-void vector_delete(vector*, int);
-void vector_free(vector*);
+void vector_init(struct vector*);
+int vector_total(struct vector*);
+//static void vector_resize(struct vector*, int);
+void vector_add(struct vector*, void*);
+void vector_set(struct vector*, int, void*);
+void* vector_get(struct vector*, int);
+void vector_delete(struct vector*, int);
+void vector_free(struct vector*);
 
 #endif

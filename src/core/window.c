@@ -1,5 +1,6 @@
 #include "core/window.h"
 
+int createSwapChain(struct Window* window);
 bool isDeviceSuitable(struct Window* window, VkPhysicalDevice device);
 
 int init_window(struct Window* window)
@@ -9,6 +10,8 @@ int init_window(struct Window* window)
 
     if (!glfwVulkanSupported())
         return 2;
+
+    memset(window, 0, sizeof(struct Window));
 
     return 0;
 }
@@ -63,12 +66,43 @@ int create_glfw_window(struct Window* window, int width, int height)
 
     glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
+    const char* convertedExtensions[SMALL_BUFFER];
+    memset(convertedExtensions, 0, sizeof(convertedExtensions));
+
+    for (int loopNum = 0; loopNum < glfwExtensionCount; loopNum++)
+        convertedExtensions[loopNum] = glfwExtensions[loopNum];
+
+    if (enableValidationLayers) {
+        convertedExtensions[glfwExtensionCount] = "VK_EXT_DEBUG_UTILS_EXTENSION_NAME\0";
+        //extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+    }
+
     createInfo.enabledExtensionCount = glfwExtensionCount;
-    createInfo.ppEnabledExtensionNames = glfwExtensions;
-    createInfo.enabledLayerCount = 0;
+    createInfo.ppEnabledExtensionNames = convertedExtensions; //glfwExtensions;
+
+    if (enableValidationLayers) {
+        createInfo.enabledLayerCount = (uint32_t)1;
+        createInfo.ppEnabledLayerNames = validationLayers;
+    } else {
+        createInfo.enabledLayerCount = 0;
+    }
 
     if (vkCreateInstance(&createInfo, NULL, &window->instance) != VK_SUCCESS)
         return 2;
+
+    if (enableValidationLayers) {
+
+        VkDebugUtilsMessengerCreateInfoEXT createInfo = { 0 };
+        createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+        createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+        createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+        createInfo.pfnUserCallback = debugCallback;
+
+        if (CreateDebugUtilsMessengerEXT(window->instance, &createInfo, NULL, &window->debugMessenger) != VK_SUCCESS) {
+            //throw std::runtime_error("failed to set up debug messenger!");
+            //TODO: add return
+        }
+    }
 
     uint32_t extensionCount = 0;
     vkEnumerateInstanceExtensionProperties(NULL, &extensionCount, NULL);
@@ -136,12 +170,12 @@ int create_glfw_window(struct Window* window, int width, int height)
     createInfo2.pEnabledFeatures = &deviceFeatures;
     createInfo2.enabledExtensionCount = 0;
 
-    /*if (enableValidationLayers) {
-        createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-        createInfo.ppEnabledLayerNames = validationLayers.data();
+    if (enableValidationLayers) {
+        createInfo.enabledLayerCount = (uint32_t)1;
+        createInfo.ppEnabledLayerNames = validationLayers;
     } else {
         createInfo.enabledLayerCount = 0;
-    }*/
+    }
 
     if (vkCreateDevice(window->physicalDevice, &createInfo2, NULL, &window->device) != VK_SUCCESS)
         return 6;
@@ -149,6 +183,135 @@ int create_glfw_window(struct Window* window, int width, int height)
     vkGetDeviceQueue(window->device, window->indices.graphicsFamily, 0, &window->graphicsQueue);
     vkGetDeviceQueue(window->device, window->indices.presentFamily, 0, &window->presentQueue);
     //glfwSetWindowPos(&window->instance, 0, 0);
+
+    int swapChainError = createSwapChain(window);
+    if (swapChainError != 0)
+        return swapChainError;
+
+    return 0;
+}
+
+int createSwapChain(struct Window* window)
+{
+    struct SwapChainSupportDetails swapChainSupport = { { 0 } };
+    //memset(extensions, 0, sizeof(extensions));
+
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(window->physicalDevice, window->surface, &swapChainSupport.capabilities);
+
+    uint32_t formatCount;
+    vkGetPhysicalDeviceSurfaceFormatsKHR(window->physicalDevice, window->surface, &formatCount, NULL);
+
+    if (formatCount != 0) {
+        //swapChainSupport.formats.resize(formatCount);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(window->physicalDevice, window->surface, &formatCount, swapChainSupport.formats);
+    }
+
+    uint32_t presentModeCount;
+    vkGetPhysicalDeviceSurfacePresentModesKHR(window->physicalDevice, window->surface, &presentModeCount, NULL);
+
+    if (presentModeCount != 0) {
+        //swapChainSupport.presentModes.resize(presentModeCount);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(window->physicalDevice, window->surface, &presentModeCount, swapChainSupport.presentModes);
+    }
+
+    // Start 1
+
+    VkSurfaceFormatKHR surfaceFormat = { 0 };
+    //swapChainSupport.formats
+
+    //if (swapChainSupport.formats.availableFormats.size() == 1 && swapChainSupport.formats.availableFormats[0].format == VK_FORMAT_UNDEFINED) {
+    if (formatCount == 1 && swapChainSupport.formats[0].format == VK_FORMAT_UNDEFINED) {
+        surfaceFormat.format = VK_FORMAT_B8G8R8A8_UNORM;
+        surfaceFormat.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+    } else {
+        //for (const auto& availableFormat : swapChainSupport.formats) {
+        for (int loopNum = 0; loopNum < SMALL_BUFFER; loopNum++) {
+            if (swapChainSupport.formats[loopNum].format == VK_FORMAT_B8G8R8A8_UNORM && swapChainSupport.formats[loopNum].colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+                surfaceFormat = swapChainSupport.formats[loopNum];
+                break;
+            } else
+                surfaceFormat = swapChainSupport.formats[0];
+        }
+    }
+
+    // chooseSwapSurfaceFormat(swapChainSupport.formats);
+
+    // Start 2
+
+    VkPresentModeKHR presentMode = { 0 };
+    //VkPresentModeKHR bestMode = VK_PRESENT_MODE_FIFO_KHR;
+
+    //swapChainSupport.presentModes
+
+    //for (const auto& availablePresentMode : availablePresentModes) {
+    for (int loopNum = 0; loopNum < SMALL_BUFFER; loopNum++) {
+        if (swapChainSupport.presentModes[loopNum] == VK_PRESENT_MODE_MAILBOX_KHR) {
+            presentMode = swapChainSupport.presentModes[loopNum];
+            break;
+        } else if (swapChainSupport.presentModes[loopNum] == VK_PRESENT_MODE_IMMEDIATE_KHR) {
+            presentMode = swapChainSupport.presentModes[loopNum];
+        }
+    }
+
+    // chooseSwapPresentMode(swapChainSupport.presentModes);
+
+    // Start 3
+
+    VkExtent2D extent = { window->width, window->height };
+
+    if (swapChainSupport.capabilities.currentExtent.width != UINT32_MAX) {
+        extent = swapChainSupport.capabilities.currentExtent;
+    } else {
+        extent.width = MAX(swapChainSupport.capabilities.minImageExtent.width, MIN(swapChainSupport.capabilities.maxImageExtent.width, extent.width));
+        extent.height = MAX(swapChainSupport.capabilities.minImageExtent.height, MIN(swapChainSupport.capabilities.maxImageExtent.height, extent.height));
+    }
+
+    //chooseSwapExtent(swapChainSupport.capabilities);
+
+    uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
+    if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) {
+        imageCount = swapChainSupport.capabilities.maxImageCount;
+    }
+
+    // End of querySwapChainSupport
+
+    VkSwapchainCreateInfoKHR createInfo = { 0 };
+    createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+    createInfo.surface = window->surface;
+
+    createInfo.minImageCount = imageCount;
+    createInfo.imageFormat = surfaceFormat.format;
+    createInfo.imageColorSpace = surfaceFormat.colorSpace;
+    createInfo.imageExtent = extent;
+    createInfo.imageArrayLayers = 1;
+    createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
+    uint32_t queueFamilyIndices[] = { (&window->indices)->graphicsFamily, (&window->indices)->presentFamily };
+
+    if ((&window->indices)->graphicsFamily != (&window->indices)->presentFamily) {
+        createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+        createInfo.queueFamilyIndexCount = 2;
+        createInfo.pQueueFamilyIndices = queueFamilyIndices;
+    } else
+        createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
+    createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    createInfo.presentMode = presentMode;
+    createInfo.clipped = VK_TRUE;
+
+    //window->swapChain = { 0 };
+    if (vkCreateSwapchainKHR(window->device, &createInfo, NULL, &window->swapChain) != VK_SUCCESS)
+        return 7;
+
+    vkGetSwapchainImagesKHR(window->device, window->swapChain, &imageCount, NULL);
+    //window->swapChainImages.resize(imageCount);
+    vkGetSwapchainImagesKHR(window->device, window->swapChain, &imageCount, window->swapChainImages);
+
+    window->swapChainImageFormat = surfaceFormat.format;
+    window->swapChainExtent = extent;
+
+    return 0;
 }
 
 bool isDeviceSuitable(struct Window* window, VkPhysicalDevice device)

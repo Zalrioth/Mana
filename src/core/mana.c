@@ -76,6 +76,9 @@ int new_window(int width, int height)
     case (6):
         printf("Failed to create logical device!\n");
         return 1;
+    case (7):
+        printf("Failed to create swap chain!\n");
+        return 1;
     }
 
     return 0;

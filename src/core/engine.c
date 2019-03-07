@@ -80,7 +80,7 @@ void update_engine(struct Engine* engine)
 
 void logic(double deltaTime)
 {
-    int i;
+    //int i;
 
     /*VECTOR_ADD(entities, "Bonjour");
     VECTOR_ADD(entities, "tout");

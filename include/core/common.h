@@ -8,6 +8,11 @@
 #include <time.h>
 #include <vulkan/vulkan.h>
 
+#include "datastructures/vector.h"
+
 #define SMALL_BUFFER 128
+
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 #define EXPORT __declspec(dllexport)
