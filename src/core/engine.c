@@ -37,6 +37,52 @@ void delete_engine(struct Engine* engine)
 {
 }
 
+void render(struct Window* window)
+{
+    vkWaitForFences(window->device, 1, &window->inFlightFences[window->currentFrame], VK_TRUE, UINT64_MAX);
+    vkResetFences(window->device, 1, &window->inFlightFences[window->currentFrame]);
+
+    uint32_t imageIndex;
+    vkAcquireNextImageKHR(window->device, window->swapChain, UINT64_MAX, window->imageAvailableSemaphores[window->currentFrame], VK_NULL_HANDLE, &imageIndex);
+
+    VkSubmitInfo submitInfo = { 0 };
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+    VkSemaphore waitSemaphores[] = { window->imageAvailableSemaphores[window->currentFrame] };
+    VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+    submitInfo.waitSemaphoreCount = 1;
+    submitInfo.pWaitSemaphores = waitSemaphores;
+    submitInfo.pWaitDstStageMask = waitStages;
+
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &window->commandBuffers[imageIndex];
+
+    VkSemaphore signalSemaphores[] = { window->renderFinishedSemaphores[window->currentFrame] };
+    submitInfo.signalSemaphoreCount = 1;
+    submitInfo.pSignalSemaphores = signalSemaphores;
+
+    if (vkQueueSubmit(window->graphicsQueue, 1, &submitInfo, window->inFlightFences[window->currentFrame]) != VK_SUCCESS)
+        printf("Error to submit draw command buffer!\n");
+    //throw std::runtime_error("failed to submit draw command buffer!");
+
+    VkPresentInfoKHR presentInfo = { 0 };
+    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+    presentInfo.waitSemaphoreCount = 1;
+    presentInfo.pWaitSemaphores = signalSemaphores;
+
+    VkSwapchainKHR swapChains[] = { window->swapChain };
+    presentInfo.swapchainCount = 1;
+    presentInfo.pSwapchains = swapChains;
+
+    presentInfo.pImageIndices = &imageIndex;
+
+    vkQueuePresentKHR(window->presentQueue, &presentInfo);
+
+    window->currentFrame = (window->currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+}
+
+// TODO: Make this whole function in python?
 void update_engine(struct Engine* engine)
 {
     engine->fpsCounter.nowTime = get_time();
@@ -49,7 +95,10 @@ void update_engine(struct Engine* engine)
         engine->fpsCounter.deltaTime--;
     }
 
-    glfwSwapBuffers(engine->window.glfwWindow);
+    // Render frame
+    render(&engine->window);
+
+    //glfwSwapBuffers(engine->window.glfwWindow);
     glfwPollEvents();
 
     engine->fpsCounter.frames++;

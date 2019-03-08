@@ -4,6 +4,10 @@ int createSwapChain(struct Window* window);
 int createImageViews(struct Window* window);
 int createRenderPass(struct Window* window);
 int createGraphicsPipeline(struct Window* window);
+int createFramebuffers(struct Window* window);
+int createCommandPool(struct Window* window);
+int createCommandBuffers(struct Window* window);
+int createSyncObjects(struct Window* window);
 bool isDeviceSuitable(struct Window* window, VkPhysicalDevice device);
 
 int init_window(struct Window* window)
@@ -51,6 +55,7 @@ int create_glfw_window(struct Window* window, int width, int height)
     glfwMakeContextCurrent(window->glfwWindow);
 
     window->physicalDevice = VK_NULL_HANDLE;
+    window->currentFrame = 0;
 
     if (enableValidationLayers && !checkValidationLayerSupport())
         return 8; // TODO: Update return
@@ -213,6 +218,22 @@ int create_glfw_window(struct Window* window, int width, int height)
     if (createGraphicsPipelineError != 0)
         return createGraphicsPipelineError;
 
+    int createFramebuffersError = createFramebuffers(window);
+    if (createFramebuffersError != 0)
+        return createFramebuffersError;
+
+    int createCommandPoolError = createCommandPool(window);
+    if (createCommandPoolError != 0)
+        return createCommandPoolError;
+
+    int createCommandBuffersError = createCommandBuffers(window);
+    if (createCommandBuffersError != 0)
+        return createCommandBuffersError;
+
+    int createSyncObjectsError = createSyncObjects(window);
+    if (createSyncObjectsError != 0)
+        return createSyncObjectsError;
+
     return 0;
 }
 
@@ -263,6 +284,7 @@ int createSwapChain(struct Window* window)
 
     // Start 2
 
+    //https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/VkPresentModeKHR.html
     VkPresentModeKHR presentMode = { 0 };
     //VkPresentModeKHR bestMode = VK_PRESENT_MODE_FIFO_KHR;
 
@@ -277,6 +299,9 @@ int createSwapChain(struct Window* window)
             presentMode = swapChainSupport.presentModes[loopNum];
         }
     }
+
+    // Force Vsync
+    presentMode = VK_PRESENT_MODE_FIFO_KHR;
 
     // chooseSwapPresentMode(swapChainSupport.presentModes);
 
@@ -591,6 +616,121 @@ int createGraphicsPipeline(struct Window* window)
 
     vkDestroyShaderModule(window->device, fragShaderModule, NULL);
     vkDestroyShaderModule(window->device, vertShaderModule, NULL);
+
+    return 0;
+}
+
+int createFramebuffers(struct Window* window)
+{
+    //swapChainFramebuffers.resize(swapChainImageViews.size());
+
+    //for (size_t i = 0; i < swapChainImageViews.size(); i++) {
+    for (int loopNum = 0; loopNum < 3; loopNum++) {
+        VkImageView attachments[] = {
+            window->swapChainImageViews[loopNum]
+        };
+
+        VkFramebufferCreateInfo framebufferInfo = { 0 };
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = window->renderPass;
+        framebufferInfo.attachmentCount = 1;
+        framebufferInfo.pAttachments = attachments;
+        framebufferInfo.width = window->swapChainExtent.width;
+        framebufferInfo.height = window->swapChainExtent.height;
+        framebufferInfo.layers = 1;
+
+        if (vkCreateFramebuffer(window->device, &framebufferInfo, NULL, &window->swapChainFramebuffers[loopNum]) != VK_SUCCESS)
+            return 12;
+        //throw std::runtime_error("failed to create framebuffer!");
+    }
+
+    return 0;
+}
+
+int createCommandPool(struct Window* window)
+{
+    VkCommandPoolCreateInfo poolInfo = { 0 };
+    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    poolInfo.queueFamilyIndex = window->indices.graphicsFamily;
+
+    if (vkCreateCommandPool(window->device, &poolInfo, NULL, &window->commandPool) != VK_SUCCESS)
+        return 13;
+    //throw std::runtime_error("failed to create command pool!");
+
+    return 0;
+}
+
+int createCommandBuffers(struct Window* window)
+{
+    //commandBuffers.resize(swapChainFramebuffers.size());
+
+    VkCommandBufferAllocateInfo allocInfo = { 0 };
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.commandPool = window->commandPool;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandBufferCount = (uint32_t)3; //commandBuffers.size();
+
+    if (vkAllocateCommandBuffers(window->device, &allocInfo, window->commandBuffers) != VK_SUCCESS)
+        return 14;
+    //throw std::runtime_error("failed to allocate command buffers!");
+
+    //for (size_t i = 0; i < commandBuffers.size(); i++) {
+    for (size_t i = 0; i < 3; i++) {
+        VkCommandBufferBeginInfo beginInfo = { 0 };
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+
+        if (vkBeginCommandBuffer(window->commandBuffers[i], &beginInfo) != VK_SUCCESS)
+            return 14;
+        //throw std::runtime_error("failed to begin recording command buffer!");
+
+        VkRenderPassBeginInfo renderPassInfo = { 0 };
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = window->renderPass;
+        renderPassInfo.framebuffer = window->swapChainFramebuffers[i];
+        renderPassInfo.renderArea.offset.x = 0;
+        renderPassInfo.renderArea.offset.y = 0;
+        renderPassInfo.renderArea.extent = window->swapChainExtent;
+
+        VkClearValue clearColor = { { 0.0f, 0.0f, 0.0f, 1.0f } };
+        renderPassInfo.clearValueCount = 1;
+        renderPassInfo.pClearValues = &clearColor;
+
+        vkCmdBeginRenderPass(window->commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        vkCmdBindPipeline(window->commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, window->graphicsPipeline);
+
+        vkCmdDraw(window->commandBuffers[i], 3, 1, 0, 0);
+
+        vkCmdEndRenderPass(window->commandBuffers[i]);
+
+        if (vkEndCommandBuffer(window->commandBuffers[i]) != VK_SUCCESS)
+            return 14;
+        //throw std::runtime_error("failed to record command buffer!");
+    }
+
+    return 0;
+}
+
+int createSyncObjects(struct Window* window)
+{
+    //imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+    //renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+    //inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
+    memset(window->inFlightFences, 0, sizeof(window->inFlightFences));
+
+    VkSemaphoreCreateInfo semaphoreInfo = { 0 };
+    semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+    VkFenceCreateInfo fenceInfo = { 0 };
+    fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        if (vkCreateSemaphore(window->device, &semaphoreInfo, NULL, &window->imageAvailableSemaphores[i]) != VK_SUCCESS || vkCreateSemaphore(window->device, &semaphoreInfo, NULL, &window->renderFinishedSemaphores[i]) != VK_SUCCESS || vkCreateFence(window->device, &fenceInfo, NULL, &window->inFlightFences[i]) != VK_SUCCESS)
+            return 15;
+        //throw std::runtime_error("failed to create synchronization objects for a frame!");
+    }
 
     return 0;
 }

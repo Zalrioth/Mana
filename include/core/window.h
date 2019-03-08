@@ -20,6 +20,8 @@ static const bool enableValidationLayers = true;
 static const char* const validationLayers[] = { "VK_LAYER_LUNARG_standard_validation" };
 static const char* const deviceExtensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
+#define MAX_FRAMES_IN_FLIGHT 2
+
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,
@@ -80,6 +82,12 @@ struct Window {
     VkImageView swapChainImageViews[3];
     VkFramebuffer swapChainFramebuffers[3];
     VkDebugUtilsMessengerEXT debugMessenger;
+    VkCommandPool commandPool;
+    VkCommandBuffer commandBuffers[SMALL_BUFFER];
+    VkSemaphore imageAvailableSemaphores[MAX_FRAMES_IN_FLIGHT];
+    VkSemaphore renderFinishedSemaphores[MAX_FRAMES_IN_FLIGHT];
+    VkFence inFlightFences[MAX_FRAMES_IN_FLIGHT];
+    size_t currentFrame;
     struct QueueFamilyIndices indices;
     int width;
     int height;
