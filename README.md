@@ -1,7 +1,5 @@
 # Mana - Mana's Also Not (an) Ancronym
 
-A simple cross-platform Vulkan graphics engine.
-
 ## Getting Started
 
 These instructions will help you get a copy of the project up and running on your local machine for development.<br/>
