@@ -17,7 +17,8 @@ static const bool enableValidationLayers = false;
 static const bool enableValidationLayers = true;
 #endif
 
-static const char* const validationLayers[] = { "VK_LAYER_LUNARG_standard_validation\0" };
+static const char* const validationLayers[] = { "VK_LAYER_LUNARG_standard_validation" };
+static const char* const deviceExtensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -34,7 +35,9 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 
 static VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger)
 {
-    VkResult (*func)(VkInstance, const VkDebugUtilsMessengerCreateInfoEXT*, const VkAllocationCallbacks*, VkDebugUtilsMessengerEXT*) = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+    //VkResult (*func)(VkInstance, const VkDebugUtilsMessengerCreateInfoEXT*, const VkAllocationCallbacks*, VkDebugUtilsMessengerEXT*) = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+    //void* func = vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+    PFN_vkCreateDebugUtilsMessengerEXT func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
     if (func != NULL) {
         return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
     } else {
@@ -70,7 +73,12 @@ struct Window {
     VkSwapchainKHR swapChain;
     VkFormat swapChainImageFormat;
     VkExtent2D swapChainExtent;
-    VkImage swapChainImages[SMALL_BUFFER];
+    VkRenderPass renderPass;
+    VkPipelineLayout pipelineLayout;
+    VkPipeline graphicsPipeline;
+    VkImage swapChainImages[3];
+    VkImageView swapChainImageViews[3];
+    VkFramebuffer swapChainFramebuffers[3];
     VkDebugUtilsMessengerEXT debugMessenger;
     struct QueueFamilyIndices indices;
     int width;
@@ -80,5 +88,6 @@ struct Window {
 int init_window(struct Window* gameWindow);
 void delete_window(struct Window* gameWindow);
 int create_glfw_window(struct Window* gameWindow, int width, int height);
+bool checkValidationLayerSupport();
 
 #endif // WINDOW_H_

@@ -76,7 +76,7 @@ string(REPLACE " -w" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 
 target_link_libraries(Mana ${includePath}grindstone/build/buildmana/Manad.lib
         ${includePath}cpython-3.7.2/PCbuild/amd64/python37_d.lib
-        ${includePath}VulkanSDK/1.1.85.0/Lib/vulkan-1.lib
+        ${includePath}VulkanSDK/1.1.101.0/Lib/vulkan-1.lib
         ${includePath}llvm/lib/libomp.lib
         glfw
         assimp)
@@ -84,7 +84,7 @@ target_link_libraries(Mana ${includePath}grindstone/build/buildmana/Manad.lib
 SET(includeList
         ${includePath}grindstone/Mana/include
         ${includePath}glfw-3.2.1/include
-        ${includePath}VulkanSDK/1.1.85.0/Include
+        ${includePath}VulkanSDK/1.1.101.0/Include
         ${includePath}assimp-4.1.0/include
         ${CMAKE_CURRENT_SOURCE_DIR}/../build/buildmana/buildassimp/include)
 
