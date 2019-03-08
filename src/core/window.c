@@ -410,11 +410,11 @@ int createRenderPass(struct Window* window)
     return 0;
 }
 
-VkShaderModule createShaderModule(struct Window* window, const char* code)
+VkShaderModule createShaderModule(struct Window* window, const char* code, int length)
 {
     VkShaderModuleCreateInfo createInfo = { 0 };
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-    createInfo.codeSize = strlen(code);
+    createInfo.codeSize = length; //HUGE_BUFFER; //strlen(code);
     createInfo.pCode = (const uint32_t*)(code);
 
     VkShaderModule shaderModule;
@@ -426,42 +426,66 @@ VkShaderModule createShaderModule(struct Window* window, const char* code)
     return shaderModule;
 }
 
-char* readFile(const char* filename)
+char* readShaderFile(const char* filename, int* fileLength)
 {
-    long int size = 0;
-    FILE* file = fopen(filename, "r");
+    //FILE* ptr = fopen(filename, "r"); // r for read, b for binary
+    //fread(text, sizeof(LARGE_BUFFER), 1, ptr);
+    FILE* fp = fopen(filename, "rb");
 
-    if (!file) {
-        fputs("File error.\n", stderr);
-        return NULL;
-    }
+    fseek(fp, 0, SEEK_END);
+    long int size = ftell(fp);
+    rewind(fp);
 
-    fseek(file, 0, SEEK_END);
-    size = ftell(file);
-    rewind(file);
+    *fileLength = size;
 
     char* result = (char*)malloc(size);
-    if (!result) {
-        fputs("Memory error.\n", stderr);
-        return NULL;
+
+    int index = 0;
+    int c;
+    while ((c = fgetc(fp)) != EOF) {
+        result[index] = c;
+        index++;
     }
 
-    if (fread(result, 1, size, file) != size) {
-        fputs("Read error.\n", stderr);
-        return NULL;
-    }
+    fclose(fp);
 
-    fclose(file);
     return result;
 }
 
 int createGraphicsPipeline(struct Window* window)
 {
-    char* vertShaderCode = readFile("assets/shaders/vert.spv");
-    char* fragShaderCode = readFile("assets/shaders/frag.spv");
+// Get the current working directory:
+#if defined(IS_WINDOWS)
+    char* buffer;
+    buffer = _getcwd(NULL, 0);
+    printf("%s \nLength: %llu\n", buffer, strlen(buffer));
+    free(buffer);
+#else
+    char cwd[LARGE_BUFFER];
+    getcwd(cwd, sizeof(cwd);
+    printf("Current working dir: %s\n", cwd);
+#endif
 
-    VkShaderModule vertShaderModule = createShaderModule(window, vertShaderCode);
-    VkShaderModule fragShaderModule = createShaderModule(window, fragShaderCode);
+    //char* vertShaderCode = readFile("./assets/shaders/basicVert.spv");
+    //char* fragShaderCode = readFile("./assets/shaders/basicFrag.spv");
+
+    //int vertShaderCode[HUGE_BUFFER];
+    //int fragShaderCode[HUGE_BUFFER];
+
+    int vertexLength = 0;
+    int fragmentLength = 0;
+
+    //memset(vertShaderCode, 0, sizeof(vertShaderCode));
+    //memset(fragShaderCode, 0, sizeof(fragShaderCode));
+
+    //char* vertShaderCode = NULL;
+    //char* fragShaderCode = NULL;
+
+    char* vertShaderCode = readShaderFile("./assets/shaders/basicVert.spv", &vertexLength);
+    char* fragShaderCode = readShaderFile("./assets/shaders/basicFrag.spv", &fragmentLength);
+
+    VkShaderModule vertShaderModule = createShaderModule(window, vertShaderCode, vertexLength);
+    VkShaderModule fragShaderModule = createShaderModule(window, fragShaderCode, fragmentLength);
 
     VkPipelineShaderStageCreateInfo vertShaderStageInfo = { 0 };
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
