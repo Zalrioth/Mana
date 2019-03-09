@@ -47,6 +47,14 @@ static VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugU
     }
 }
 
+static void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator)
+{
+    PFN_vkDestroyDebugUtilsMessengerEXT func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+    if (func != NULL) {
+        func(instance, debugMessenger, pAllocator);
+    }
+}
+
 struct QueueFamilyIndices {
     uint32_t graphicsFamily;
     uint32_t presentFamily;
@@ -93,7 +101,7 @@ struct Window {
     int height;
 };
 
-int init_window(struct Window* gameWindow);
+int init_window(struct Window* window, int width, int height);
 void delete_window(struct Window* gameWindow);
 int create_glfw_window(struct Window* gameWindow, int width, int height);
 bool checkValidationLayerSupport();

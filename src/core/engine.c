@@ -2,17 +2,13 @@
 
 int init_engine(struct Engine* engine)
 {
-    int windowError = init_window(&engine->window);
-    switch (windowError) {
-    default:
-        break;
-    case (1):
-        printf("Error initializing GLFW!\n");
+    if (!glfwInit())
         return 1;
-    case (2):
-        printf("Vulkan support not found!\n");
-        return 1;
-    }
+
+    if (!glfwVulkanSupported())
+        return 2;
+
+    memset(engine->keys, RELEASED, sizeof(engine->keys));
 
     engine->fpsCounter.limitUpdateFPS = 1.0 / 60.0;
     // maybe cap fps at 144 for limit? 30, 60, 120, 144
@@ -90,7 +86,7 @@ void update_engine(struct Engine* engine)
     engine->fpsCounter.lastTime = engine->fpsCounter.nowTime;
 
     while (engine->fpsCounter.deltaTime >= 1.0) {
-        logic(engine->fpsCounter.deltaTime / 20);
+        logic(engine, engine->fpsCounter.deltaTime / 20);
         engine->fpsCounter.updates++;
         engine->fpsCounter.deltaTime--;
     }
@@ -100,6 +96,8 @@ void update_engine(struct Engine* engine)
 
     //glfwSwapBuffers(engine->window.glfwWindow);
     glfwPollEvents();
+
+    process_input(engine);
 
     engine->fpsCounter.frames++;
 
@@ -127,8 +125,10 @@ void update_engine(struct Engine* engine)
     }
 }
 
-void logic(double deltaTime)
+void logic(struct Engine* engine, double deltaTime)
 {
+    if (engine->keys[GLFW_KEY_ESCAPE].state == PRESSED)
+        glfwSetWindowShouldClose(engine->window.glfwWindow, true);
     //int i;
 
     /*VECTOR_ADD(entities, "Bonjour");
@@ -169,4 +169,17 @@ double get_time()
     timespec_get(&currentTime, TIME_UTC);
 
     return (double)currentTime.tv_sec + (double)currentTime.tv_nsec / 1000000000;
+}
+
+void process_input(struct Engine* engine)
+{
+    for (int loopNum = 0; loopNum < KEY_LIMIT; loopNum++) {
+        if (glfwGetKey(engine->window.glfwWindow, loopNum) == GLFW_PRESS) {
+            engine->keys[loopNum].state = PRESSED;
+            engine->keys[loopNum].held = true;
+        } else if (glfwGetKey(engine->window.glfwWindow, loopNum) == GLFW_RELEASE) {
+            engine->keys[loopNum].state = RELEASED;
+            engine->keys[loopNum].held = false;
+        }
+    }
 }

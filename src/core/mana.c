@@ -14,7 +14,10 @@ int init()
     default:
         break;
     case (1):
-        printf("Error initializing window!\n");
+        printf("Error initializing GLFW!\n");
+        return 1;
+    case (2):
+        printf("Vulkan support not found!\n");
         return 1;
     }
 
@@ -53,12 +56,10 @@ int init()
 
 int new_window(int width, int height)
 {
-    int newWindowError = create_glfw_window(&engine.window, width, height);
-    switch (newWindowError) {
+    switch (init_window(&engine.window, width, height)) {
     default:
         break;
     case (1):
-        glfwTerminate();
         printf("Error creating GLFW window!\n");
         return 1;
     case (2):
@@ -91,7 +92,10 @@ void update()
 
 bool should_close()
 {
-    return glfwWindowShouldClose(engine.window.glfwWindow);
+    if (glfwWindowShouldClose(engine.window.glfwWindow))
+        return true;
+
+    return false;
 }
 
 void close_window()

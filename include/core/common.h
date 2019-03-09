@@ -18,6 +18,7 @@
 
 #include "datastructures/vector.h"
 
+#define ERROR !0
 #define SMALL_BUFFER 128
 #define LARGE_BUFFER 8192
 #define HUGE_BUFFER 32768

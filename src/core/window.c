@@ -10,37 +10,11 @@ int createCommandBuffers(struct Window* window);
 int createSyncObjects(struct Window* window);
 bool isDeviceSuitable(struct Window* window, VkPhysicalDevice device);
 
-int init_window(struct Window* window)
+int init_window(struct Window* window, int width, int height)
 {
-    if (!glfwInit())
-        return 1;
-
-    if (!glfwVulkanSupported())
-        return 2;
-
     memset(window, 0, sizeof(struct Window));
 
-    return 0;
-}
-
-void delete_window(struct Window* window)
-{
-    vkDestroyDevice(window->device, NULL);
-
-    //if (enableValidationLayers) {
-    //    DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
-    //}
-
-    vkDestroySurfaceKHR(window->instance, window->surface, NULL);
-    vkDestroyInstance(window->instance, NULL);
-
-    glfwDestroyWindow(window->glfwWindow);
-
-    glfwTerminate();
-}
-
-int create_glfw_window(struct Window* window, int width, int height)
-{
+    int errorCode = 0;
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
@@ -222,19 +196,58 @@ int create_glfw_window(struct Window* window, int width, int height)
     if (createFramebuffersError != 0)
         return createFramebuffersError;
 
-    int createCommandPoolError = createCommandPool(window);
-    if (createCommandPoolError != 0)
-        return createCommandPoolError;
+    if ((errorCode = createCommandPool(window)) == ERROR)
+        goto cleanup;
 
-    int createCommandBuffersError = createCommandBuffers(window);
-    if (createCommandBuffersError != 0)
-        return createCommandBuffersError;
+    if ((errorCode = createCommandBuffers(window)) == ERROR)
+        goto cleanup;
 
-    int createSyncObjectsError = createSyncObjects(window);
-    if (createSyncObjectsError != 0)
-        return createSyncObjectsError;
+    if ((errorCode = createSyncObjects(window) == ERROR))
+        goto cleanup;
 
-    return 0;
+    return errorCode;
+
+cleanup:
+    delete_window(window);
+    return errorCode;
+}
+
+void delete_window(struct Window* window)
+{
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        vkDestroySemaphore(window->device, window->renderFinishedSemaphores[i], NULL);
+        vkDestroySemaphore(window->device, window->imageAvailableSemaphores[i], NULL);
+        vkDestroyFence(window->device, window->inFlightFences[i], NULL);
+    }
+
+    vkDestroyCommandPool(window->device, window->commandPool, NULL);
+
+    //for (auto framebuffer : swapChainFramebuffers)
+    for (int loopNum = 0; loopNum < 3; loopNum++)
+        vkDestroyFramebuffer(window->device, window->swapChainFramebuffers[loopNum], NULL);
+
+    vkDestroyPipeline(window->device, window->graphicsPipeline, NULL);
+    vkDestroyPipelineLayout(window->device, window->pipelineLayout, NULL);
+    vkDestroyRenderPass(window->device, window->renderPass, NULL);
+
+    //for (auto imageView : swapChainImageViews)
+    for (int loopNum = 0; loopNum < 3; loopNum++)
+        vkDestroyImageView(window->device, window->swapChainImageViews[loopNum], NULL);
+
+    vkDestroySwapchainKHR(window->device, window->swapChain, NULL);
+    vkDestroyDevice(window->device, NULL);
+
+    if (enableValidationLayers)
+        DestroyDebugUtilsMessengerEXT(window->instance, window->debugMessenger, NULL);
+
+    vkDestroySurfaceKHR(window->instance, window->surface, NULL);
+    vkDestroyInstance(window->instance, NULL);
+
+    glfwDestroyWindow(window->glfwWindow);
+
+    glfwTerminate();
+
+    //free(window);
 }
 
 int createSwapChain(struct Window* window)
