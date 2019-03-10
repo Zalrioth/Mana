@@ -1,5 +1,7 @@
 #include "core/window.h"
 
+//https://stackoverflow.com/questions/2845748/function-defined-but-not-used-warning-in-c
+
 int createWindow(struct Window* window, int width, int height);
 int createInstance(struct Window* window);
 int setupDebugMessenger(struct Window* window);
@@ -104,6 +106,8 @@ cleanup:
 
 void delete_window(struct Window* window)
 {
+    vkDeviceWaitIdle(window->device);
+
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         vkDestroySemaphore(window->device, window->renderFinishedSemaphores[i], NULL);
         vkDestroySemaphore(window->device, window->imageAvailableSemaphores[i], NULL);
