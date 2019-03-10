@@ -99,6 +99,10 @@ void update_engine(struct Engine* engine)
 
     process_input(engine);
 
+    // Will need to move input code to python
+    if (engine->keys[GLFW_KEY_ESCAPE].state == PRESSED)
+        glfwSetWindowShouldClose(engine->window.glfwWindow, true);
+
     engine->fpsCounter.frames++;
 
     if (get_time() - engine->fpsCounter.timer > 1.0) {
@@ -127,8 +131,6 @@ void update_engine(struct Engine* engine)
 
 void logic(struct Engine* engine, double deltaTime)
 {
-    if (engine->keys[GLFW_KEY_ESCAPE].state == PRESSED)
-        glfwSetWindowShouldClose(engine->window.glfwWindow, true);
     //int i;
 
     /*VECTOR_ADD(entities, "Bonjour");
