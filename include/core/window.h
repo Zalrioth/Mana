@@ -5,11 +5,7 @@
 #ifndef WINDOW_H_
 #define WINDOW_H_
 
-#include "datastructures/vector.h"
-
 #include "core/common.h"
-
-#define FPS_COUNT 10
 
 #ifdef NDEBUG
 static const bool enableValidationLayers = false;
@@ -21,39 +17,22 @@ static const char* const validationLayers[] = { "VK_LAYER_LUNARG_standard_valida
 static const char* const deviceExtensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
 #define MAX_FRAMES_IN_FLIGHT 2
+#define MAX_SWAP_CHAIN_FRAMES MAX_FRAMES_IN_FLIGHT + 1
 
-static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-    VkDebugUtilsMessageTypeFlagsEXT messageType,
-    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-    void* pUserData)
-{
-
-    //std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
-    fprintf(stderr, "validation layer: %s\n", pCallbackData->pMessage);
-
-    return VK_FALSE;
-}
-
-static VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger)
-{
-    //VkResult (*func)(VkInstance, const VkDebugUtilsMessengerCreateInfoEXT*, const VkAllocationCallbacks*, VkDebugUtilsMessengerEXT*) = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
-    //void* func = vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
-    PFN_vkCreateDebugUtilsMessengerEXT func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
-    if (func != NULL) {
-        return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
-    } else {
-        return VK_ERROR_EXTENSION_NOT_PRESENT;
-    }
-}
-
-static void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator)
-{
-    PFN_vkDestroyDebugUtilsMessengerEXT func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
-    if (func != NULL) {
-        func(instance, debugMessenger, pAllocator);
-    }
-}
+#define CREATE_WINDOW_ERROR 1
+#define CREATE_INSTANCE_ERROR 2
+#define SETUP_DEBUG_MESSENGER_ERROR 3
+#define CREATE_SURFACE_ERROR 4
+#define PICK_PHYSICAL_DEVICE_ERROR 5
+#define CREATE_LOGICAL_DEVICE_ERROR 6
+#define CREATE_SWAP_CHAIN_ERROR 7
+#define CREATE_IMAGE_VIEWS_ERROR 8
+#define CREATE_RENDER_PASS_ERROR 9
+#define CREATE_GRAPHICS_PIPELINE_ERROR 10
+#define CREATE_FRAME_BUFFER_ERRORS 11
+#define CREATE_COMMAND_POOL_ERROR 12
+#define CREATE_COMMAND_BUFFER_ERROR 13
+#define CREATE_SYNC_OBJECT_ERROR 14
 
 struct QueueFamilyIndices {
     uint32_t graphicsFamily;
@@ -86,9 +65,9 @@ struct Window {
     VkRenderPass renderPass;
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
-    VkImage swapChainImages[3];
-    VkImageView swapChainImageViews[3];
-    VkFramebuffer swapChainFramebuffers[3];
+    VkImage swapChainImages[MAX_SWAP_CHAIN_FRAMES];
+    VkImageView swapChainImageViews[MAX_SWAP_CHAIN_FRAMES];
+    VkFramebuffer swapChainFramebuffers[MAX_SWAP_CHAIN_FRAMES];
     VkDebugUtilsMessengerEXT debugMessenger;
     VkCommandPool commandPool;
     VkCommandBuffer commandBuffers[SMALL_BUFFER];

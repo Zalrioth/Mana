@@ -82,7 +82,7 @@ int new_window(int width, int height)
         return 1;
     }
 
-    return 0;
+    return NO_ERROR;
 }
 
 void update()
@@ -101,7 +101,6 @@ bool should_close()
 void close_window()
 {
     delete_window(&engine.window);
-    //glfwTerminate();
 }
 
 void cleanup()

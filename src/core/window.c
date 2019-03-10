@@ -1,5 +1,11 @@
 #include "core/window.h"
 
+int createWindow(struct Window* window, int width, int height);
+int createInstance(struct Window* window);
+int setupDebugMessenger(struct Window* window);
+int createSurface(struct Window* window);
+int pickPhysicalDevice(struct Window* window);
+int createLogicalDevice(struct Window* window);
 int createSwapChain(struct Window* window);
 int createImageViews(struct Window* window);
 int createRenderPass(struct Window* window);
@@ -10,31 +16,149 @@ int createCommandBuffers(struct Window* window);
 int createSyncObjects(struct Window* window);
 bool isDeviceSuitable(struct Window* window, VkPhysicalDevice device);
 
+static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT messageType,
+    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+    void* pUserData)
+{
+
+    //std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+    fprintf(stderr, "validation layer: %s\n", pCallbackData->pMessage);
+
+    return VK_FALSE;
+}
+
+static VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger)
+{
+    //VkResult (*func)(VkInstance, const VkDebugUtilsMessengerCreateInfoEXT*, const VkAllocationCallbacks*, VkDebugUtilsMessengerEXT*) = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+    //void* func = vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+    PFN_vkCreateDebugUtilsMessengerEXT func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+    if (func != NULL) {
+        return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+    } else {
+        return VK_ERROR_EXTENSION_NOT_PRESENT;
+    }
+}
+
+static void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator)
+{
+    PFN_vkDestroyDebugUtilsMessengerEXT func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+    if (func != NULL) {
+        func(instance, debugMessenger, pAllocator);
+    }
+}
+
 int init_window(struct Window* window, int width, int height)
+{
+    int errorCode;
+
+    if ((errorCode = createWindow(window, width, height)) == ERROR)
+        goto cleanup;
+
+    if ((errorCode = createInstance(window)) == ERROR)
+        goto cleanup;
+
+    if ((errorCode = setupDebugMessenger(window)) == ERROR)
+        goto cleanup;
+
+    if ((errorCode = createSurface(window)) == ERROR)
+        goto cleanup;
+
+    if ((errorCode = pickPhysicalDevice(window)) == ERROR)
+        goto cleanup;
+
+    if ((errorCode = createLogicalDevice(window)) == ERROR)
+        goto cleanup;
+
+    if ((errorCode = createSwapChain(window)) == ERROR)
+        goto cleanup;
+
+    if ((errorCode = createImageViews(window)) == ERROR)
+        goto cleanup;
+
+    if ((errorCode = createRenderPass(window)) == ERROR)
+        goto cleanup;
+
+    if ((errorCode = createGraphicsPipeline(window)) == ERROR)
+        goto cleanup;
+
+    if ((errorCode = createFramebuffers(window)) == ERROR)
+        goto cleanup;
+
+    if ((errorCode = createCommandPool(window)) == ERROR)
+        goto cleanup;
+
+    if ((errorCode = createCommandBuffers(window)) == ERROR)
+        goto cleanup;
+
+    if ((errorCode = createSyncObjects(window)) == ERROR)
+        goto cleanup;
+
+    return NO_ERROR;
+
+cleanup:
+    delete_window(window);
+    return errorCode;
+}
+
+void delete_window(struct Window* window)
+{
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        vkDestroySemaphore(window->device, window->renderFinishedSemaphores[i], NULL);
+        vkDestroySemaphore(window->device, window->imageAvailableSemaphores[i], NULL);
+        vkDestroyFence(window->device, window->inFlightFences[i], NULL);
+    }
+
+    vkDestroyCommandPool(window->device, window->commandPool, NULL);
+
+    for (int loopNum = 0; loopNum < MAX_SWAP_CHAIN_FRAMES; loopNum++)
+        vkDestroyFramebuffer(window->device, window->swapChainFramebuffers[loopNum], NULL);
+
+    vkDestroyPipeline(window->device, window->graphicsPipeline, NULL);
+    vkDestroyPipelineLayout(window->device, window->pipelineLayout, NULL);
+    vkDestroyRenderPass(window->device, window->renderPass, NULL);
+
+    for (int loopNum = 0; loopNum < MAX_SWAP_CHAIN_FRAMES; loopNum++)
+        vkDestroyImageView(window->device, window->swapChainImageViews[loopNum], NULL);
+
+    vkDestroySwapchainKHR(window->device, window->swapChain, NULL);
+    vkDestroyDevice(window->device, NULL);
+
+    if (enableValidationLayers)
+        DestroyDebugUtilsMessengerEXT(window->instance, window->debugMessenger, NULL);
+
+    vkDestroySurfaceKHR(window->instance, window->surface, NULL);
+    vkDestroyInstance(window->instance, NULL);
+
+    glfwDestroyWindow(window->glfwWindow);
+    glfwTerminate();
+}
+
+int createWindow(struct Window* window, int width, int height)
 {
     memset(window, 0, sizeof(struct Window));
 
-    int errorCode = 0;
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
     window->glfwWindow = glfwCreateWindow(width, height, "Grindstone", NULL, NULL);
     window->width = width;
     window->height = height;
-
-    if (!window->glfwWindow)
-        return 1;
+    window->physicalDevice = VK_NULL_HANDLE;
+    window->currentFrame = 0;
 
     glfwSwapInterval(1);
     glfwMakeContextCurrent(window->glfwWindow);
 
-    window->physicalDevice = VK_NULL_HANDLE;
-    window->currentFrame = 0;
+    if (!window->glfwWindow)
+        return CREATE_WINDOW_ERROR;
 
-    if (enableValidationLayers && !checkValidationLayerSupport())
-        return 8; // TODO: Update return
-    //throw std::runtime_error("validation layers requested, but not available!");
+    return NO_ERROR;
+}
 
+int createInstance(struct Window* window)
+{
     struct VkApplicationInfo appInfo = { 0 };
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pApplicationName = "Grindstone";
@@ -46,6 +170,18 @@ int init_window(struct Window* window, int width, int height)
     struct VkInstanceCreateInfo createInfo = { 0 };
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pApplicationInfo = &appInfo;
+
+    /*uint32_t extensionCount = 0;
+    vkEnumerateInstanceExtensionProperties(NULL, &extensionCount, NULL);
+
+    struct VkExtensionProperties extensions[(int)extensionCount];
+    memset(extensions, 0, sizeof(extensions));
+
+    vkEnumerateInstanceExtensionProperties(NULL, &extensionCount, extensions);
+
+    printf("Available extensions: ");
+    for (int loopNum = 0; loopNum < extensionCount; loopNum++)
+        printf("\t %s\n", extensions[loopNum].extensionName);*/
 
     uint32_t glfwExtensionCount = 0;
     const char** glfwExtensions;
@@ -75,7 +211,15 @@ int init_window(struct Window* window, int width, int height)
     }
 
     if (vkCreateInstance(&createInfo, NULL, &window->instance) != VK_SUCCESS)
-        return 2;
+        return CREATE_INSTANCE_ERROR;
+
+    return NO_ERROR;
+}
+int setupDebugMessenger(struct Window* window)
+{
+    if (enableValidationLayers && !checkValidationLayerSupport())
+        return 8; // TODO: Update return
+    //throw std::runtime_error("validation layers requested, but not available!");
 
     if (enableValidationLayers) {
         VkDebugUtilsMessengerCreateInfoEXT debugInfo = { 0 };
@@ -85,28 +229,23 @@ int init_window(struct Window* window, int width, int height)
         debugInfo.pfnUserCallback = debugCallback;
 
         if (CreateDebugUtilsMessengerEXT(window->instance, &debugInfo, NULL, &window->debugMessenger) != VK_SUCCESS) {
-            return 9;
+            return SETUP_DEBUG_MESSENGER_ERROR;
             //throw std::runtime_error("failed to set up debug messenger!");
             //TODO: Add return
         }
     }
 
-    uint32_t extensionCount = 0;
-    vkEnumerateInstanceExtensionProperties(NULL, &extensionCount, NULL);
-
-    struct VkExtensionProperties extensions[(int)extensionCount];
-    memset(extensions, 0, sizeof(extensions));
-
-    vkEnumerateInstanceExtensionProperties(NULL, &extensionCount, extensions);
-
-    printf("Available extensions: ");
-    for (int loopNum = 0; loopNum < extensionCount; loopNum++)
-        printf("\t %s\n", extensions[loopNum].extensionName);
-
+    return NO_ERROR;
+}
+int createSurface(struct Window* window)
+{
     if (glfwCreateWindowSurface(window->instance, window->glfwWindow, NULL, &window->surface) != VK_SUCCESS)
-        return 3;
+        return CREATE_SURFACE_ERROR;
 
-    // Pick Device
+    return NO_ERROR;
+}
+int pickPhysicalDevice(struct Window* window)
+{
     uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(window->instance, &deviceCount, NULL);
 
@@ -126,8 +265,12 @@ int init_window(struct Window* window, int width, int height)
     }
 
     if (window->physicalDevice == VK_NULL_HANDLE)
-        return 5;
+        return PICK_PHYSICAL_DEVICE_ERROR;
 
+    return NO_ERROR;
+}
+int createLogicalDevice(struct Window* window)
+{
     // Create device
     int queueCreateInfosSize = 2;
     VkDeviceQueueCreateInfo queueCreateInfos[(int)queueCreateInfosSize];
@@ -170,84 +313,12 @@ int init_window(struct Window* window, int width, int height)
     }
 
     if (vkCreateDevice(window->physicalDevice, &deviceInfo, NULL, &window->device) != VK_SUCCESS)
-        return 6;
+        return CREATE_LOGICAL_DEVICE_ERROR;
 
     vkGetDeviceQueue(window->device, window->indices.graphicsFamily, 0, &window->graphicsQueue);
     vkGetDeviceQueue(window->device, window->indices.presentFamily, 0, &window->presentQueue);
-    //glfwSetWindowPos(&window->instance, 0, 0);
 
-    int swapChainError = createSwapChain(window);
-    if (swapChainError != 0)
-        return swapChainError;
-
-    int createImageViewsError = createImageViews(window);
-    if (createImageViewsError != 0)
-        return createImageViewsError;
-
-    int createRenderPassError = createRenderPass(window);
-    if (createRenderPassError != 0)
-        return createRenderPassError;
-
-    int createGraphicsPipelineError = createGraphicsPipeline(window);
-    if (createGraphicsPipelineError != 0)
-        return createGraphicsPipelineError;
-
-    int createFramebuffersError = createFramebuffers(window);
-    if (createFramebuffersError != 0)
-        return createFramebuffersError;
-
-    if ((errorCode = createCommandPool(window)) == ERROR)
-        goto cleanup;
-
-    if ((errorCode = createCommandBuffers(window)) == ERROR)
-        goto cleanup;
-
-    if ((errorCode = createSyncObjects(window) == ERROR))
-        goto cleanup;
-
-    return errorCode;
-
-cleanup:
-    delete_window(window);
-    return errorCode;
-}
-
-void delete_window(struct Window* window)
-{
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        vkDestroySemaphore(window->device, window->renderFinishedSemaphores[i], NULL);
-        vkDestroySemaphore(window->device, window->imageAvailableSemaphores[i], NULL);
-        vkDestroyFence(window->device, window->inFlightFences[i], NULL);
-    }
-
-    vkDestroyCommandPool(window->device, window->commandPool, NULL);
-
-    //for (auto framebuffer : swapChainFramebuffers)
-    for (int loopNum = 0; loopNum < 3; loopNum++)
-        vkDestroyFramebuffer(window->device, window->swapChainFramebuffers[loopNum], NULL);
-
-    vkDestroyPipeline(window->device, window->graphicsPipeline, NULL);
-    vkDestroyPipelineLayout(window->device, window->pipelineLayout, NULL);
-    vkDestroyRenderPass(window->device, window->renderPass, NULL);
-
-    //for (auto imageView : swapChainImageViews)
-    for (int loopNum = 0; loopNum < 3; loopNum++)
-        vkDestroyImageView(window->device, window->swapChainImageViews[loopNum], NULL);
-
-    vkDestroySwapchainKHR(window->device, window->swapChain, NULL);
-    vkDestroyDevice(window->device, NULL);
-
-    if (enableValidationLayers)
-        DestroyDebugUtilsMessengerEXT(window->instance, window->debugMessenger, NULL);
-
-    vkDestroySurfaceKHR(window->instance, window->surface, NULL);
-    vkDestroyInstance(window->instance, NULL);
-
-    glfwDestroyWindow(window->glfwWindow);
-
-    glfwTerminate();
-
-    //free(window);
+    return NO_ERROR;
 }
 
 int createSwapChain(struct Window* window)
@@ -363,7 +434,7 @@ int createSwapChain(struct Window* window)
 
     //window->swapChain = { 0 };
     if (vkCreateSwapchainKHR(window->device, &swapchainInfo, NULL, &window->swapChain) != VK_SUCCESS)
-        return 7;
+        return CREATE_SWAP_CHAIN_ERROR;
 
     vkGetSwapchainImagesKHR(window->device, window->swapChain, &imageCount, NULL);
     //window->swapChainImages.resize(imageCount);
@@ -372,15 +443,15 @@ int createSwapChain(struct Window* window)
     window->swapChainImageFormat = surfaceFormat.format;
     window->swapChainExtent = extent;
 
-    return 0;
+    return NO_ERROR;
 }
 
 int createImageViews(struct Window* window)
 {
     //swapChainImageViews.resize(swapChainImages.size());
 
-    for (size_t i = 0; i < 3; i++) {
-        VkImageViewCreateInfo createInfo = {};
+    for (size_t i = 0; i < MAX_SWAP_CHAIN_FRAMES; i++) {
+        VkImageViewCreateInfo createInfo = { 0 };
         createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         createInfo.image = window->swapChainImages[i];
         createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
@@ -396,11 +467,11 @@ int createImageViews(struct Window* window)
         createInfo.subresourceRange.layerCount = 1;
 
         if (vkCreateImageView(window->device, &createInfo, NULL, &window->swapChainImageViews[i]) != VK_SUCCESS)
-            return 8;
+            return CREATE_IMAGE_VIEWS_ERROR;
         //throw std::runtime_error("failed to create image views!");
     }
 
-    return 0;
+    return NO_ERROR;
 }
 
 int createRenderPass(struct Window* window)
@@ -442,10 +513,10 @@ int createRenderPass(struct Window* window)
     renderPassInfo.pDependencies = &dependency;
 
     if (vkCreateRenderPass(window->device, &renderPassInfo, NULL, &window->renderPass) != VK_SUCCESS)
-        return 10;
+        return CREATE_RENDER_PASS_ERROR;
     //throw std::runtime_error("failed to create render pass!");
 
-    return 0;
+    return NO_ERROR;
 }
 
 VkShaderModule createShaderModule(struct Window* window, const char* code, int length)
@@ -605,7 +676,7 @@ int createGraphicsPipeline(struct Window* window)
     pipelineLayoutInfo.pushConstantRangeCount = 0;
 
     if (vkCreatePipelineLayout(window->device, &pipelineLayoutInfo, NULL, &window->pipelineLayout) != VK_SUCCESS)
-        return 11;
+        return CREATE_GRAPHICS_PIPELINE_ERROR;
     //throw std::runtime_error("failed to create pipeline layout!");
 
     VkGraphicsPipelineCreateInfo pipelineInfo = { 0 };
@@ -624,13 +695,13 @@ int createGraphicsPipeline(struct Window* window)
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
     if (vkCreateGraphicsPipelines(window->device, VK_NULL_HANDLE, 1, &pipelineInfo, NULL, &window->graphicsPipeline) != VK_SUCCESS)
-        return 11;
+        return CREATE_GRAPHICS_PIPELINE_ERROR;
     //throw std::runtime_error("failed to create graphics pipeline!");
 
     vkDestroyShaderModule(window->device, fragShaderModule, NULL);
     vkDestroyShaderModule(window->device, vertShaderModule, NULL);
 
-    return 0;
+    return NO_ERROR;
 }
 
 int createFramebuffers(struct Window* window)
@@ -638,7 +709,7 @@ int createFramebuffers(struct Window* window)
     //swapChainFramebuffers.resize(swapChainImageViews.size());
 
     //for (size_t i = 0; i < swapChainImageViews.size(); i++) {
-    for (int loopNum = 0; loopNum < 3; loopNum++) {
+    for (int loopNum = 0; loopNum < MAX_SWAP_CHAIN_FRAMES; loopNum++) {
         VkImageView attachments[] = {
             window->swapChainImageViews[loopNum]
         };
@@ -653,11 +724,11 @@ int createFramebuffers(struct Window* window)
         framebufferInfo.layers = 1;
 
         if (vkCreateFramebuffer(window->device, &framebufferInfo, NULL, &window->swapChainFramebuffers[loopNum]) != VK_SUCCESS)
-            return 12;
+            return CREATE_FRAME_BUFFER_ERRORS;
         //throw std::runtime_error("failed to create framebuffer!");
     }
 
-    return 0;
+    return NO_ERROR;
 }
 
 int createCommandPool(struct Window* window)
@@ -667,10 +738,10 @@ int createCommandPool(struct Window* window)
     poolInfo.queueFamilyIndex = window->indices.graphicsFamily;
 
     if (vkCreateCommandPool(window->device, &poolInfo, NULL, &window->commandPool) != VK_SUCCESS)
-        return 13;
+        return CREATE_COMMAND_POOL_ERROR;
     //throw std::runtime_error("failed to create command pool!");
 
-    return 0;
+    return NO_ERROR;
 }
 
 int createCommandBuffers(struct Window* window)
@@ -681,20 +752,20 @@ int createCommandBuffers(struct Window* window)
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.commandPool = window->commandPool;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandBufferCount = (uint32_t)3; //commandBuffers.size();
+    allocInfo.commandBufferCount = (uint32_t)MAX_SWAP_CHAIN_FRAMES; //commandBuffers.size();
 
     if (vkAllocateCommandBuffers(window->device, &allocInfo, window->commandBuffers) != VK_SUCCESS)
-        return 14;
+        return CREATE_COMMAND_BUFFER_ERROR;
     //throw std::runtime_error("failed to allocate command buffers!");
 
     //for (size_t i = 0; i < commandBuffers.size(); i++) {
-    for (size_t i = 0; i < 3; i++) {
+    for (size_t i = 0; i < MAX_SWAP_CHAIN_FRAMES; i++) {
         VkCommandBufferBeginInfo beginInfo = { 0 };
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
         if (vkBeginCommandBuffer(window->commandBuffers[i], &beginInfo) != VK_SUCCESS)
-            return 14;
+            return CREATE_COMMAND_BUFFER_ERROR;
         //throw std::runtime_error("failed to begin recording command buffer!");
 
         VkRenderPassBeginInfo renderPassInfo = { 0 };
@@ -705,7 +776,7 @@ int createCommandBuffers(struct Window* window)
         renderPassInfo.renderArea.offset.y = 0;
         renderPassInfo.renderArea.extent = window->swapChainExtent;
 
-        VkClearValue clearColor = { { 0.0f, 0.0f, 0.0f, 1.0f } };
+        VkClearValue clearColor = { { { 0.0f, 0.0f, 0.0f, 1.0f } } };
         renderPassInfo.clearValueCount = 1;
         renderPassInfo.pClearValues = &clearColor;
 
@@ -713,16 +784,16 @@ int createCommandBuffers(struct Window* window)
 
         vkCmdBindPipeline(window->commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, window->graphicsPipeline);
 
-        vkCmdDraw(window->commandBuffers[i], 3, 1, 0, 0);
+        vkCmdDraw(window->commandBuffers[i], MAX_SWAP_CHAIN_FRAMES, 1, 0, 0);
 
         vkCmdEndRenderPass(window->commandBuffers[i]);
 
         if (vkEndCommandBuffer(window->commandBuffers[i]) != VK_SUCCESS)
-            return 14;
+            return CREATE_COMMAND_BUFFER_ERROR;
         //throw std::runtime_error("failed to record command buffer!");
     }
 
-    return 0;
+    return NO_ERROR;
 }
 
 int createSyncObjects(struct Window* window)
@@ -741,11 +812,11 @@ int createSyncObjects(struct Window* window)
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         if (vkCreateSemaphore(window->device, &semaphoreInfo, NULL, &window->imageAvailableSemaphores[i]) != VK_SUCCESS || vkCreateSemaphore(window->device, &semaphoreInfo, NULL, &window->renderFinishedSemaphores[i]) != VK_SUCCESS || vkCreateFence(window->device, &fenceInfo, NULL, &window->inFlightFences[i]) != VK_SUCCESS)
-            return 15;
+            return CREATE_SYNC_OBJECT_ERROR;
         //throw std::runtime_error("failed to create synchronization objects for a frame!");
     }
 
-    return 0;
+    return NO_ERROR;
 }
 
 bool isDeviceSuitable(struct Window* window, VkPhysicalDevice device)

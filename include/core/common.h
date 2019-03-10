@@ -1,6 +1,6 @@
+#define _CRT_SECURE_NO_DEPRECATE
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-
 #include <omp.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -19,6 +19,8 @@
 #include "datastructures/vector.h"
 
 #define ERROR !0
+#define NO_ERROR 0
+
 #define SMALL_BUFFER 128
 #define LARGE_BUFFER 8192
 #define HUGE_BUFFER 32768
