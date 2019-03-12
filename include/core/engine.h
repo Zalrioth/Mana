@@ -5,6 +5,9 @@
 #include "core/common.h"
 #include "core/window.h"
 
+#define GLFW_ERROR 1
+#define VULKAN_SUPPORT_ERROR 2
+
 #define FPS_COUNT 10
 
 #define KEY_LIMIT 512

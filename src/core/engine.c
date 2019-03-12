@@ -3,10 +3,10 @@
 int init_engine(struct Engine* engine)
 {
     if (!glfwInit())
-        return 1;
+        return GLFW_ERROR;
 
     if (!glfwVulkanSupported())
-        return 2;
+        return VULKAN_SUPPORT_ERROR;
 
     memset(engine->keys, RELEASED, sizeof(engine->keys));
 

@@ -18,7 +18,6 @@
 
 #include "datastructures/vector.h"
 
-#define ERROR !0
 #define NO_ERROR 0
 
 #define SMALL_BUFFER 128

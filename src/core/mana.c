@@ -13,12 +13,12 @@ int init()
     switch (engineError) {
     default:
         break;
-    case (1):
+    case (GLFW_ERROR):
         printf("Error initializing GLFW!\n");
-        return 1;
-    case (2):
+        return ENGINE_ERROR;
+    case (VULKAN_SUPPORT_ERROR):
         printf("Vulkan support not found!\n");
-        return 1;
+        return ENGINE_ERROR;
     }
 
     //printf("Num of CPU: %d\n", omp_get_num_procs());
@@ -59,27 +59,48 @@ int new_window(int width, int height)
     switch (init_window(&engine.window, width, height)) {
     default:
         break;
-    case (1):
+    case (CREATE_WINDOW_ERROR):
         printf("Error creating GLFW window!\n");
-        return 1;
-    case (2):
+        return WINDOW_ERROR;
+    case (CREATE_INSTANCE_ERROR):
         printf("Failed to create Vulkan instance!\n");
-        return 1;
-    case (3):
+        return WINDOW_ERROR;
+    case (SETUP_DEBUG_MESSENGER_ERROR):
+        printf("Failed to set up debug messengerS!\n");
+        return WINDOW_ERROR;
+    case (CREATE_SURFACE_ERROR):
         printf("Failed to create window surface!\n");
-        return 1;
-    case (4):
-        printf("Failed to find GPUs with Vulkan support!\n");
-        return 1;
-    case (5):
+        return WINDOW_ERROR;
+    case (PICK_PHYSICAL_DEVICE_ERROR):
         printf("Failed to find a suitable GPU!\n");
-        return 1;
-    case (6):
+        return WINDOW_ERROR;
+    case (CREATE_LOGICAL_DEVICE_ERROR):
         printf("Failed to create logical device!\n");
-        return 1;
-    case (7):
+        return WINDOW_ERROR;
+    case (CREATE_SWAP_CHAIN_ERROR):
         printf("Failed to create swap chain!\n");
-        return 1;
+        return WINDOW_ERROR;
+    case (CREATE_IMAGE_VIEWS_ERROR):
+        printf("Failed to create image views!\n");
+        return WINDOW_ERROR;
+    case (CREATE_RENDER_PASS_ERROR):
+        printf("Failed to create render pass!\n");
+        return WINDOW_ERROR;
+    case (CREATE_GRAPHICS_PIPELINE_ERROR):
+        printf("Failed to create pipeline layout!\n");
+        return WINDOW_ERROR;
+    case (CREATE_FRAME_BUFFER_ERROR):
+        printf("Failed to create framebuffer!\n");
+        return WINDOW_ERROR;
+    case (CREATE_COMMAND_POOL_ERROR):
+        printf("Failed to create command pool!\n");
+        return WINDOW_ERROR;
+    case (CREATE_COMMAND_BUFFER_ERROR):
+        printf("Failed to begin recording command buffer!\n");
+        return WINDOW_ERROR;
+    case (CREATE_SYNC_OBJECT_ERROR):
+        printf("Failed to create synchronization objects for a frame!\n");
+        return WINDOW_ERROR;
     }
 
     return NO_ERROR;

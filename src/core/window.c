@@ -25,7 +25,6 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     void* pUserData)
 {
 
-    //std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
     fprintf(stderr, "validation layer: %s\n", pCallbackData->pMessage);
 
     return VK_FALSE;
@@ -33,8 +32,6 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 
 static VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger)
 {
-    //VkResult (*func)(VkInstance, const VkDebugUtilsMessengerCreateInfoEXT*, const VkAllocationCallbacks*, VkDebugUtilsMessengerEXT*) = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
-    //void* func = vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
     PFN_vkCreateDebugUtilsMessengerEXT func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
     if (func != NULL) {
         return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
@@ -55,46 +52,46 @@ int init_window(struct Window* window, int width, int height)
 {
     int errorCode;
 
-    if ((errorCode = createWindow(window, width, height)) == ERROR)
+    if ((errorCode = createWindow(window, width, height)) != NO_ERROR)
         goto cleanup;
 
-    if ((errorCode = createInstance(window)) == ERROR)
+    if ((errorCode = createInstance(window)) != NO_ERROR)
         goto cleanup;
 
-    if ((errorCode = setupDebugMessenger(window)) == ERROR)
+    if ((errorCode = setupDebugMessenger(window)) != NO_ERROR)
         goto cleanup;
 
-    if ((errorCode = createSurface(window)) == ERROR)
+    if ((errorCode = createSurface(window)) != NO_ERROR)
         goto cleanup;
 
-    if ((errorCode = pickPhysicalDevice(window)) == ERROR)
+    if ((errorCode = pickPhysicalDevice(window)) != NO_ERROR)
         goto cleanup;
 
-    if ((errorCode = createLogicalDevice(window)) == ERROR)
+    if ((errorCode = createLogicalDevice(window)) != NO_ERROR)
         goto cleanup;
 
-    if ((errorCode = createSwapChain(window)) == ERROR)
+    if ((errorCode = createSwapChain(window)) != NO_ERROR)
         goto cleanup;
 
-    if ((errorCode = createImageViews(window)) == ERROR)
+    if ((errorCode = createImageViews(window)) != NO_ERROR)
         goto cleanup;
 
-    if ((errorCode = createRenderPass(window)) == ERROR)
+    if ((errorCode = createRenderPass(window)) != NO_ERROR)
         goto cleanup;
 
-    if ((errorCode = createGraphicsPipeline(window)) == ERROR)
+    if ((errorCode = createGraphicsPipeline(window)) != NO_ERROR)
         goto cleanup;
 
-    if ((errorCode = createFramebuffers(window)) == ERROR)
+    if ((errorCode = createFramebuffers(window)) != NO_ERROR)
         goto cleanup;
 
-    if ((errorCode = createCommandPool(window)) == ERROR)
+    if ((errorCode = createCommandPool(window)) != NO_ERROR)
         goto cleanup;
 
-    if ((errorCode = createCommandBuffers(window)) == ERROR)
+    if ((errorCode = createCommandBuffers(window)) != NO_ERROR)
         goto cleanup;
 
-    if ((errorCode = createSyncObjects(window)) == ERROR)
+    if ((errorCode = createSyncObjects(window)) != NO_ERROR)
         goto cleanup;
 
     return NO_ERROR;
@@ -201,11 +198,10 @@ int createInstance(struct Window* window)
     if (enableValidationLayers) {
         convertedExtensions[glfwExtensionCount] = VK_EXT_DEBUG_UTILS_EXTENSION_NAME; //"VK_EXT_DEBUG_UTILS_EXTENSION_NAME\0";
         glfwExtensionCount++;
-        //extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
     }
 
     createInfo.enabledExtensionCount = glfwExtensionCount;
-    createInfo.ppEnabledExtensionNames = convertedExtensions; //glfwExtensions;
+    createInfo.ppEnabledExtensionNames = convertedExtensions;
 
     if (enableValidationLayers) {
         createInfo.enabledLayerCount = (uint32_t)1;
@@ -222,8 +218,7 @@ int createInstance(struct Window* window)
 int setupDebugMessenger(struct Window* window)
 {
     if (enableValidationLayers && !checkValidationLayerSupport())
-        return 8; // TODO: Update return
-    //throw std::runtime_error("validation layers requested, but not available!");
+        return SETUP_DEBUG_MESSENGER_ERROR;
 
     if (enableValidationLayers) {
         VkDebugUtilsMessengerCreateInfoEXT debugInfo = { 0 };
@@ -232,11 +227,8 @@ int setupDebugMessenger(struct Window* window)
         debugInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
         debugInfo.pfnUserCallback = debugCallback;
 
-        if (CreateDebugUtilsMessengerEXT(window->instance, &debugInfo, NULL, &window->debugMessenger) != VK_SUCCESS) {
+        if (CreateDebugUtilsMessengerEXT(window->instance, &debugInfo, NULL, &window->debugMessenger) != VK_SUCCESS)
             return SETUP_DEBUG_MESSENGER_ERROR;
-            //throw std::runtime_error("failed to set up debug messenger!");
-            //TODO: Add return
-        }
     }
 
     return NO_ERROR;
@@ -280,9 +272,6 @@ int createLogicalDevice(struct Window* window)
     VkDeviceQueueCreateInfo queueCreateInfos[(int)queueCreateInfosSize];
     memset(queueCreateInfos, 0, sizeof(queueCreateInfos));
 
-    //std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    //std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
-    //
     float queuePriority = 1.0f;
 
     queueCreateInfos[0].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -307,7 +296,6 @@ int createLogicalDevice(struct Window* window)
 
     deviceInfo.enabledExtensionCount = (int32_t)1;
     deviceInfo.ppEnabledExtensionNames = deviceExtensions;
-    //createInfo2.enabledExtensionCount = 0;
 
     if (enableValidationLayers) {
         deviceInfo.enabledLayerCount = (uint32_t)1;
@@ -328,37 +316,27 @@ int createLogicalDevice(struct Window* window)
 int createSwapChain(struct Window* window)
 {
     struct SwapChainSupportDetails swapChainSupport = { { 0 } };
-    //memset(extensions, 0, sizeof(extensions));
 
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(window->physicalDevice, window->surface, &swapChainSupport.capabilities);
 
     uint32_t formatCount;
     vkGetPhysicalDeviceSurfaceFormatsKHR(window->physicalDevice, window->surface, &formatCount, NULL);
 
-    if (formatCount != 0) {
-        //swapChainSupport.formats.resize(formatCount);
+    if (formatCount != 0)
         vkGetPhysicalDeviceSurfaceFormatsKHR(window->physicalDevice, window->surface, &formatCount, swapChainSupport.formats);
-    }
 
     uint32_t presentModeCount;
     vkGetPhysicalDeviceSurfacePresentModesKHR(window->physicalDevice, window->surface, &presentModeCount, NULL);
 
-    if (presentModeCount != 0) {
-        //swapChainSupport.presentModes.resize(presentModeCount);
+    if (presentModeCount != 0)
         vkGetPhysicalDeviceSurfacePresentModesKHR(window->physicalDevice, window->surface, &presentModeCount, swapChainSupport.presentModes);
-    }
-
-    // Start 1
 
     VkSurfaceFormatKHR surfaceFormat = { 0 };
-    //swapChainSupport.formats
 
-    //if (swapChainSupport.formats.availableFormats.size() == 1 && swapChainSupport.formats.availableFormats[0].format == VK_FORMAT_UNDEFINED) {
     if (formatCount == 1 && swapChainSupport.formats[0].format == VK_FORMAT_UNDEFINED) {
         surfaceFormat.format = VK_FORMAT_B8G8R8A8_UNORM;
         surfaceFormat.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
     } else {
-        //for (const auto& availableFormat : swapChainSupport.formats) {
         for (int loopNum = 0; loopNum < SMALL_BUFFER; loopNum++) {
             if (swapChainSupport.formats[loopNum].format == VK_FORMAT_B8G8R8A8_UNORM && swapChainSupport.formats[loopNum].colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
                 surfaceFormat = swapChainSupport.formats[loopNum];
@@ -368,17 +346,9 @@ int createSwapChain(struct Window* window)
         }
     }
 
-    // chooseSwapSurfaceFormat(swapChainSupport.formats);
-
-    // Start 2
-
     //https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/VkPresentModeKHR.html
     VkPresentModeKHR presentMode = { 0 };
-    //VkPresentModeKHR bestMode = VK_PRESENT_MODE_FIFO_KHR;
 
-    //swapChainSupport.presentModes
-
-    //for (const auto& availablePresentMode : availablePresentModes) {
     for (int loopNum = 0; loopNum < SMALL_BUFFER; loopNum++) {
         if (swapChainSupport.presentModes[loopNum] == VK_PRESENT_MODE_MAILBOX_KHR) {
             presentMode = swapChainSupport.presentModes[loopNum];
@@ -391,10 +361,6 @@ int createSwapChain(struct Window* window)
     // Force Vsync
     presentMode = VK_PRESENT_MODE_FIFO_KHR;
 
-    // chooseSwapPresentMode(swapChainSupport.presentModes);
-
-    // Start 3
-
     VkExtent2D extent = { window->width, window->height };
 
     if (swapChainSupport.capabilities.currentExtent.width != UINT32_MAX) {
@@ -404,12 +370,9 @@ int createSwapChain(struct Window* window)
         extent.height = MAX(swapChainSupport.capabilities.minImageExtent.height, MIN(swapChainSupport.capabilities.maxImageExtent.height, extent.height));
     }
 
-    //chooseSwapExtent(swapChainSupport.capabilities);
-
     uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
     if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount)
         imageCount = swapChainSupport.capabilities.maxImageCount;
-    // End of querySwapChainSupport
 
     VkSwapchainCreateInfoKHR swapchainInfo = { 0 };
     swapchainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -436,12 +399,10 @@ int createSwapChain(struct Window* window)
     swapchainInfo.presentMode = presentMode;
     swapchainInfo.clipped = VK_TRUE;
 
-    //window->swapChain = { 0 };
     if (vkCreateSwapchainKHR(window->device, &swapchainInfo, NULL, &window->swapChain) != VK_SUCCESS)
         return CREATE_SWAP_CHAIN_ERROR;
 
     vkGetSwapchainImagesKHR(window->device, window->swapChain, &imageCount, NULL);
-    //window->swapChainImages.resize(imageCount);
     vkGetSwapchainImagesKHR(window->device, window->swapChain, &imageCount, window->swapChainImages);
 
     window->swapChainImageFormat = surfaceFormat.format;
@@ -452,8 +413,6 @@ int createSwapChain(struct Window* window)
 
 int createImageViews(struct Window* window)
 {
-    //swapChainImageViews.resize(swapChainImages.size());
-
     for (size_t i = 0; i < MAX_SWAP_CHAIN_FRAMES; i++) {
         VkImageViewCreateInfo createInfo = { 0 };
         createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -472,7 +431,6 @@ int createImageViews(struct Window* window)
 
         if (vkCreateImageView(window->device, &createInfo, NULL, &window->swapChainImageViews[i]) != VK_SUCCESS)
             return CREATE_IMAGE_VIEWS_ERROR;
-        //throw std::runtime_error("failed to create image views!");
     }
 
     return NO_ERROR;
@@ -518,7 +476,6 @@ int createRenderPass(struct Window* window)
 
     if (vkCreateRenderPass(window->device, &renderPassInfo, NULL, &window->renderPass) != VK_SUCCESS)
         return CREATE_RENDER_PASS_ERROR;
-    //throw std::runtime_error("failed to create render pass!");
 
     return NO_ERROR;
 }
@@ -527,22 +484,19 @@ VkShaderModule createShaderModule(struct Window* window, const char* code, int l
 {
     VkShaderModuleCreateInfo createInfo = { 0 };
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-    createInfo.codeSize = length; //HUGE_BUFFER; //strlen(code);
+    createInfo.codeSize = length;
     createInfo.pCode = (const uint32_t*)(code);
 
     VkShaderModule shaderModule;
     if (vkCreateShaderModule(window->device, &createInfo, NULL, &shaderModule) != VK_SUCCESS)
         printf("failed to create shader module!\n");
     //return 1;
-    //throw std::runtime_error("failed to create shader module!");
 
     return shaderModule;
 }
 
 char* readShaderFile(const char* filename, int* fileLength)
 {
-    //FILE* ptr = fopen(filename, "r"); // r for read, b for binary
-    //fread(text, sizeof(LARGE_BUFFER), 1, ptr);
     FILE* fp = fopen(filename, "rb");
 
     fseek(fp, 0, SEEK_END);
@@ -567,7 +521,7 @@ char* readShaderFile(const char* filename, int* fileLength)
 
 int createGraphicsPipeline(struct Window* window)
 {
-// Get the current working directory:
+// Get the current working directory
 #if defined(IS_WINDOWS)
     char* buffer;
     buffer = _getcwd(NULL, 0);
@@ -579,20 +533,8 @@ int createGraphicsPipeline(struct Window* window)
     printf("Current working dir: %s\n", cwd);
 #endif
 
-    //char* vertShaderCode = readFile("./assets/shaders/basicVert.spv");
-    //char* fragShaderCode = readFile("./assets/shaders/basicFrag.spv");
-
-    //int vertShaderCode[HUGE_BUFFER];
-    //int fragShaderCode[HUGE_BUFFER];
-
     int vertexLength = 0;
     int fragmentLength = 0;
-
-    //memset(vertShaderCode, 0, sizeof(vertShaderCode));
-    //memset(fragShaderCode, 0, sizeof(fragShaderCode));
-
-    //char* vertShaderCode = NULL;
-    //char* fragShaderCode = NULL;
 
     char* vertShaderCode = readShaderFile("./assets/shaders/basicVert.spv", &vertexLength);
     char* fragShaderCode = readShaderFile("./assets/shaders/basicFrag.spv", &fragmentLength);
@@ -681,7 +623,6 @@ int createGraphicsPipeline(struct Window* window)
 
     if (vkCreatePipelineLayout(window->device, &pipelineLayoutInfo, NULL, &window->pipelineLayout) != VK_SUCCESS)
         return CREATE_GRAPHICS_PIPELINE_ERROR;
-    //throw std::runtime_error("failed to create pipeline layout!");
 
     VkGraphicsPipelineCreateInfo pipelineInfo = { 0 };
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -700,7 +641,6 @@ int createGraphicsPipeline(struct Window* window)
 
     if (vkCreateGraphicsPipelines(window->device, VK_NULL_HANDLE, 1, &pipelineInfo, NULL, &window->graphicsPipeline) != VK_SUCCESS)
         return CREATE_GRAPHICS_PIPELINE_ERROR;
-    //throw std::runtime_error("failed to create graphics pipeline!");
 
     vkDestroyShaderModule(window->device, fragShaderModule, NULL);
     vkDestroyShaderModule(window->device, vertShaderModule, NULL);
@@ -710,13 +650,8 @@ int createGraphicsPipeline(struct Window* window)
 
 int createFramebuffers(struct Window* window)
 {
-    //swapChainFramebuffers.resize(swapChainImageViews.size());
-
-    //for (size_t i = 0; i < swapChainImageViews.size(); i++) {
     for (int loopNum = 0; loopNum < MAX_SWAP_CHAIN_FRAMES; loopNum++) {
-        VkImageView attachments[] = {
-            window->swapChainImageViews[loopNum]
-        };
+        VkImageView attachments[] = { window->swapChainImageViews[loopNum] };
 
         VkFramebufferCreateInfo framebufferInfo = { 0 };
         framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -728,8 +663,7 @@ int createFramebuffers(struct Window* window)
         framebufferInfo.layers = 1;
 
         if (vkCreateFramebuffer(window->device, &framebufferInfo, NULL, &window->swapChainFramebuffers[loopNum]) != VK_SUCCESS)
-            return CREATE_FRAME_BUFFER_ERRORS;
-        //throw std::runtime_error("failed to create framebuffer!");
+            return CREATE_FRAME_BUFFER_ERROR;
     }
 
     return NO_ERROR;
@@ -743,26 +677,21 @@ int createCommandPool(struct Window* window)
 
     if (vkCreateCommandPool(window->device, &poolInfo, NULL, &window->commandPool) != VK_SUCCESS)
         return CREATE_COMMAND_POOL_ERROR;
-    //throw std::runtime_error("failed to create command pool!");
 
     return NO_ERROR;
 }
 
 int createCommandBuffers(struct Window* window)
 {
-    //commandBuffers.resize(swapChainFramebuffers.size());
-
     VkCommandBufferAllocateInfo allocInfo = { 0 };
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.commandPool = window->commandPool;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandBufferCount = (uint32_t)MAX_SWAP_CHAIN_FRAMES; //commandBuffers.size();
+    allocInfo.commandBufferCount = (uint32_t)MAX_SWAP_CHAIN_FRAMES;
 
     if (vkAllocateCommandBuffers(window->device, &allocInfo, window->commandBuffers) != VK_SUCCESS)
         return CREATE_COMMAND_BUFFER_ERROR;
-    //throw std::runtime_error("failed to allocate command buffers!");
 
-    //for (size_t i = 0; i < commandBuffers.size(); i++) {
     for (size_t i = 0; i < MAX_SWAP_CHAIN_FRAMES; i++) {
         VkCommandBufferBeginInfo beginInfo = { 0 };
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -770,7 +699,6 @@ int createCommandBuffers(struct Window* window)
 
         if (vkBeginCommandBuffer(window->commandBuffers[i], &beginInfo) != VK_SUCCESS)
             return CREATE_COMMAND_BUFFER_ERROR;
-        //throw std::runtime_error("failed to begin recording command buffer!");
 
         VkRenderPassBeginInfo renderPassInfo = { 0 };
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -785,16 +713,12 @@ int createCommandBuffers(struct Window* window)
         renderPassInfo.pClearValues = &clearColor;
 
         vkCmdBeginRenderPass(window->commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
         vkCmdBindPipeline(window->commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, window->graphicsPipeline);
-
         vkCmdDraw(window->commandBuffers[i], MAX_SWAP_CHAIN_FRAMES, 1, 0, 0);
-
         vkCmdEndRenderPass(window->commandBuffers[i]);
 
         if (vkEndCommandBuffer(window->commandBuffers[i]) != VK_SUCCESS)
             return CREATE_COMMAND_BUFFER_ERROR;
-        //throw std::runtime_error("failed to record command buffer!");
     }
 
     return NO_ERROR;
@@ -802,9 +726,6 @@ int createCommandBuffers(struct Window* window)
 
 int createSyncObjects(struct Window* window)
 {
-    //imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-    //renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-    //inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
     memset(window->inFlightFences, 0, sizeof(window->inFlightFences));
 
     VkSemaphoreCreateInfo semaphoreInfo = { 0 };
@@ -817,7 +738,6 @@ int createSyncObjects(struct Window* window)
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         if (vkCreateSemaphore(window->device, &semaphoreInfo, NULL, &window->imageAvailableSemaphores[i]) != VK_SUCCESS || vkCreateSemaphore(window->device, &semaphoreInfo, NULL, &window->renderFinishedSemaphores[i]) != VK_SUCCESS || vkCreateFence(window->device, &fenceInfo, NULL, &window->inFlightFences[i]) != VK_SUCCESS)
             return CREATE_SYNC_OBJECT_ERROR;
-        //throw std::runtime_error("failed to create synchronization objects for a frame!");
     }
 
     return NO_ERROR;
@@ -859,35 +779,7 @@ bool isDeviceSuitable(struct Window* window, VkPhysicalDevice device)
     if (!graphicsFamilyFound || !presentFamilyFound)
         return false;
 
-    //return graphicsFamilyFound && presentFamilyFound;
-
     return true;
-
-    /*bool extensionsSupported = checkDeviceExtensionSupport(device);
-
-    {
-        uint32_t extensionCount;
-        vkEnumerateDeviceExtensionProperties(device, NULL, &extensionCount, NULL);
-
-        VkExtensionProperties availableExtensions[extensionCount];
-        vkEnumerateDeviceExtensionProperties(device, NULL, &extensionCount, availableExtensions);
-
-        std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
-
-        for (const auto& extension : availableExtensions) {
-            requiredExtensions.erase(extension.extensionName);
-        }
-
-        return requiredExtensions.empty();
-    }
-
-    bool swapChainAdequate = false;
-    if (extensionsSupported) {
-        SwapChainSupportDetails swapChainSupport = querySwapChainSupport(device);
-        swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
-    }
-
-    return extensionsSupported && swapChainAdequate;*/
 }
 
 bool checkValidationLayerSupport()
@@ -900,7 +792,6 @@ bool checkValidationLayerSupport()
 
     bool layerFound = false;
 
-    //for (const auto& layerProperties : availableLayers) {
     for (int loopNum = 0; loopNum < layerCount; loopNum++) {
         if (strcmp(validationLayers[0], availableLayers[loopNum].layerName) == 0) {
             layerFound = true;
