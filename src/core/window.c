@@ -246,9 +246,9 @@ int pickPhysicalDevice(struct Window* window)
     vkEnumeratePhysicalDevices(window->instance, &deviceCount, NULL);
 
     if (deviceCount == 0)
-        return 4;
+        return PICK_PHYSICAL_DEVICE_ERROR;
 
-    VkPhysicalDevice devices[(int)deviceCount];
+    VkPhysicalDevice devices[deviceCount];
     memset(devices, 0, sizeof(devices));
 
     vkEnumeratePhysicalDevices(window->instance, &deviceCount, devices);
@@ -269,7 +269,7 @@ int createLogicalDevice(struct Window* window)
 {
     // Create device
     int queueCreateInfosSize = 2;
-    VkDeviceQueueCreateInfo queueCreateInfos[(int)queueCreateInfosSize];
+    VkDeviceQueueCreateInfo queueCreateInfos[queueCreateInfosSize];
     memset(queueCreateInfos, 0, sizeof(queueCreateInfos));
 
     float queuePriority = 1.0f;
@@ -452,7 +452,7 @@ int createRenderPass(struct Window* window)
     colorAttachmentRef.attachment = 0;
     colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-    VkSubpassDescription subpass = {};
+    VkSubpassDescription subpass = { 0 };
     subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
     subpass.colorAttachmentCount = 1;
     subpass.pColorAttachments = &colorAttachmentRef;
@@ -748,7 +748,7 @@ bool isDeviceSuitable(struct Window* window, VkPhysicalDevice device)
     uint32_t queueFamilyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, NULL);
 
-    struct VkQueueFamilyProperties queueFamilies[(int)queueFamilyCount];
+    struct VkQueueFamilyProperties queueFamilies[queueFamilyCount];
     memset(queueFamilies, 0, sizeof(queueFamilies));
 
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies);
@@ -787,7 +787,7 @@ bool checkValidationLayerSupport()
     uint32_t layerCount;
     vkEnumerateInstanceLayerProperties(&layerCount, NULL);
 
-    VkLayerProperties availableLayers[(int)layerCount];
+    VkLayerProperties availableLayers[layerCount];
     vkEnumerateInstanceLayerProperties(&layerCount, availableLayers);
 
     bool layerFound = false;
