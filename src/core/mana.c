@@ -7,6 +7,12 @@
 // C Error handeling
 //https://www.ibm.com/support/knowledgecenter/en/SSGMCP_5.2.0/com.ibm.cics.ts.applicationprogramming.doc/topics/dfhp3c00145.html
 
+void* readScript(void* vargp)
+{
+    printf("Printing GeeksQuiz from Thread \n");
+    return NULL;
+}
+
 int init()
 {
     int engineError = init_engine(&engine);
@@ -127,4 +133,12 @@ void close_window()
 void cleanup()
 {
     delete_engine(&engine);
+}
+
+void print_fps()
+{
+    printf("Target FPS: %lf\n", engine.fpsCounter.secondTargetFps);
+    printf("Average FPS: %lf\n", engine.fpsCounter.secondAverageFps);
+    printf("Draw FPS: %d\n", engine.fpsCounter.secondFrames);
+    printf("Update FPS: %d\n\n", engine.fpsCounter.secondUpdates);
 }

@@ -74,15 +74,14 @@ add_subdirectory(${includePath}assimp-4.1.0 buildassimp)
 string(REPLACE " -w" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 string(REPLACE " -w" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 
-target_link_libraries(Mana ${includePath}grindstone/build/buildmana/Manad.lib
-        ${includePath}cpython-3.7.2/PCbuild/amd64/python37_d.lib
-        ${includePath}VulkanSDK/1.1.101.0/Lib/vulkan-1.lib
+target_link_libraries(Mana ${includePath}VulkanSDK/1.1.101.0/Lib/vulkan-1.lib
         ${includePath}llvm/lib/libomp.lib
         glfw
         assimp)
 
 SET(includeList
         ${includePath}grindstone/Mana/include
+        ${includePath}cglm/include
         ${includePath}glfw-3.2.1/include
         ${includePath}VulkanSDK/1.1.101.0/Include
         ${includePath}assimp-4.1.0/include

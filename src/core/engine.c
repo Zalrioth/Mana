@@ -108,10 +108,10 @@ void update_engine(struct Engine* engine)
     if (get_time() - engine->fpsCounter.timer > 1.0) {
         engine->fpsCounter.timer++;
 
-        printf("Target FPS: %lf\n", engine->fpsCounter.targetFps);
-        printf("Average FPS: %lf\n", engine->fpsCounter.averageFps);
-        printf("Draw FPS: %d\n", engine->fpsCounter.frames);
-        printf("Update FPS: %d\n\n", engine->fpsCounter.updates);
+        engine->fpsCounter.secondTargetFps = engine->fpsCounter.targetFps;
+        engine->fpsCounter.secondAverageFps = engine->fpsCounter.averageFps;
+        engine->fpsCounter.secondFrames = engine->fpsCounter.frames;
+        engine->fpsCounter.secondUpdates = engine->fpsCounter.updates;
 
         engine->fpsCounter.fps = engine->fpsCounter.frames;
 

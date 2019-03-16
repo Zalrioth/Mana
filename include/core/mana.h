@@ -14,6 +14,7 @@ EXPORT void update();
 EXPORT bool should_close();
 EXPORT void close_window();
 EXPORT void cleanup();
+EXPORT void print_fps();
 
 struct Engine engine;
 

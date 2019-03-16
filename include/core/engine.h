@@ -24,17 +24,22 @@ struct FPSCounter {
     int fpsPast[FPS_COUNT];
     double limitUpdateFPS;
     // maybe cap fps at 144 for limit? 30, 60, 120, 144
-    double targetFps;
     double limitDrawFPS;
-    double averageFps;
     int input[128];
     double lastTime, timer;
     double deltaTime;
     int nowTime;
     int frames;
-    int updates;
     double lastRenderTime;
     int fps;
+    double targetFps;
+    double averageFps;
+    int updates;
+    // frame safe
+    double secondTargetFps;
+    double secondAverageFps;
+    int secondFrames;
+    int secondUpdates;
 };
 
 struct Engine {
