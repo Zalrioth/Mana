@@ -7,10 +7,12 @@ Note: You may need to change CMake include directory paths.
 
 ### Prerequisites
 
-* [Assimp](https://github.com/assimp/assimp/) - Model loading library
-* [Chaos](https://github.com/Zalrioth/Chaos/) - GPU physics library
-* [GLFW](https://github.com/glfw/glfw/) - Vulkan helper library
-* [Vulkan](https://www.lunarg.com/vulkan-sdk/) - Vulkan SDK, or you can use your own
+* [Assimp](https://github.com/assimp/assimp) - Model loading library
+* [Chaos](https://github.com/Zalrioth/Chaos) - GPU physics library
+* [GLFW](https://github.com/glfw/glfw/) - Vulkan utility library
+* [LLVM](http://releases.llvm.org/download.html) - Compiler that supports OpenMP 4
+* [Lua](https://github.com/lua/lua) - Embedded scripting language
+* [Vulkan](https://www.lunarg.com/vulkan-sdk/) - Vulkan SDK
 
 ### Setting Up a Project
 
@@ -25,9 +27,8 @@ mana = cdll.LoadLibrary("Mana.dll")
 def game():
     print("Loading Game")
 
-    # Mana engine critical stuff
     mana.init()
-    mana.new_window()
+    mana.new_window(1280, 720)
 
     while mana.should_close() is not True:
         mana.update()

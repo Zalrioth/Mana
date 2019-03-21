@@ -14,7 +14,9 @@ project(Mana VERSION 0.1.0)
 #https://stackoverflow.com/questions/41182827/disable-werror-for-one-of-cmakelists-txt
 #https://stackoverflow.com/questions/1452671/disable-all-gcc-warnings
 
+set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 14)
+
 set(CMAKE_DEBUG_POSTFIX "")
 
 if (WIN32)
@@ -74,13 +76,15 @@ add_subdirectory(${includePath}assimp-4.1.0 buildassimp)
 string(REPLACE " -w" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 string(REPLACE " -w" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 
-target_link_libraries(Mana ${includePath}VulkanSDK/1.1.101.0/Lib/vulkan-1.lib
+target_link_libraries(Mana
+        ${includePath}VulkanSDK/1.1.101.0/Lib/vulkan-1.lib
         ${includePath}llvm/lib/libomp.lib
         glfw
         assimp)
 
 SET(includeList
         ${includePath}grindstone/Mana/include
+        ${includePath}grindstone/Chaos/include
         ${includePath}cglm/include
         ${includePath}glfw-3.2.1/include
         ${includePath}VulkanSDK/1.1.101.0/Include

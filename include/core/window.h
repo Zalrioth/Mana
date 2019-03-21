@@ -63,6 +63,7 @@ struct Window {
     VkFormat swapChainImageFormat;
     VkExtent2D swapChainExtent;
     VkRenderPass renderPass;
+    VkDescriptorSetLayout descriptorSetLayout;
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
     VkImage swapChainImages[MAX_SWAP_CHAIN_FRAMES];
@@ -70,6 +71,11 @@ struct Window {
     VkFramebuffer swapChainFramebuffers[MAX_SWAP_CHAIN_FRAMES];
     VkDebugUtilsMessengerEXT debugMessenger;
     VkCommandPool commandPool;
+
+    VkImage depthImage;
+    VkDeviceMemory depthImageMemory;
+    VkImageView depthImageView;
+
     VkCommandBuffer commandBuffers[SMALL_BUFFER];
     VkSemaphore imageAvailableSemaphores[MAX_FRAMES_IN_FLIGHT];
     VkSemaphore renderFinishedSemaphores[MAX_FRAMES_IN_FLIGHT];

@@ -11,12 +11,29 @@ int createLogicalDevice(struct Window* window);
 int createSwapChain(struct Window* window);
 int createImageViews(struct Window* window);
 int createRenderPass(struct Window* window);
+int createDescriptorSetLayout(struct Window* window);
 int createGraphicsPipeline(struct Window* window);
 int createFramebuffers(struct Window* window);
+
+int createTextureImage(struct Window* window);
+int createTextureImageView(struct Window* window);
+int createTextureSampler(struct Window* window);
 int createCommandPool(struct Window* window);
+int createDepthResources(struct Window* window);
+int createVertexBuffer(struct Window* window);
+int createIndexBuffer(struct Window* window);
+int createUniformBuffers(struct Window* window);
+int createDescriptorPool(struct Window* window);
+int createDescriptorSets(struct Window* window);
+
 int createCommandBuffers(struct Window* window);
 int createSyncObjects(struct Window* window);
+
 bool isDeviceSuitable(struct Window* window, VkPhysicalDevice device);
+VkImageView createImageView(struct Window* window, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
+void createImage(struct Window* window, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage* image, VkDeviceMemory* imageMemory);
+void transitionImageLayout(struct Window* window, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+uint32_t findMemoryType(struct Window* window, uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -110,6 +127,8 @@ void delete_window(struct Window* window)
         vkDestroySemaphore(window->device, window->imageAvailableSemaphores[i], NULL);
         vkDestroyFence(window->device, window->inFlightFences[i], NULL);
     }
+
+    vkDestroyDescriptorSetLayout(window->device, window->descriptorSetLayout, NULL);
 
     vkDestroyCommandPool(window->device, window->commandPool, NULL);
 
@@ -480,6 +499,32 @@ int createRenderPass(struct Window* window)
     return NO_ERROR;
 }
 
+int createDescriptorSetLayout(struct Window* window)
+{
+    VkDescriptorSetLayoutBinding uboLayoutBinding = { 0 };
+    uboLayoutBinding.binding = 0;
+    uboLayoutBinding.descriptorCount = 1;
+    uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    uboLayoutBinding.pImmutableSamplers = NULL;
+    uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+    VkDescriptorSetLayoutBinding samplerLayoutBinding = { 0 };
+    samplerLayoutBinding.binding = 1;
+    samplerLayoutBinding.descriptorCount = 1;
+    samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    samplerLayoutBinding.pImmutableSamplers = NULL;
+    samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    VkDescriptorSetLayoutBinding bindings[2] = { uboLayoutBinding, samplerLayoutBinding };
+    VkDescriptorSetLayoutCreateInfo layoutInfo = { 0 };
+    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layoutInfo.bindingCount = 2;
+    layoutInfo.pBindings = bindings;
+
+    if (vkCreateDescriptorSetLayout(window->device, &layoutInfo, NULL, &window->descriptorSetLayout) != VK_SUCCESS)
+        printf("failed to create descriptor set layout!");
+}
+
 VkShaderModule createShaderModule(struct Window* window, const char* code, int length)
 {
     VkShaderModuleCreateInfo createInfo = { 0 };
@@ -535,6 +580,9 @@ int createGraphicsPipeline(struct Window* window)
 
     int vertexLength = 0;
     int fragmentLength = 0;
+
+    //char* vertShaderCode = readShaderFile("./assets/shaders/vert.spv", &vertexLength);
+    //char* fragShaderCode = readShaderFile("./assets/shaders/frag.spv", &fragmentLength);
 
     char* vertShaderCode = readShaderFile("./assets/shaders/basicVert.spv", &vertexLength);
     char* fragShaderCode = readShaderFile("./assets/shaders/basicFrag.spv", &fragmentLength);
@@ -651,12 +699,12 @@ int createGraphicsPipeline(struct Window* window)
 int createFramebuffers(struct Window* window)
 {
     for (int loopNum = 0; loopNum < MAX_SWAP_CHAIN_FRAMES; loopNum++) {
-        VkImageView attachments[] = { window->swapChainImageViews[loopNum] };
+        VkImageView attachments[] = { window->swapChainImageViews[loopNum], window->depthImageView };
 
         VkFramebufferCreateInfo framebufferInfo = { 0 };
         framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         framebufferInfo.renderPass = window->renderPass;
-        framebufferInfo.attachmentCount = 1;
+        framebufferInfo.attachmentCount = 2;
         framebufferInfo.pAttachments = attachments;
         framebufferInfo.width = window->swapChainExtent.width;
         framebufferInfo.height = window->swapChainExtent.height;
@@ -679,6 +727,18 @@ int createCommandPool(struct Window* window)
         return CREATE_COMMAND_POOL_ERROR;
 
     return NO_ERROR;
+}
+
+int createDepthResources(struct Window* window)
+{
+    VkFormat depthFormat = findDepthFormat(window);
+
+    createImage(window, window->swapChainExtent.width, window->swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, window->depthImage, window->depthImageMemory);
+    window->depthImageView = createImageView(window, window->depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+    transitionImageLayout(window, window->depthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+
+    return 0;
 }
 
 int createCommandBuffers(struct Window* window)
@@ -800,4 +860,142 @@ bool checkValidationLayerSupport()
     }
 
     return layerFound;
+}
+
+VkImageView createImageView(struct Window* window, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags)
+{
+    VkImageViewCreateInfo viewInfo = { 0 };
+    viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewInfo.image = image;
+    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    viewInfo.format = format;
+    viewInfo.subresourceRange.aspectMask = aspectFlags;
+    viewInfo.subresourceRange.baseMipLevel = 0;
+    viewInfo.subresourceRange.levelCount = 1;
+    viewInfo.subresourceRange.baseArrayLayer = 0;
+    viewInfo.subresourceRange.layerCount = 1;
+
+    VkImageView imageView;
+    if (vkCreateImageView(window->device, &viewInfo, NULL, &imageView) != VK_SUCCESS)
+        printf("failed to create texture image view!");
+
+    return imageView;
+}
+#define TOTAL_CANDIDIATES 3
+VkFormat findDepthFormat(struct Window* window)
+{
+    //return findSupportedFormat(
+    //    { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
+    //    VK_IMAGE_TILING_OPTIMAL,
+    //    VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+
+    VkFormat candidate[TOTAL_CANDIDIATES] = { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT };
+    VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
+    VkFormatFeatureFlags features = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
+
+    for (int loopNum = 0; loopNum < TOTAL_CANDIDIATES; loopNum++) {
+        VkFormatProperties props;
+        vkGetPhysicalDeviceFormatProperties(window->physicalDevice, candidate[loopNum], &props);
+
+        if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
+            return candidate[loopNum];
+        } else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) {
+            return candidate[loopNum];
+        }
+    }
+
+    printf("failed to find supported format!");
+}
+
+void createImage(struct Window* window, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage* image, VkDeviceMemory* imageMemory)
+{
+    //VkImageCreateInfo imageInfo = { 0 };
+    //imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    //imageInfo.imageType = VK_IMAGE_TYPE_2D;
+    //imageInfo.extent.width = width;
+    //imageInfo.extent.height = height;
+    //imageInfo.extent.depth = 1;
+    //imageInfo.mipLevels = 1;
+    //imageInfo.arrayLayers = 1;
+    //imageInfo.format = format;
+    //imageInfo.tiling = tiling;
+    //imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    //imageInfo.usage = usage;
+    //imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+    //imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    //if (vkCreateImage(window->device, &imageInfo, NULL, &image) != VK_SUCCESS)
+    //    printf("failed to create image!");
+
+    //VkMemoryRequirements memRequirements;
+    //vkGetImageMemoryRequirements(window->device, image, &memRequirements);
+
+    //VkMemoryAllocateInfo allocInfo = { 0 };
+    //allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    //allocInfo.allocationSize = memRequirements.size;
+    //allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
+
+    //if (vkAllocateMemory(window->device, &allocInfo, NULL, &imageMemory) != VK_SUCCESS)
+    //    printf("failed to allocate image memory!");
+
+    //vkBindImageMemory(window->device, image, imageMemory, 0);
+}
+
+void transitionImageLayout(struct Window* window, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
+{
+    //VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+    //
+    //VkImageMemoryBarrier barrier = { 0 };
+    //barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    //barrier.oldLayout = oldLayout;
+    //barrier.newLayout = newLayout;
+    //barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    //barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    //barrier.image = image;
+    //
+    //if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
+    //    barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+    //    if (hasStencilComponent(format))
+    //        barrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+    //} else
+    //    barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    //
+    //barrier.subresourceRange.baseMipLevel = 0;
+    //barrier.subresourceRange.levelCount = 1;
+    //barrier.subresourceRange.baseArrayLayer = 0;
+    //barrier.subresourceRange.layerCount = 1;
+    //
+    //VkPipelineStageFlags sourceStage;
+    //VkPipelineStageFlags destinationStage;
+    //
+    //if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+    //    barrier.srcAccessMask = 0;
+    //    barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    //
+    //    sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+    //    destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+    //} else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+    //    barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    //    barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+    //
+    //    sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+    //    destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+    //} else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
+    //    barrier.srcAccessMask = 0;
+    //    barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+    //
+    //    sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+    //    destinationStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+    //} else
+    //    printf("unsupported layout transition!");
+    //
+    //vkCmdPipelineBarrier(
+    //    commandBuffer,
+    //    sourceStage, destinationStage,
+    //    0,
+    //    0, NULL,
+    //    0, NULL,
+    //    1, &barrier);
+    //
+    //endSingleTimeCommands(commandBuffer);
 }
