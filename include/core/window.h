@@ -6,6 +6,9 @@
 #define WINDOW_H_
 
 #include "core/common.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include <cglm/cglm.h>
+#include <stb_image.h>
 
 #ifdef NDEBUG
 static const bool enableValidationLayers = false;

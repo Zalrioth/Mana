@@ -2,17 +2,7 @@
 
 ## Getting Started
 
-These instructions will help you get a copy of the project up and running on your local machine for development.<br/>
-Note: You may need to change CMake include directory paths.
-
-### Prerequisites
-
-* [Assimp](https://github.com/assimp/assimp) - Model loading library
-* [Chaos](https://github.com/Zalrioth/Chaos) - GPU physics library
-* [GLFW](https://github.com/glfw/glfw/) - Vulkan utility library
-* [LLVM](http://releases.llvm.org/download.html) - Compiler that supports OpenMP 4
-* [Lua](https://github.com/lua/lua) - Embedded scripting language
-* [Vulkan](https://www.lunarg.com/vulkan-sdk/) - Vulkan SDK
+Build as a library with cargo then use with your favorite language.<br/>
 
 ### Setting Up a Project
 
