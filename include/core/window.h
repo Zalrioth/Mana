@@ -6,9 +6,7 @@
 #define WINDOW_H_
 
 #include "core/common.h"
-#define STB_IMAGE_IMPLEMENTATION
 #include <cglm/cglm.h>
-#include <stb_image.h>
 
 #ifdef NDEBUG
 static const bool enableValidationLayers = false;
@@ -74,6 +72,19 @@ struct Window {
     VkFramebuffer swapChainFramebuffers[MAX_SWAP_CHAIN_FRAMES];
     VkDebugUtilsMessengerEXT debugMessenger;
     VkCommandPool commandPool;
+
+    VkImage textureImage;
+    VkDeviceMemory textureImageMemory;
+    VkImageView textureImageView;
+    VkSampler textureSampler;
+
+    struct Vector imageVertices;
+    struct Vector imageIndices;
+
+    VkBuffer vertexBuffer;
+    VkDeviceMemory vertexBufferMemory;
+    VkBuffer indexBuffer;
+    VkDeviceMemory indexBufferMemory;
 
     VkImage depthImage;
     VkDeviceMemory depthImageMemory;

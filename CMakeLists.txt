@@ -85,7 +85,7 @@ target_link_libraries(Mana
 SET(includeList
         ${includePath}grindstone/Mana/include
         ${includePath}grindstone/Chaos/include
-        ${includePath}cglm/include
+        ${includePath}cglm-master/include
         ${includePath}glfw-3.2.1/include
         ${includePath}VulkanSDK/1.1.101.0/Include
         ${includePath}assimp-4.1.0/include

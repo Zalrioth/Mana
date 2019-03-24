@@ -1,4 +1,6 @@
 #include "core/window.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include <core/stb_image.h>
 
 //https://stackoverflow.com/questions/2845748/function-defined-but-not-used-warning-in-c
 
@@ -14,7 +16,6 @@ int createRenderPass(struct Window* window);
 int createDescriptorSetLayout(struct Window* window);
 int createGraphicsPipeline(struct Window* window);
 int createFramebuffers(struct Window* window);
-
 int createTextureImage(struct Window* window);
 int createTextureImageView(struct Window* window);
 int createTextureSampler(struct Window* window);
@@ -31,9 +32,15 @@ int createSyncObjects(struct Window* window);
 
 bool isDeviceSuitable(struct Window* window, VkPhysicalDevice device);
 VkImageView createImageView(struct Window* window, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
-void createImage(struct Window* window, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage* image, VkDeviceMemory* imageMemory);
+void createImage(struct Window* window, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage image, VkDeviceMemory imageMemory);
+VkFormat findDepthFormat(struct Window* window);
 void transitionImageLayout(struct Window* window, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+VkCommandBuffer beginSingleTimeCommands();
+void endSingleTimeCommands(struct Window* window, VkCommandBuffer commandBuffer);
+void createBuffer(struct Window* window, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer buffer, VkDeviceMemory bufferMemory);
+void copyBufferToImage(struct Window* window, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 uint32_t findMemoryType(struct Window* window, uint32_t typeFilter, VkMemoryPropertyFlags properties);
+void copyBuffer(struct Window* window, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -104,6 +111,17 @@ int init_window(struct Window* window, int width, int height)
 
     if ((errorCode = createCommandPool(window)) != NO_ERROR)
         goto cleanup;
+
+    createDepthResources(window);
+    createFramebuffers(window);
+    createTextureImage(window);
+    createTextureImageView(window);
+    createTextureSampler(window);
+    createVertexBuffer(window);
+    createIndexBuffer(window);
+    createUniformBuffers(window);
+    createDescriptorPool(window);
+    createDescriptorSets(window);
 
     if ((errorCode = createCommandBuffers(window)) != NO_ERROR)
         goto cleanup;
@@ -523,6 +541,8 @@ int createDescriptorSetLayout(struct Window* window)
 
     if (vkCreateDescriptorSetLayout(window->device, &layoutInfo, NULL, &window->descriptorSetLayout) != VK_SUCCESS)
         printf("failed to create descriptor set layout!");
+
+    return 0;
 }
 
 VkShaderModule createShaderModule(struct Window* window, const char* code, int length)
@@ -714,6 +734,68 @@ int createFramebuffers(struct Window* window)
     return NO_ERROR;
 }
 
+int createTextureImage(struct Window* window)
+{
+    int texWidth, texHeight, texChannels;
+    stbi_uc* pixels = stbi_load("textures/texture.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+    VkDeviceSize imageSize = texWidth * texHeight * 4;
+
+    if (!pixels)
+        printf("failed to load texture image!\n");
+
+    VkBuffer stagingBuffer = { 0 };
+    VkDeviceMemory stagingBufferMemory = { 0 };
+    createBuffer(window, imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+    void* data;
+    vkMapMemory(window->device, stagingBufferMemory, 0, imageSize, 0, &data);
+    memcpy(data, pixels, imageSize);
+    vkUnmapMemory(window->device, stagingBufferMemory);
+
+    stbi_image_free(pixels);
+
+    createImage(window, texWidth, texHeight, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, window->textureImage, window->textureImageMemory);
+
+    transitionImageLayout(window, window->textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    copyBufferToImage(window, stagingBuffer, window->textureImage, texWidth, texHeight);
+    transitionImageLayout(window, window->textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+    vkDestroyBuffer(window->device, stagingBuffer, NULL);
+    vkFreeMemory(window->device, stagingBufferMemory, NULL);
+
+    return 0;
+}
+
+int createTextureImageView(struct Window* window)
+{
+    window->textureImageView = createImageView(window, window->textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+
+    return 0;
+}
+
+int createTextureSampler(struct Window* window)
+{
+    VkSamplerCreateInfo samplerInfo = { 0 };
+    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    samplerInfo.magFilter = VK_FILTER_LINEAR;
+    samplerInfo.minFilter = VK_FILTER_LINEAR;
+    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.anisotropyEnable = VK_TRUE;
+    samplerInfo.maxAnisotropy = 16;
+    samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+    samplerInfo.unnormalizedCoordinates = VK_FALSE;
+    samplerInfo.compareEnable = VK_FALSE;
+    samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+
+    if (vkCreateSampler(window->device, &samplerInfo, NULL, &window->textureSampler) != VK_SUCCESS)
+        printf("failed to create texture sampler!\n");
+
+    return 0;
+}
+
 int createCommandPool(struct Window* window)
 {
     VkCommandPoolCreateInfo poolInfo = { 0 };
@@ -881,11 +963,6 @@ VkImageView createImageView(struct Window* window, VkImage image, VkFormat forma
 #define TOTAL_CANDIDIATES 3
 VkFormat findDepthFormat(struct Window* window)
 {
-    //return findSupportedFormat(
-    //    { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
-    //    VK_IMAGE_TILING_OPTIMAL,
-    //    VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
-
     VkFormat candidate[TOTAL_CANDIDIATES] = { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT };
     VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
     VkFormatFeatureFlags features = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
@@ -902,40 +979,42 @@ VkFormat findDepthFormat(struct Window* window)
     }
 
     printf("failed to find supported format!");
+
+    return 0;
 }
 
-void createImage(struct Window* window, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage* image, VkDeviceMemory* imageMemory)
+void createImage(struct Window* window, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage image, VkDeviceMemory imageMemory)
 {
-    //VkImageCreateInfo imageInfo = { 0 };
-    //imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-    //imageInfo.imageType = VK_IMAGE_TYPE_2D;
-    //imageInfo.extent.width = width;
-    //imageInfo.extent.height = height;
-    //imageInfo.extent.depth = 1;
-    //imageInfo.mipLevels = 1;
-    //imageInfo.arrayLayers = 1;
-    //imageInfo.format = format;
-    //imageInfo.tiling = tiling;
-    //imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    //imageInfo.usage = usage;
-    //imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-    //imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    VkImageCreateInfo imageInfo = { 0 };
+    imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imageInfo.imageType = VK_IMAGE_TYPE_2D;
+    imageInfo.extent.width = width;
+    imageInfo.extent.height = height;
+    imageInfo.extent.depth = 1;
+    imageInfo.mipLevels = 1;
+    imageInfo.arrayLayers = 1;
+    imageInfo.format = format;
+    imageInfo.tiling = tiling;
+    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imageInfo.usage = usage;
+    imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+    imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    //if (vkCreateImage(window->device, &imageInfo, NULL, &image) != VK_SUCCESS)
-    //    printf("failed to create image!");
+    if (vkCreateImage(window->device, &imageInfo, NULL, &image) != VK_SUCCESS)
+        printf("failed to create image!");
 
-    //VkMemoryRequirements memRequirements;
-    //vkGetImageMemoryRequirements(window->device, image, &memRequirements);
+    VkMemoryRequirements memRequirements;
+    vkGetImageMemoryRequirements(window->device, image, &memRequirements);
 
-    //VkMemoryAllocateInfo allocInfo = { 0 };
-    //allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    //allocInfo.allocationSize = memRequirements.size;
-    //allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
+    VkMemoryAllocateInfo allocInfo = { 0 };
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex = findMemoryType(window, memRequirements.memoryTypeBits, properties);
 
-    //if (vkAllocateMemory(window->device, &allocInfo, NULL, &imageMemory) != VK_SUCCESS)
-    //    printf("failed to allocate image memory!");
+    if (vkAllocateMemory(window->device, &allocInfo, NULL, &imageMemory) != VK_SUCCESS)
+        printf("failed to allocate image memory!");
 
-    //vkBindImageMemory(window->device, image, imageMemory, 0);
+    vkBindImageMemory(window->device, image, imageMemory, 0);
 }
 
 void transitionImageLayout(struct Window* window, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
@@ -952,7 +1031,7 @@ void transitionImageLayout(struct Window* window, VkImage image, VkFormat format
 
     if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
         barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-        if (hasStencilComponent(format))
+        if (format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT)
             barrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
     } else
         barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -962,8 +1041,8 @@ void transitionImageLayout(struct Window* window, VkImage image, VkFormat format
     barrier.subresourceRange.baseArrayLayer = 0;
     barrier.subresourceRange.layerCount = 1;
 
-    VkPipelineStageFlags sourceStage;
-    VkPipelineStageFlags destinationStage;
+    VkPipelineStageFlags sourceStage = { 0 };
+    VkPipelineStageFlags destinationStage = { 0 };
 
     if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
         barrier.srcAccessMask = 0;
@@ -994,5 +1073,158 @@ void transitionImageLayout(struct Window* window, VkImage image, VkFormat format
         0, NULL,
         1, &barrier);
 
-    endSingleTimeCommands(commandBuffer);
+    endSingleTimeCommands(window, commandBuffer);
+}
+
+VkCommandBuffer beginSingleTimeCommands(struct Window* window)
+{
+    VkCommandBufferAllocateInfo allocInfo = {};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandPool = window->commandPool;
+    allocInfo.commandBufferCount = 1;
+
+    VkCommandBuffer commandBuffer;
+    vkAllocateCommandBuffers(window->device, &allocInfo, &commandBuffer);
+
+    VkCommandBufferBeginInfo beginInfo = {};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+    vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+    return commandBuffer;
+}
+
+void endSingleTimeCommands(struct Window* window, VkCommandBuffer commandBuffer)
+{
+    vkEndCommandBuffer(commandBuffer);
+
+    VkSubmitInfo submitInfo = { 0 };
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &commandBuffer;
+
+    vkQueueSubmit(window->graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+    vkQueueWaitIdle(window->graphicsQueue);
+
+    vkFreeCommandBuffers(window->device, window->commandPool, 1, &commandBuffer);
+}
+
+void createBuffer(struct Window* window, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer buffer, VkDeviceMemory bufferMemory)
+{
+    VkBufferCreateInfo bufferInfo = { 0 };
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.size = size;
+    bufferInfo.usage = usage;
+    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    if (vkCreateBuffer(window->device, &bufferInfo, NULL, &buffer) != VK_SUCCESS)
+        printf("failed to create buffer!\n");
+
+    VkMemoryRequirements memRequirements;
+    vkGetBufferMemoryRequirements(window->device, buffer, &memRequirements);
+
+    VkMemoryAllocateInfo allocInfo = { 0 };
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex = findMemoryType(window, memRequirements.memoryTypeBits, properties);
+
+    if (vkAllocateMemory(window->device, &allocInfo, NULL, &bufferMemory) != VK_SUCCESS)
+        printf("failed to allocate buffer memory!\n");
+
+    vkBindBufferMemory(window->device, buffer, bufferMemory, 0);
+}
+
+void copyBufferToImage(struct Window* window, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
+{
+    VkCommandBuffer commandBuffer = beginSingleTimeCommands(window);
+
+    VkBufferImageCopy region = { 0 };
+    region.bufferOffset = 0;
+    region.bufferRowLength = 0;
+    region.bufferImageHeight = 0;
+    region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    region.imageSubresource.mipLevel = 0;
+    region.imageSubresource.baseArrayLayer = 0;
+    region.imageSubresource.layerCount = 1;
+    region.imageOffset.x = 0;
+    region.imageOffset.y = 0;
+    region.imageOffset.z = 0;
+    region.imageExtent.width = width;
+    region.imageExtent.height = height;
+    region.imageExtent.depth = 1;
+
+    vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+    endSingleTimeCommands(window, commandBuffer);
+}
+
+uint32_t findMemoryType(struct Window* window, uint32_t typeFilter, VkMemoryPropertyFlags properties)
+{
+    VkPhysicalDeviceMemoryProperties memProperties;
+    vkGetPhysicalDeviceMemoryProperties(window->physicalDevice, &memProperties);
+
+    for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+        if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+            return i;
+        }
+    }
+
+    printf("failed to find suitable memory type!\n");
+
+    return -1;
+}
+
+voif createVertexBuffer(struct Window* window)
+{
+    VkDeviceSize bufferSize = sizeof(window->imageVertices.items[0]) * window->imageVertices.total;
+
+    VkBuffer stagingBuffer = { 0 };
+    VkDeviceMemory stagingBufferMemory = { 0 };
+    createBuffer(window, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+    void* data;
+    vkMapMemory(window->device, stagingBufferMemory, 0, bufferSize, 0, &data);
+    memcpy(data, window->imageVertices.items, bufferSize);
+    vkUnmapMemory(window->device, stagingBufferMemory);
+
+    createBuffer(window, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, window->vertexBuffer, window->vertexBufferMemory);
+
+    copyBuffer(window, stagingBuffer, window->vertexBuffer, bufferSize);
+
+    vkDestroyBuffer(window->device, stagingBuffer, NULL);
+    vkFreeMemory(window->device, stagingBufferMemory, NULL);
+}
+
+void copyBuffer(struct Window* window, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+{
+    VkCommandBuffer commandBuffer = beginSingleTimeCommands(window);
+
+    VkBufferCopy copyRegion = { 0 };
+    copyRegion.size = size;
+    vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+
+    endSingleTimeCommands(window, commandBuffer);
+}
+
+void createIndexBuffer(struct Window* window)
+{
+    VkDeviceSize bufferSize = sizeof(window->imageIndices[0]) * window->imageIndices.total;
+
+    VkBuffer stagingBuffer = { 0 };
+    VkDeviceMemory stagingBufferMemory = { 0 };
+    createBuffer(window, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+    void* data;
+    vkMapMemory(window->device, stagingBufferMemory, 0, bufferSize, 0, &data);
+    memcpy(data, window->imageIndices.items, bufferSize);
+    vkUnmapMemory(window->device, stagingBufferMemory);
+
+    createBuffer(window, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, window->indexBuffer, indexBufferMemory);
+
+    copyBuffer(stagingBuffer, indexBuffer, bufferSize);
+
+    vkDestroyBuffer(window->device, stagingBuffer, NULL);
+    vkFreeMemory(window->device, stagingBufferMemory, NULL);
 }
