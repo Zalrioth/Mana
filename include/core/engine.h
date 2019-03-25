@@ -54,5 +54,6 @@ void delete_engine(struct Engine* engine);
 void update_engine(struct Engine* engine);
 void logic(struct Engine* engine, double deltaTime);
 void process_input(struct Engine* engine);
+void updateUniformBuffer(struct Window* window, uint32_t currentImage);
 
 #endif // ENGINE_H_

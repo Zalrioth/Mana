@@ -36,10 +36,18 @@ void delete_engine(struct Engine* engine)
 void render(struct Window* window)
 {
     vkWaitForFences(window->device, 1, &window->inFlightFences[window->currentFrame], VK_TRUE, UINT64_MAX);
-    vkResetFences(window->device, 1, &window->inFlightFences[window->currentFrame]);
+    //vkResetFences(window->device, 1, &window->inFlightFences[window->currentFrame]);
 
     uint32_t imageIndex;
-    vkAcquireNextImageKHR(window->device, window->swapChain, UINT64_MAX, window->imageAvailableSemaphores[window->currentFrame], VK_NULL_HANDLE, &imageIndex);
+    VkResult result = vkAcquireNextImageKHR(window->device, window->swapChain, UINT64_MAX, window->imageAvailableSemaphores[window->currentFrame], VK_NULL_HANDLE, &imageIndex);
+
+    if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+        recreateSwapChain(window);
+        return;
+    } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
+        printf("failed to acquire swap chain image!\n");
+
+    updateUniformBuffer(window, imageIndex);
 
     VkSubmitInfo submitInfo = { 0 };
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -57,6 +65,8 @@ void render(struct Window* window)
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
 
+    vkResetFences(window->device, 1, &window->inFlightFences[window->currentFrame]);
+
     if (vkQueueSubmit(window->graphicsQueue, 1, &submitInfo, window->inFlightFences[window->currentFrame]) != VK_SUCCESS)
         printf("Error to submit draw command buffer!\n");
     //throw std::runtime_error("failed to submit draw command buffer!");
@@ -73,7 +83,13 @@ void render(struct Window* window)
 
     presentInfo.pImageIndices = &imageIndex;
 
-    vkQueuePresentKHR(window->presentQueue, &presentInfo);
+    result = vkQueuePresentKHR(window->presentQueue, &presentInfo);
+
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || window->framebufferResized) {
+        window->framebufferResized = false;
+        recreateSwapChain(window);
+    } else if (result != VK_SUCCESS)
+        printf("failed to present swap chain image!\n");
 
     window->currentFrame = (window->currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
@@ -184,4 +200,21 @@ void process_input(struct Engine* engine)
             engine->keys[loopNum].held = false;
         }
     }
+}
+
+void updateUniformBuffer(struct Window* window, uint32_t currentImage)
+{
+    double time = fmod(get_time(), M_2_PI);
+
+    struct UniformBufferObject ubo = { 0 };
+    //ubo.model = (vec3){ 0.0f, 0.0f, 1.0f };
+    glm_rotate((mat4){ 1.0f }, time * glm_rad(90.0f), ubo.model);
+    glm_lookat((vec3){ 2.0f, 2.0f, 2.0f }, (vec3){ 0.0f, 0.0f, 0.0f }, (vec3){ 0.0f, 0.0f, 1.0f }, ubo.view);
+    glm_perspective(glm_rad(45.0f), window->swapChainExtent.width / (float)window->swapChainExtent.height, 0.1f, 10.0f, ubo.proj);
+    ubo.proj[1][1] *= -1;
+
+    void* data;
+    vkMapMemory(window->device, window->uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);
+    memcpy(data, &ubo, sizeof(ubo));
+    vkUnmapMemory(window->device, window->uniformBuffersMemory[currentImage]);
 }

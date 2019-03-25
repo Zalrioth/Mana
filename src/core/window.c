@@ -32,15 +32,18 @@ int createSyncObjects(struct Window* window);
 
 bool isDeviceSuitable(struct Window* window, VkPhysicalDevice device);
 VkImageView createImageView(struct Window* window, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
-void createImage(struct Window* window, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage image, VkDeviceMemory imageMemory);
+void createImage(struct Window* window, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage* image, VkDeviceMemory* imageMemory);
 VkFormat findDepthFormat(struct Window* window);
 void transitionImageLayout(struct Window* window, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 VkCommandBuffer beginSingleTimeCommands();
 void endSingleTimeCommands(struct Window* window, VkCommandBuffer commandBuffer);
-void createBuffer(struct Window* window, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer buffer, VkDeviceMemory bufferMemory);
+void createBuffer(struct Window* window, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer* buffer, VkDeviceMemory* bufferMemory);
 void copyBufferToImage(struct Window* window, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 uint32_t findMemoryType(struct Window* window, uint32_t typeFilter, VkMemoryPropertyFlags properties);
 void copyBuffer(struct Window* window, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+void cleanupSwapChain(struct Window* window);
+VkVertexInputBindingDescription getBindingDescription();
+void getAttributeDescriptions(VkVertexInputAttributeDescription* attributeDescriptions);
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -103,17 +106,69 @@ int init_window(struct Window* window, int width, int height)
     if ((errorCode = createRenderPass(window)) != NO_ERROR)
         goto cleanup;
 
-    if ((errorCode = createGraphicsPipeline(window)) != NO_ERROR)
-        goto cleanup;
+    createDescriptorSetLayout(window);
 
-    if ((errorCode = createFramebuffers(window)) != NO_ERROR)
+    if ((errorCode = createGraphicsPipeline(window)) != NO_ERROR)
         goto cleanup;
 
     if ((errorCode = createCommandPool(window)) != NO_ERROR)
         goto cleanup;
 
+    vector_init(&window->imageVertices);
+
+    struct Vertex test1 = { { -0.5f, -0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f } };
+    struct Vertex test2 = { { 0.5f, -0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f } };
+    struct Vertex test3 = { { 0.5f, 0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f } };
+    struct Vertex test4 = { { -0.5f, 0.5f, 0.0f }, { 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f } };
+
+    struct Vertex test5 = { { -0.5f, -0.5f, -0.5f }, { 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f } };
+    struct Vertex test6 = { { 0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f } };
+    struct Vertex test7 = { { 0.5f, 0.5f, -0.5f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f } };
+    struct Vertex test8 = { { -0.5f, 0.5f, -0.5f }, { 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f } };
+
+    vector_add(&window->imageVertices, &test1);
+    vector_add(&window->imageVertices, &test2);
+    vector_add(&window->imageVertices, &test3);
+    vector_add(&window->imageVertices, &test4);
+
+    vector_add(&window->imageVertices, &test5);
+    vector_add(&window->imageVertices, &test6);
+    vector_add(&window->imageVertices, &test7);
+    vector_add(&window->imageVertices, &test8);
+
+    vector_init(&window->imageIndices);
+
+    int index1 = 0;
+    int index2 = 1;
+    int index3 = 2;
+    int index4 = 2;
+    int index5 = 3;
+    int index6 = 0;
+    int index7 = 4;
+    int index8 = 5;
+    int index9 = 6;
+    int index10 = 6;
+    int index11 = 7;
+    int index12 = 4;
+
+    vector_add(&window->imageIndices, &index1);
+    vector_add(&window->imageIndices, &index2);
+    vector_add(&window->imageIndices, &index3);
+    vector_add(&window->imageIndices, &index4);
+    vector_add(&window->imageIndices, &index5);
+    vector_add(&window->imageIndices, &index6);
+    vector_add(&window->imageIndices, &index7);
+    vector_add(&window->imageIndices, &index8);
+    vector_add(&window->imageIndices, &index9);
+    vector_add(&window->imageIndices, &index10);
+    vector_add(&window->imageIndices, &index11);
+    vector_add(&window->imageIndices, &index12);
+
     createDepthResources(window);
-    createFramebuffers(window);
+
+    if ((errorCode = createFramebuffers(window)) != NO_ERROR)
+        goto cleanup;
+
     createTextureImage(window);
     createTextureImageView(window);
     createTextureSampler(window);
@@ -183,6 +238,7 @@ int createWindow(struct Window* window, int width, int height)
     window->glfwWindow = glfwCreateWindow(width, height, "Grindstone", NULL, NULL);
     window->width = width;
     window->height = height;
+    window->framebufferResized = false;
     window->physicalDevice = VK_NULL_HANDLE;
     window->currentFrame = 0;
 
@@ -450,23 +506,29 @@ int createSwapChain(struct Window* window)
 
 int createImageViews(struct Window* window)
 {
-    for (size_t i = 0; i < MAX_SWAP_CHAIN_FRAMES; i++) {
-        VkImageViewCreateInfo createInfo = { 0 };
-        createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        createInfo.image = window->swapChainImages[i];
-        createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        createInfo.format = window->swapChainImageFormat;
-        createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        createInfo.subresourceRange.baseMipLevel = 0;
-        createInfo.subresourceRange.levelCount = 1;
-        createInfo.subresourceRange.baseArrayLayer = 0;
-        createInfo.subresourceRange.layerCount = 1;
 
-        if (vkCreateImageView(window->device, &createInfo, NULL, &window->swapChainImageViews[i]) != VK_SUCCESS)
+    //for (uint32_t i = 0; i < swapChainImages.size(); i++) {
+    //        swapChainImageViews[i] = createImageView(swapChainImages[i], swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+    //    }
+    //}
+
+    for (size_t i = 0; i < MAX_SWAP_CHAIN_FRAMES; i++) {
+        VkImageViewCreateInfo viewInfo = { 0 };
+        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        viewInfo.image = window->swapChainImages[i];
+        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        viewInfo.format = window->swapChainImageFormat;
+        //createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+        //createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+        //createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+        //createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+        viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        viewInfo.subresourceRange.baseMipLevel = 0;
+        viewInfo.subresourceRange.levelCount = 1;
+        viewInfo.subresourceRange.baseArrayLayer = 0;
+        viewInfo.subresourceRange.layerCount = 1;
+
+        if (vkCreateImageView(window->device, &viewInfo, NULL, &window->swapChainImageViews[i]) != VK_SUCCESS)
             return CREATE_IMAGE_VIEWS_ERROR;
     }
 
@@ -485,14 +547,29 @@ int createRenderPass(struct Window* window)
     colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
+    VkAttachmentDescription depthAttachment = { 0 };
+    depthAttachment.format = findDepthFormat(window);
+    depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+    depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
     VkAttachmentReference colorAttachmentRef = { 0 };
     colorAttachmentRef.attachment = 0;
     colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+    VkAttachmentReference depthAttachmentRef = { 0 };
+    depthAttachmentRef.attachment = 1;
+    depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
     VkSubpassDescription subpass = { 0 };
     subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
     subpass.colorAttachmentCount = 1;
     subpass.pColorAttachments = &colorAttachmentRef;
+    subpass.pDepthStencilAttachment = &depthAttachmentRef;
 
     VkSubpassDependency dependency = { 0 };
     dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -502,10 +579,11 @@ int createRenderPass(struct Window* window)
     dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
     dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
+    VkAttachmentDescription attachments[2] = { colorAttachment, depthAttachment };
     VkRenderPassCreateInfo renderPassInfo = { 0 };
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    renderPassInfo.attachmentCount = 1;
-    renderPassInfo.pAttachments = &colorAttachment;
+    renderPassInfo.attachmentCount = 2;
+    renderPassInfo.pAttachments = attachments;
     renderPassInfo.subpassCount = 1;
     renderPassInfo.pSubpasses = &subpass;
     renderPassInfo.dependencyCount = 1;
@@ -601,8 +679,8 @@ int createGraphicsPipeline(struct Window* window)
     int vertexLength = 0;
     int fragmentLength = 0;
 
-    char* vertShaderCode = readShaderFile("./assets/shaders/basicVert.spv", &vertexLength);
-    char* fragShaderCode = readShaderFile("./assets/shaders/basicFrag.spv", &fragmentLength);
+    char* vertShaderCode = readShaderFile("./Assets/shaders/textureVert.spv", &vertexLength);
+    char* fragShaderCode = readShaderFile("./Assets/shaders/textureFrag.spv", &fragmentLength);
 
     VkShaderModule vertShaderModule = createShaderModule(window, vertShaderCode, vertexLength);
     VkShaderModule fragShaderModule = createShaderModule(window, fragShaderCode, fragmentLength);
@@ -623,8 +701,16 @@ int createGraphicsPipeline(struct Window* window)
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo = { 0 };
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertexInputInfo.vertexBindingDescriptionCount = 0;
-    vertexInputInfo.vertexAttributeDescriptionCount = 0;
+
+    VkVertexInputBindingDescription bindingDescription = getBindingDescription();
+    VkVertexInputAttributeDescription attributeDescriptions[3];
+    memset(attributeDescriptions, 0, sizeof(attributeDescriptions));
+    getAttributeDescriptions(attributeDescriptions);
+
+    vertexInputInfo.vertexBindingDescriptionCount = 1;
+    vertexInputInfo.vertexAttributeDescriptionCount = 3; // Note: length of attributeDescriptions
+    vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+    vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions;
 
     VkPipelineInputAssemblyStateCreateInfo inputAssembly = { 0 };
     inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -658,13 +744,21 @@ int createGraphicsPipeline(struct Window* window)
     rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
     rasterizer.lineWidth = 1.0f;
     rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-    rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+    rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_FALSE;
 
     VkPipelineMultisampleStateCreateInfo multisampling = { 0 };
     multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
     multisampling.sampleShadingEnable = VK_FALSE;
     multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+
+    VkPipelineDepthStencilStateCreateInfo depthStencil = { 0 };
+    depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    depthStencil.depthTestEnable = VK_TRUE;
+    depthStencil.depthWriteEnable = VK_TRUE;
+    depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+    depthStencil.depthBoundsTestEnable = VK_FALSE;
+    depthStencil.stencilTestEnable = VK_FALSE;
 
     VkPipelineColorBlendAttachmentState colorBlendAttachment = { 0 };
     colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
@@ -683,8 +777,8 @@ int createGraphicsPipeline(struct Window* window)
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = { 0 };
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = 0;
-    pipelineLayoutInfo.pushConstantRangeCount = 0;
+    pipelineLayoutInfo.setLayoutCount = 1;
+    pipelineLayoutInfo.pSetLayouts = &window->descriptorSetLayout;
 
     if (vkCreatePipelineLayout(window->device, &pipelineLayoutInfo, NULL, &window->pipelineLayout) != VK_SUCCESS)
         return CREATE_GRAPHICS_PIPELINE_ERROR;
@@ -698,6 +792,7 @@ int createGraphicsPipeline(struct Window* window)
     pipelineInfo.pViewportState = &viewportState;
     pipelineInfo.pRasterizationState = &rasterizer;
     pipelineInfo.pMultisampleState = &multisampling;
+    pipelineInfo.pDepthStencilState = &depthStencil;
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.layout = window->pipelineLayout;
     pipelineInfo.renderPass = window->renderPass;
@@ -737,7 +832,7 @@ int createFramebuffers(struct Window* window)
 int createTextureImage(struct Window* window)
 {
     int texWidth, texHeight, texChannels;
-    stbi_uc* pixels = stbi_load("textures/texture.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+    stbi_uc* pixels = stbi_load("./Assets/textures/texture.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
     VkDeviceSize imageSize = texWidth * texHeight * 4;
 
     if (!pixels)
@@ -745,7 +840,7 @@ int createTextureImage(struct Window* window)
 
     VkBuffer stagingBuffer = { 0 };
     VkDeviceMemory stagingBufferMemory = { 0 };
-    createBuffer(window, imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+    createBuffer(window, imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &stagingBuffer, &stagingBufferMemory);
 
     void* data;
     vkMapMemory(window->device, stagingBufferMemory, 0, imageSize, 0, &data);
@@ -754,7 +849,7 @@ int createTextureImage(struct Window* window)
 
     stbi_image_free(pixels);
 
-    createImage(window, texWidth, texHeight, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, window->textureImage, window->textureImageMemory);
+    createImage(window, texWidth, texHeight, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &window->textureImage, &window->textureImageMemory);
 
     transitionImageLayout(window, window->textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
     copyBufferToImage(window, stagingBuffer, window->textureImage, texWidth, texHeight);
@@ -812,7 +907,7 @@ int createDepthResources(struct Window* window)
 {
     VkFormat depthFormat = findDepthFormat(window);
 
-    createImage(window, window->swapChainExtent.width, window->swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, window->depthImage, window->depthImageMemory);
+    createImage(window, window->swapChainExtent.width, window->swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &window->depthImage, &window->depthImageMemory);
     window->depthImageView = createImageView(window, window->depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 
     transitionImageLayout(window, window->depthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
@@ -847,13 +942,31 @@ int createCommandBuffers(struct Window* window)
         renderPassInfo.renderArea.offset.y = 0;
         renderPassInfo.renderArea.extent = window->swapChainExtent;
 
-        VkClearValue clearColor = { { { 0.0f, 0.0f, 0.0f, 1.0f } } };
-        renderPassInfo.clearValueCount = 1;
-        renderPassInfo.pClearValues = &clearColor;
+        VkClearValue clearValues[2];
+        memset(clearValues, 0, sizeof(clearValues));
+
+        //http://ogldev.atspace.co.uk/www/tutorial51/tutorial51.html
+        VkClearColorValue clearColor = { { 164.0f / 256.0f, 30.0f / 256.0f, 34.0f / 256.0f, 0.0f } };
+        clearValues[0].color = clearColor;
+
+        VkClearDepthStencilValue depthColor = { 1.0f, 0 };
+        clearValues[1].depthStencil = depthColor;
+
+        renderPassInfo.clearValueCount = 2;
+        renderPassInfo.pClearValues = clearValues;
 
         vkCmdBeginRenderPass(window->commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
         vkCmdBindPipeline(window->commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, window->graphicsPipeline);
-        vkCmdDraw(window->commandBuffers[i], MAX_SWAP_CHAIN_FRAMES, 1, 0, 0);
+
+        VkBuffer vertexBuffers[] = { window->vertexBuffer };
+        VkDeviceSize offsets[] = { 0 };
+        vkCmdBindVertexBuffers(window->commandBuffers[i], 0, 1, vertexBuffers, offsets);
+
+        vkCmdBindIndexBuffer(window->commandBuffers[i], window->indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+
+        vkCmdBindDescriptorSets(window->commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, window->pipelineLayout, 0, 1, &window->descriptorSets[i], 0, NULL);
+
+        vkCmdDrawIndexed(window->commandBuffers[i], window->imageIndices.total, 1, 0, 0, 0);
         vkCmdEndRenderPass(window->commandBuffers[i]);
 
         if (vkEndCommandBuffer(window->commandBuffers[i]) != VK_SUCCESS)
@@ -983,7 +1096,7 @@ VkFormat findDepthFormat(struct Window* window)
     return 0;
 }
 
-void createImage(struct Window* window, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage image, VkDeviceMemory imageMemory)
+void createImage(struct Window* window, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage* image, VkDeviceMemory* imageMemory)
 {
     VkImageCreateInfo imageInfo = { 0 };
     imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -1000,21 +1113,21 @@ void createImage(struct Window* window, uint32_t width, uint32_t height, VkForma
     imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
     imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    if (vkCreateImage(window->device, &imageInfo, NULL, &image) != VK_SUCCESS)
+    if (vkCreateImage(window->device, &imageInfo, NULL, image) != VK_SUCCESS)
         printf("failed to create image!");
 
     VkMemoryRequirements memRequirements;
-    vkGetImageMemoryRequirements(window->device, image, &memRequirements);
+    vkGetImageMemoryRequirements(window->device, *image, &memRequirements);
 
     VkMemoryAllocateInfo allocInfo = { 0 };
     allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocInfo.allocationSize = memRequirements.size;
     allocInfo.memoryTypeIndex = findMemoryType(window, memRequirements.memoryTypeBits, properties);
 
-    if (vkAllocateMemory(window->device, &allocInfo, NULL, &imageMemory) != VK_SUCCESS)
+    if (vkAllocateMemory(window->device, &allocInfo, NULL, imageMemory) != VK_SUCCESS)
         printf("failed to allocate image memory!");
 
-    vkBindImageMemory(window->device, image, imageMemory, 0);
+    vkBindImageMemory(window->device, *image, *imageMemory, 0);
 }
 
 void transitionImageLayout(struct Window* window, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
@@ -1111,7 +1224,7 @@ void endSingleTimeCommands(struct Window* window, VkCommandBuffer commandBuffer)
     vkFreeCommandBuffers(window->device, window->commandPool, 1, &commandBuffer);
 }
 
-void createBuffer(struct Window* window, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer buffer, VkDeviceMemory bufferMemory)
+void createBuffer(struct Window* window, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer* buffer, VkDeviceMemory* bufferMemory)
 {
     VkBufferCreateInfo bufferInfo = { 0 };
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -1119,21 +1232,21 @@ void createBuffer(struct Window* window, VkDeviceSize size, VkBufferUsageFlags u
     bufferInfo.usage = usage;
     bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    if (vkCreateBuffer(window->device, &bufferInfo, NULL, &buffer) != VK_SUCCESS)
+    if (vkCreateBuffer(window->device, &bufferInfo, NULL, buffer) != VK_SUCCESS)
         printf("failed to create buffer!\n");
 
     VkMemoryRequirements memRequirements;
-    vkGetBufferMemoryRequirements(window->device, buffer, &memRequirements);
+    vkGetBufferMemoryRequirements(window->device, *buffer, &memRequirements);
 
     VkMemoryAllocateInfo allocInfo = { 0 };
     allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocInfo.allocationSize = memRequirements.size;
     allocInfo.memoryTypeIndex = findMemoryType(window, memRequirements.memoryTypeBits, properties);
 
-    if (vkAllocateMemory(window->device, &allocInfo, NULL, &bufferMemory) != VK_SUCCESS)
+    if (vkAllocateMemory(window->device, &allocInfo, NULL, bufferMemory) != VK_SUCCESS)
         printf("failed to allocate buffer memory!\n");
 
-    vkBindBufferMemory(window->device, buffer, bufferMemory, 0);
+    vkBindBufferMemory(window->device, *buffer, *bufferMemory, 0);
 }
 
 void copyBufferToImage(struct Window* window, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
@@ -1176,25 +1289,27 @@ uint32_t findMemoryType(struct Window* window, uint32_t typeFilter, VkMemoryProp
     return -1;
 }
 
-voif createVertexBuffer(struct Window* window)
+int createVertexBuffer(struct Window* window)
 {
     VkDeviceSize bufferSize = sizeof(window->imageVertices.items[0]) * window->imageVertices.total;
 
     VkBuffer stagingBuffer = { 0 };
     VkDeviceMemory stagingBufferMemory = { 0 };
-    createBuffer(window, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+    createBuffer(window, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &stagingBuffer, &stagingBufferMemory);
 
     void* data;
     vkMapMemory(window->device, stagingBufferMemory, 0, bufferSize, 0, &data);
     memcpy(data, window->imageVertices.items, bufferSize);
     vkUnmapMemory(window->device, stagingBufferMemory);
 
-    createBuffer(window, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, window->vertexBuffer, window->vertexBufferMemory);
+    createBuffer(window, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &window->vertexBuffer, &window->vertexBufferMemory);
 
     copyBuffer(window, stagingBuffer, window->vertexBuffer, bufferSize);
 
     vkDestroyBuffer(window->device, stagingBuffer, NULL);
     vkFreeMemory(window->device, stagingBufferMemory, NULL);
+
+    return 0;
 }
 
 void copyBuffer(struct Window* window, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
@@ -1208,23 +1323,180 @@ void copyBuffer(struct Window* window, VkBuffer srcBuffer, VkBuffer dstBuffer, V
     endSingleTimeCommands(window, commandBuffer);
 }
 
-void createIndexBuffer(struct Window* window)
+int createIndexBuffer(struct Window* window)
 {
-    VkDeviceSize bufferSize = sizeof(window->imageIndices[0]) * window->imageIndices.total;
+    VkDeviceSize bufferSize = sizeof(window->imageIndices.items[0]) * window->imageIndices.total;
 
     VkBuffer stagingBuffer = { 0 };
     VkDeviceMemory stagingBufferMemory = { 0 };
-    createBuffer(window, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+    createBuffer(window, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &stagingBuffer, &stagingBufferMemory);
 
     void* data;
     vkMapMemory(window->device, stagingBufferMemory, 0, bufferSize, 0, &data);
     memcpy(data, window->imageIndices.items, bufferSize);
     vkUnmapMemory(window->device, stagingBufferMemory);
 
-    createBuffer(window, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, window->indexBuffer, indexBufferMemory);
+    createBuffer(window, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &window->indexBuffer, &window->indexBufferMemory);
 
-    copyBuffer(stagingBuffer, indexBuffer, bufferSize);
+    copyBuffer(window, stagingBuffer, window->indexBuffer, bufferSize);
 
     vkDestroyBuffer(window->device, stagingBuffer, NULL);
     vkFreeMemory(window->device, stagingBufferMemory, NULL);
+
+    return 0;
+}
+
+int createUniformBuffers(struct Window* window)
+{
+    VkDeviceSize bufferSize = sizeof(struct UniformBufferObject);
+
+    for (size_t i = 0; i < MAX_SWAP_CHAIN_FRAMES; i++)
+        createBuffer(window, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &window->uniformBuffers[i], &window->uniformBuffersMemory[i]);
+
+    return 0;
+}
+
+int createDescriptorPool(struct Window* window)
+{
+    VkDescriptorPoolSize poolSizes[2];
+    memset(poolSizes, 0, sizeof(poolSizes));
+
+    poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    poolSizes[0].descriptorCount = MAX_SWAP_CHAIN_FRAMES;
+    poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    poolSizes[1].descriptorCount = MAX_SWAP_CHAIN_FRAMES;
+
+    VkDescriptorPoolCreateInfo poolInfo = { 0 };
+    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    poolInfo.poolSizeCount = 2;
+    poolInfo.pPoolSizes = poolSizes;
+    poolInfo.maxSets = MAX_SWAP_CHAIN_FRAMES;
+
+    if (vkCreateDescriptorPool(window->device, &poolInfo, NULL, &window->descriptorPool) != VK_SUCCESS)
+        printf("failed to create descriptor pool!\n");
+
+    return 0;
+}
+
+int createDescriptorSets(struct Window* window)
+{
+    VkDescriptorSetLayout layouts[MAX_SWAP_CHAIN_FRAMES];
+    memset(layouts, 0, sizeof(layouts));
+
+    for (int loopNum = 0; loopNum < MAX_SWAP_CHAIN_FRAMES; loopNum++)
+        layouts[loopNum] = window->descriptorSetLayout;
+
+    VkDescriptorSetAllocateInfo allocInfo = { 0 };
+    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    allocInfo.descriptorPool = window->descriptorPool;
+    allocInfo.descriptorSetCount = MAX_SWAP_CHAIN_FRAMES;
+    allocInfo.pSetLayouts = layouts;
+
+    if (vkAllocateDescriptorSets(window->device, &allocInfo, window->descriptorSets) != VK_SUCCESS)
+        printf("failed to allocate descriptor sets!\n");
+
+    for (size_t i = 0; i < MAX_SWAP_CHAIN_FRAMES; i++) {
+        VkDescriptorBufferInfo bufferInfo = { 0 };
+        bufferInfo.buffer = window->uniformBuffers[i];
+        bufferInfo.offset = 0;
+        bufferInfo.range = sizeof(struct UniformBufferObject);
+
+        VkDescriptorImageInfo imageInfo = { 0 };
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.imageView = window->textureImageView;
+        imageInfo.sampler = window->textureSampler;
+
+        VkWriteDescriptorSet descriptorWrites[2];
+        memset(descriptorWrites, 0, sizeof(descriptorWrites));
+
+        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[0].dstSet = window->descriptorSets[i];
+        descriptorWrites[0].dstBinding = 0;
+        descriptorWrites[0].dstArrayElement = 0;
+        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[0].descriptorCount = 1;
+        descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[1].dstSet = window->descriptorSets[i];
+        descriptorWrites[1].dstBinding = 1;
+        descriptorWrites[1].dstArrayElement = 0;
+        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[1].descriptorCount = 1;
+        descriptorWrites[1].pImageInfo = &imageInfo;
+
+        vkUpdateDescriptorSets(window->device, 2, descriptorWrites, 0, NULL);
+    }
+
+    return 0;
+}
+
+void recreateSwapChain(struct Window* window)
+{
+    int width = 0, height = 0;
+    while (width == 0 || height == 0) {
+        glfwGetFramebufferSize(window->glfwWindow, &width, &height);
+        glfwWaitEvents();
+    }
+
+    vkDeviceWaitIdle(window->device);
+
+    cleanupSwapChain(window);
+
+    createSwapChain(window);
+    createImageViews(window);
+    createRenderPass(window);
+    createGraphicsPipeline(window);
+    createDepthResources(window);
+    createFramebuffers(window);
+    createCommandBuffers(window);
+}
+
+void cleanupSwapChain(struct Window* window)
+{
+    vkDestroyImageView(window->device, window->depthImageView, NULL);
+    vkDestroyImage(window->device, window->depthImage, NULL);
+    vkFreeMemory(window->device, window->depthImageMemory, NULL);
+
+    for (int loopNum = 0; loopNum < MAX_SWAP_CHAIN_FRAMES; loopNum++)
+        vkDestroyFramebuffer(window->device, window->swapChainFramebuffers[loopNum], NULL);
+
+    vkFreeCommandBuffers(window->device, window->commandPool, SMALL_BUFFER, window->commandBuffers);
+
+    vkDestroyPipeline(window->device, window->graphicsPipeline, NULL);
+    vkDestroyPipelineLayout(window->device, window->pipelineLayout, NULL);
+    vkDestroyRenderPass(window->device, window->renderPass, NULL);
+
+    for (int loopNum = 0; loopNum < MAX_SWAP_CHAIN_FRAMES; loopNum++)
+        vkDestroyImageView(window->device, window->swapChainImageViews[loopNum], NULL);
+
+    vkDestroySwapchainKHR(window->device, window->swapChain, NULL);
+}
+
+VkVertexInputBindingDescription getBindingDescription()
+{
+    VkVertexInputBindingDescription bindingDescription = { 0 };
+    bindingDescription.binding = 0;
+    bindingDescription.stride = sizeof(struct Vertex);
+    bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+    return bindingDescription;
+}
+
+void getAttributeDescriptions(VkVertexInputAttributeDescription* attributeDescriptions)
+{
+    attributeDescriptions[0].binding = 0;
+    attributeDescriptions[0].location = 0;
+    attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+    attributeDescriptions[0].offset = offsetof(struct Vertex, pos);
+
+    attributeDescriptions[1].binding = 0;
+    attributeDescriptions[1].location = 1;
+    attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+    attributeDescriptions[1].offset = offsetof(struct Vertex, color);
+
+    attributeDescriptions[2].binding = 0;
+    attributeDescriptions[2].location = 2;
+    attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+    attributeDescriptions[2].offset = offsetof(struct Vertex, texCoord);
 }

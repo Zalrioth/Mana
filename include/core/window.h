@@ -40,6 +40,18 @@ struct QueueFamilyIndices {
     uint32_t presentFamily;
 };
 
+struct UniformBufferObject {
+    mat4 model;
+    mat4 view;
+    mat4 proj;
+};
+
+struct Vertex {
+    vec3 pos;
+    vec3 color;
+    vec2 texCoord;
+};
+
 //presentModes
 
 //vector myVector
@@ -72,6 +84,8 @@ struct Window {
     VkFramebuffer swapChainFramebuffers[MAX_SWAP_CHAIN_FRAMES];
     VkDebugUtilsMessengerEXT debugMessenger;
     VkCommandPool commandPool;
+    VkDescriptorPool descriptorPool;
+    VkDescriptorSet descriptorSets[MAX_SWAP_CHAIN_FRAMES];
 
     VkImage textureImage;
     VkDeviceMemory textureImageMemory;
@@ -80,6 +94,9 @@ struct Window {
 
     struct Vector imageVertices;
     struct Vector imageIndices;
+
+    VkBuffer uniformBuffers[MAX_SWAP_CHAIN_FRAMES];
+    VkDeviceMemory uniformBuffersMemory[MAX_SWAP_CHAIN_FRAMES];
 
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexBufferMemory;
@@ -98,11 +115,13 @@ struct Window {
     struct QueueFamilyIndices indices;
     int width;
     int height;
+    bool framebufferResized;
 };
 
 int init_window(struct Window* window, int width, int height);
 void delete_window(struct Window* gameWindow);
 int create_glfw_window(struct Window* gameWindow, int width, int height);
 bool checkValidationLayerSupport();
+void recreateSwapChain(struct Window* window);
 
 #endif // WINDOW_H_
