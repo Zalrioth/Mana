@@ -67,3 +67,9 @@ void vector_free(struct Vector* v)
 {
     free(v->items);
 }
+
+void vector_clear(struct Vector* v)
+{
+    for (int i = v->total - 1; i >= 0; i--)
+        vector_delete(v, i);
+}

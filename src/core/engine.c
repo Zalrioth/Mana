@@ -65,6 +65,12 @@ void render(struct Window* window)
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
 
+    //for (int i = window->imageIndices.total - 1; i >= 0; i--)
+    //fprintf(stderr, "print out Num: %d\n", *(int*)vector_get(&window->imageIndices, i));
+
+    //for (int i = window->imageVertices.total - 1; i >= 0; i--)
+    //fprintf(stderr, "print out Struct: %f\n", ((struct Vertex*)vector_get(&window->imageVertices, i))->color[0]);
+
     vkResetFences(window->device, 1, &window->inFlightFences[window->currentFrame]);
 
     if (vkQueueSubmit(window->graphicsQueue, 1, &submitInfo, window->inFlightFences[window->currentFrame]) != VK_SUCCESS)
@@ -206,9 +212,13 @@ void updateUniformBuffer(struct Window* window, uint32_t currentImage)
 {
     double time = fmod(get_time(), M_2_PI);
 
-    struct UniformBufferObject ubo = { 0 };
-    //ubo.model = (vec3){ 0.0f, 0.0f, 1.0f };
-    glm_rotate((mat4){ 1.0f }, time * glm_rad(90.0f), ubo.model);
+    struct UniformBufferObject ubo = { { { 0 } } };
+    //ubo.model = (mat4){ { 1.0f } };
+    ubo.model[0][0] = 1.0f;
+    ubo.model[1][1] = 1.0f;
+    ubo.model[2][2] = 1.0f;
+    ubo.model[3][3] = 1.0f;
+    glm_rotate(ubo.model, time * glm_rad(90.0f), (vec3){ 0.0f, 0.0f, 1.0f });
     glm_lookat((vec3){ 2.0f, 2.0f, 2.0f }, (vec3){ 0.0f, 0.0f, 0.0f }, (vec3){ 0.0f, 0.0f, 1.0f }, ubo.view);
     glm_perspective(glm_rad(45.0f), window->swapChainExtent.width / (float)window->swapChainExtent.height, 0.1f, 10.0f, ubo.proj);
     ubo.proj[1][1] *= -1;

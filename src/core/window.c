@@ -27,6 +27,8 @@ int createUniformBuffers(struct Window* window);
 int createDescriptorPool(struct Window* window);
 int createDescriptorSets(struct Window* window);
 
+void assign_vertex(struct Vertex* vertex, float r, float g, float b, float x, float y, float z, float u, float v);
+
 int createCommandBuffers(struct Window* window);
 int createSyncObjects(struct Window* window);
 
@@ -116,53 +118,91 @@ int init_window(struct Window* window, int width, int height)
 
     vector_init(&window->imageVertices);
 
-    struct Vertex test1 = { { -0.5f, -0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f } };
-    struct Vertex test2 = { { 0.5f, -0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f } };
-    struct Vertex test3 = { { 0.5f, 0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f } };
-    struct Vertex test4 = { { -0.5f, 0.5f, 0.0f }, { 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f } };
+    struct Vertex* test1 = malloc(sizeof(struct Vertex));
+    assign_vertex(test1, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
 
-    struct Vertex test5 = { { -0.5f, -0.5f, -0.5f }, { 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f } };
-    struct Vertex test6 = { { 0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f } };
-    struct Vertex test7 = { { 0.5f, 0.5f, -0.5f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f } };
-    struct Vertex test8 = { { -0.5f, 0.5f, -0.5f }, { 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f } };
+    struct Vertex* test2 = malloc(sizeof(struct Vertex));
+    assign_vertex(test2, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f);
 
-    vector_add(&window->imageVertices, &test1);
-    vector_add(&window->imageVertices, &test2);
-    vector_add(&window->imageVertices, &test3);
-    vector_add(&window->imageVertices, &test4);
+    struct Vertex* test3 = malloc(sizeof(struct Vertex));
+    assign_vertex(test3, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
 
-    vector_add(&window->imageVertices, &test5);
-    vector_add(&window->imageVertices, &test6);
-    vector_add(&window->imageVertices, &test7);
-    vector_add(&window->imageVertices, &test8);
+    struct Vertex* test4 = malloc(sizeof(struct Vertex));
+    assign_vertex(test4, -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+
+    ///////////////////////////
+    struct Vertex* test5 = malloc(sizeof(struct Vertex));
+    assign_vertex(test5, -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+
+    struct Vertex* test6 = malloc(sizeof(struct Vertex));
+    assign_vertex(test6, 0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f);
+
+    struct Vertex* test7 = malloc(sizeof(struct Vertex));
+    assign_vertex(test7, 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
+
+    struct Vertex* test8 = malloc(sizeof(struct Vertex));
+    assign_vertex(test8, -0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+
+    vector_add(&window->imageVertices, test1);
+    vector_add(&window->imageVertices, test2);
+    vector_add(&window->imageVertices, test3);
+    vector_add(&window->imageVertices, test4);
+
+    vector_add(&window->imageVertices, test5);
+    vector_add(&window->imageVertices, test6);
+    vector_add(&window->imageVertices, test7);
+    vector_add(&window->imageVertices, test8);
 
     vector_init(&window->imageIndices);
 
-    int index1 = 0;
-    int index2 = 1;
-    int index3 = 2;
-    int index4 = 2;
-    int index5 = 3;
-    int index6 = 0;
-    int index7 = 4;
-    int index8 = 5;
-    int index9 = 6;
-    int index10 = 6;
-    int index11 = 7;
-    int index12 = 4;
+    int* index1 = (int*)malloc(sizeof(int));
+    *index1 = 0;
 
-    vector_add(&window->imageIndices, &index1);
-    vector_add(&window->imageIndices, &index2);
-    vector_add(&window->imageIndices, &index3);
-    vector_add(&window->imageIndices, &index4);
-    vector_add(&window->imageIndices, &index5);
-    vector_add(&window->imageIndices, &index6);
-    vector_add(&window->imageIndices, &index7);
-    vector_add(&window->imageIndices, &index8);
-    vector_add(&window->imageIndices, &index9);
-    vector_add(&window->imageIndices, &index10);
-    vector_add(&window->imageIndices, &index11);
-    vector_add(&window->imageIndices, &index12);
+    int* index2 = (int*)malloc(sizeof(int));
+    *index2 = 1;
+
+    int* index3 = (int*)malloc(sizeof(int));
+    *index3 = 2;
+
+    int* index4 = (int*)malloc(sizeof(int));
+    *index4 = 2;
+
+    int* index5 = (int*)malloc(sizeof(int));
+    *index5 = 3;
+
+    int* index6 = (int*)malloc(sizeof(int));
+    *index6 = 0;
+
+    int* index7 = (int*)malloc(sizeof(int));
+    *index7 = 4;
+
+    int* index8 = (int*)malloc(sizeof(int));
+    *index8 = 5;
+
+    int* index9 = (int*)malloc(sizeof(int));
+    *index9 = 6;
+
+    int* index10 = (int*)malloc(sizeof(int));
+    *index10 = 6;
+
+    int* index11 = (int*)malloc(sizeof(int));
+    *index11 = 7;
+
+    int* index12 = (int*)malloc(sizeof(int));
+    *index12 = 4;
+
+    vector_add(&window->imageIndices, index1);
+    vector_add(&window->imageIndices, index2);
+    vector_add(&window->imageIndices, index3);
+    vector_add(&window->imageIndices, index4);
+    vector_add(&window->imageIndices, index5);
+    vector_add(&window->imageIndices, index6);
+    vector_add(&window->imageIndices, index7);
+    vector_add(&window->imageIndices, index8);
+    vector_add(&window->imageIndices, index9);
+    vector_add(&window->imageIndices, index10);
+    vector_add(&window->imageIndices, index11);
+    vector_add(&window->imageIndices, index12);
 
     createDepthResources(window);
 
@@ -191,9 +231,50 @@ cleanup:
     return errorCode;
 }
 
+void assign_vertex(struct Vertex* vertex, float x, float y, float z, float r, float g, float b, float u, float v)
+{
+    vertex->pos[0] = x;
+    vertex->pos[1] = y;
+    vertex->pos[2] = z;
+
+    vertex->color[0] = r;
+    vertex->color[1] = g;
+    vertex->color[2] = b;
+
+    vertex->texCoord[0] = u;
+    vertex->texCoord[1] = v;
+}
+
 void delete_window(struct Window* window)
 {
-    vkDeviceWaitIdle(window->device);
+    cleanupSwapChain(window);
+
+    vector_clear(&window->imageVertices);
+    vector_free(&window->imageVertices);
+
+    vector_clear(&window->imageIndices);
+    vector_free(&window->imageIndices);
+
+    vkDestroySampler(window->device, window->textureSampler, NULL);
+    vkDestroyImageView(window->device, window->textureImageView, NULL);
+
+    vkDestroyImage(window->device, window->textureImage, NULL);
+    vkFreeMemory(window->device, window->textureImageMemory, NULL);
+
+    vkDestroyDescriptorPool(window->device, window->descriptorPool, NULL);
+
+    vkDestroyDescriptorSetLayout(window->device, window->descriptorSetLayout, NULL);
+
+    for (int loopNum = 0; loopNum < MAX_SWAP_CHAIN_FRAMES; loopNum++) {
+        vkDestroyBuffer(window->device, window->uniformBuffers[loopNum], NULL);
+        vkFreeMemory(window->device, window->uniformBuffersMemory[loopNum], NULL);
+    }
+
+    vkDestroyBuffer(window->device, window->indexBuffer, NULL);
+    vkFreeMemory(window->device, window->indexBufferMemory, NULL);
+
+    vkDestroyBuffer(window->device, window->vertexBuffer, NULL);
+    vkFreeMemory(window->device, window->vertexBufferMemory, NULL);
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         vkDestroySemaphore(window->device, window->renderFinishedSemaphores[i], NULL);
@@ -201,21 +282,8 @@ void delete_window(struct Window* window)
         vkDestroyFence(window->device, window->inFlightFences[i], NULL);
     }
 
-    vkDestroyDescriptorSetLayout(window->device, window->descriptorSetLayout, NULL);
-
     vkDestroyCommandPool(window->device, window->commandPool, NULL);
 
-    for (int loopNum = 0; loopNum < MAX_SWAP_CHAIN_FRAMES; loopNum++)
-        vkDestroyFramebuffer(window->device, window->swapChainFramebuffers[loopNum], NULL);
-
-    vkDestroyPipeline(window->device, window->graphicsPipeline, NULL);
-    vkDestroyPipelineLayout(window->device, window->pipelineLayout, NULL);
-    vkDestroyRenderPass(window->device, window->renderPass, NULL);
-
-    for (int loopNum = 0; loopNum < MAX_SWAP_CHAIN_FRAMES; loopNum++)
-        vkDestroyImageView(window->device, window->swapChainImageViews[loopNum], NULL);
-
-    vkDestroySwapchainKHR(window->device, window->swapChain, NULL);
     vkDestroyDevice(window->device, NULL);
 
     if (enableValidationLayers)
@@ -225,6 +293,7 @@ void delete_window(struct Window* window)
     vkDestroyInstance(window->instance, NULL);
 
     glfwDestroyWindow(window->glfwWindow);
+
     glfwTerminate();
 }
 
@@ -378,6 +447,7 @@ int createLogicalDevice(struct Window* window)
     queueCreateInfos[1].pQueuePriorities = &queuePriority;
 
     struct VkPhysicalDeviceFeatures deviceFeatures = { 0 };
+    deviceFeatures.samplerAnisotropy = VK_TRUE;
 
     struct VkDeviceCreateInfo deviceInfo = { 0 };
     deviceInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
