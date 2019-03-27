@@ -14,10 +14,6 @@ int vector_total(struct Vector* v)
 
 void vector_resize(struct Vector* v, int capacity)
 {
-#ifdef DEBUG_ON
-    printf("vector_resize: %d to %d\n", v->capacity, capacity);
-#endif
-
     void** items = realloc(v->items, sizeof(void*) * capacity);
     if (items) {
         v->items = items;
