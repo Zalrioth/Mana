@@ -73,7 +73,9 @@ void render(struct Window* window)
 
     vkResetFences(window->device, 1, &window->inFlightFences[window->currentFrame]);
 
-    if (vkQueueSubmit(window->graphicsQueue, 1, &submitInfo, window->inFlightFences[window->currentFrame]) != VK_SUCCESS)
+    result = vkQueueSubmit(window->graphicsQueue, 1, &submitInfo, window->inFlightFences[window->currentFrame]);
+
+    if (result != VK_SUCCESS)
         fprintf(stderr, "Error to submit draw command buffer!\n");
     //throw std::runtime_error("failed to submit draw command buffer!");
 
@@ -153,38 +155,6 @@ void update_engine(struct Engine* engine)
 
 void logic(struct Engine* engine, double deltaTime)
 {
-    //int i;
-
-    /*VECTOR_ADD(entities, "Bonjour");
-    VECTOR_ADD(entities, "tout");
-    VECTOR_ADD(entities, "le");
-    VECTOR_ADD(entities, "monde");
-
-    for (i = 0; i < VECTOR_TOTAL(entities); i++)
-        printf("%s ", VECTOR_GET(entities, char*, i));
-    printf("\n");
-
-    VECTOR_DELETE(entities, 3);
-    VECTOR_DELETE(entities, 2);
-    VECTOR_DELETE(entities, 1);
-
-    VECTOR_SET(entities, 0, "Hello");
-    VECTOR_ADD(entities, "World");
-
-    for (i = 0; i < VECTOR_TOTAL(entities); i++)
-        printf("%s ", VECTOR_GET(entities, char*, i));
-    printf("\n");
-
-    printf("before vector size: %d\n", VECTOR_TOTAL(entities));
-
-    for (i = VECTOR_TOTAL(entities) - 1; i >= 0; i--)
-        VECTOR_DELETE(entities, i);
-
-    printf("total vector size: %d\n", VECTOR_TOTAL(entities));
-
-    //VECTOR_FREE(entities);*/
-
-    //display();
 }
 
 double get_time()
@@ -212,16 +182,20 @@ void updateUniformBuffer(struct Window* window, uint32_t currentImage)
 {
     double time = fmod(get_time(), M_2_PI);
 
+    time = 1.0;
+
     struct UniformBufferObject ubo = { { { 0 } } };
     //ubo.model = (mat4){ { 1.0f } };
     ubo.model[0][0] = 1.0f;
-    ubo.model[1][1] = 1.0f;
-    ubo.model[2][2] = 1.0f;
-    ubo.model[3][3] = 1.0f;
+    ubo.model[0][1] = 1.0f;
+    ubo.model[0][2] = 1.0f;
+    ubo.model[0][3] = 1.0f;
+
     glm_rotate(ubo.model, time * glm_rad(90.0f), (vec3){ 0.0f, 0.0f, 1.0f });
     glm_lookat((vec3){ 2.0f, 2.0f, 2.0f }, (vec3){ 0.0f, 0.0f, 0.0f }, (vec3){ 0.0f, 0.0f, 1.0f }, ubo.view);
-    glm_perspective(glm_rad(45.0f), window->swapChainExtent.width / (float)window->swapChainExtent.height, 0.1f, 10.0f, ubo.proj);
+    glm_perspective(glm_rad(45.0f), (float)window->swapChainExtent.width / (float)window->swapChainExtent.height, 0.1f, 10.0f, ubo.proj);
     ubo.proj[1][1] *= -1;
+    //ubo.proj[3][2] /= 2;
 
     void* data;
     vkMapMemory(window->device, window->uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);

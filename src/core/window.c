@@ -178,11 +178,11 @@ void delete_window(struct Window* window)
 {
     cleanupSwapChain(window);
 
-    vector_clear(&window->imageVertices);
-    vector_free(&window->imageVertices);
+    //vector_clear(&window->imageVertices);
+    //vector_free(&window->imageVertices);
 
-    vector_clear(&window->imageIndices);
-    vector_free(&window->imageIndices);
+    //vector_clear(&window->imageIndices);
+    //vector_free(&window->imageIndices);
 
     vkDestroySampler(window->device, window->textureSampler, NULL);
     vkDestroyImageView(window->device, window->textureImageView, NULL);
@@ -226,12 +226,22 @@ void delete_window(struct Window* window)
     glfwTerminate();
 }
 
+static void framebufferResizeCallback(GLFWwindow* window, int width, int height)
+{
+    struct Window* windowHandle = (struct Window*)(glfwGetWindowUserPointer(window));
+    windowHandle->framebufferResized = true;
+}
+
 int createWindow(struct Window* window, int width, int height)
 {
     memset(window, 0, sizeof(struct Window));
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
+    glfwInit();
+
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
     window->glfwWindow = glfwCreateWindow(width, height, "Grindstone", NULL, NULL);
     window->width = width;
@@ -240,99 +250,37 @@ int createWindow(struct Window* window, int width, int height)
     window->physicalDevice = VK_NULL_HANDLE;
     window->currentFrame = 0;
 
+    glfwSetWindowUserPointer(window->glfwWindow, &window);
+    glfwSetFramebufferSizeCallback(window->glfwWindow, framebufferResizeCallback);
+
     glfwSwapInterval(1);
     glfwMakeContextCurrent(window->glfwWindow);
 
     if (!window->glfwWindow)
         return CREATE_WINDOW_ERROR;
 
-    vector_init(&window->imageVertices);
+    assign_vertex(&window->imageVertices[0], -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+    assign_vertex(&window->imageVertices[1], 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f);
+    assign_vertex(&window->imageVertices[2], 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
+    assign_vertex(&window->imageVertices[3], -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 
-    struct Vertex* test1 = malloc(sizeof(struct Vertex));
-    assign_vertex(test1, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+    assign_vertex(&window->imageVertices[4], -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+    assign_vertex(&window->imageVertices[5], 0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f);
+    assign_vertex(&window->imageVertices[6], 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
+    assign_vertex(&window->imageVertices[7], -0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 
-    struct Vertex* test2 = malloc(sizeof(struct Vertex));
-    assign_vertex(test2, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f);
-
-    struct Vertex* test3 = malloc(sizeof(struct Vertex));
-    assign_vertex(test3, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
-
-    struct Vertex* test4 = malloc(sizeof(struct Vertex));
-    assign_vertex(test4, -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
-
-    ///////////////////////////
-    struct Vertex* test5 = malloc(sizeof(struct Vertex));
-    assign_vertex(test5, -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-
-    struct Vertex* test6 = malloc(sizeof(struct Vertex));
-    assign_vertex(test6, 0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f);
-
-    struct Vertex* test7 = malloc(sizeof(struct Vertex));
-    assign_vertex(test7, 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
-
-    struct Vertex* test8 = malloc(sizeof(struct Vertex));
-    assign_vertex(test8, -0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
-
-    vector_add(&window->imageVertices, test1);
-    vector_add(&window->imageVertices, test2);
-    vector_add(&window->imageVertices, test3);
-    vector_add(&window->imageVertices, test4);
-
-    vector_add(&window->imageVertices, test5);
-    vector_add(&window->imageVertices, test6);
-    vector_add(&window->imageVertices, test7);
-    vector_add(&window->imageVertices, test8);
-
-    vector_init(&window->imageIndices);
-
-    int* index1 = (int*)malloc(sizeof(int));
-    *index1 = 0;
-
-    int* index2 = (int*)malloc(sizeof(int));
-    *index2 = 1;
-
-    int* index3 = (int*)malloc(sizeof(int));
-    *index3 = 2;
-
-    int* index4 = (int*)malloc(sizeof(int));
-    *index4 = 2;
-
-    int* index5 = (int*)malloc(sizeof(int));
-    *index5 = 3;
-
-    int* index6 = (int*)malloc(sizeof(int));
-    *index6 = 0;
-
-    int* index7 = (int*)malloc(sizeof(int));
-    *index7 = 4;
-
-    int* index8 = (int*)malloc(sizeof(int));
-    *index8 = 5;
-
-    int* index9 = (int*)malloc(sizeof(int));
-    *index9 = 6;
-
-    int* index10 = (int*)malloc(sizeof(int));
-    *index10 = 6;
-
-    int* index11 = (int*)malloc(sizeof(int));
-    *index11 = 7;
-
-    int* index12 = (int*)malloc(sizeof(int));
-    *index12 = 4;
-
-    vector_add(&window->imageIndices, index1);
-    vector_add(&window->imageIndices, index2);
-    vector_add(&window->imageIndices, index3);
-    vector_add(&window->imageIndices, index4);
-    vector_add(&window->imageIndices, index5);
-    vector_add(&window->imageIndices, index6);
-    vector_add(&window->imageIndices, index7);
-    vector_add(&window->imageIndices, index8);
-    vector_add(&window->imageIndices, index9);
-    vector_add(&window->imageIndices, index10);
-    vector_add(&window->imageIndices, index11);
-    vector_add(&window->imageIndices, index12);
+    window->imageIndices[0] = 0;
+    window->imageIndices[1] = 1;
+    window->imageIndices[2] = 2;
+    window->imageIndices[3] = 2;
+    window->imageIndices[4] = 3;
+    window->imageIndices[5] = 0;
+    window->imageIndices[6] = 4;
+    window->imageIndices[7] = 5;
+    window->imageIndices[8] = 6;
+    window->imageIndices[9] = 6;
+    window->imageIndices[10] = 7;
+    window->imageIndices[11] = 4;
 
     return NO_ERROR;
 }
@@ -447,7 +395,8 @@ int pickPhysicalDevice(struct Window* window)
 int createLogicalDevice(struct Window* window)
 {
     // Create device
-    int queueCreateInfosSize = 2;
+    //TODO: LOOK MORE INTO THIS NOT CORRECT
+    int queueCreateInfosSize = 1;
     VkDeviceQueueCreateInfo queueCreateInfos[queueCreateInfosSize];
     memset(queueCreateInfos, 0, sizeof(queueCreateInfos));
 
@@ -458,12 +407,12 @@ int createLogicalDevice(struct Window* window)
     queueCreateInfos[0].queueCount = 1;
     queueCreateInfos[0].pQueuePriorities = &queuePriority;
 
-    if ((&window->indices)->graphicsFamily != (&window->indices)->presentFamily) {
-        queueCreateInfos[1].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        queueCreateInfos[1].queueFamilyIndex = (&window->indices)->presentFamily;
-        queueCreateInfos[1].queueCount = 1;
-        queueCreateInfos[1].pQueuePriorities = &queuePriority;
-    }
+    //if ((&window->indices)->graphicsFamily != (&window->indices)->presentFamily) {
+    //    queueCreateInfos[1].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    //    queueCreateInfos[1].queueFamilyIndex = (&window->indices)->presentFamily;
+    //    queueCreateInfos[1].queueCount = 1;
+    //    queueCreateInfos[1].pQueuePriorities = &queuePriority;
+    //}
 
     struct VkPhysicalDeviceFeatures deviceFeatures = { 0 };
     deviceFeatures.samplerAnisotropy = VK_TRUE;
@@ -471,10 +420,10 @@ int createLogicalDevice(struct Window* window)
     struct VkDeviceCreateInfo deviceInfo = { 0 };
     deviceInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 
-    if ((&window->indices)->graphicsFamily != (&window->indices)->presentFamily)
-        deviceInfo.queueCreateInfoCount = (uint32_t)(queueCreateInfosSize);
-    else
-        deviceInfo.queueCreateInfoCount = 1;
+    //if ((&window->indices)->graphicsFamily != (&window->indices)->presentFamily)
+    //    deviceInfo.queueCreateInfoCount = (uint32_t)(queueCreateInfosSize);
+    //else
+    deviceInfo.queueCreateInfoCount = 1;
     deviceInfo.pQueueCreateInfos = queueCreateInfos;
 
     deviceInfo.pEnabledFeatures = &deviceFeatures;
@@ -1041,7 +990,7 @@ int createCommandBuffers(struct Window* window)
         memset(clearValues, 0, sizeof(clearValues));
 
         //http://ogldev.atspace.co.uk/www/tutorial51/tutorial51.html
-        VkClearColorValue clearColor = { { 164.0f / 256.0f, 30.0f / 256.0f, 34.0f / 256.0f, 0.0f } };
+        VkClearColorValue clearColor = { { 0.0f, 0.0f, 0.0f, 1.0f } };
         clearValues[0].color = clearColor;
 
         VkClearDepthStencilValue depthColor = { 1.0f, 0 };
@@ -1061,7 +1010,9 @@ int createCommandBuffers(struct Window* window)
 
         vkCmdBindDescriptorSets(window->commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, window->pipelineLayout, 0, 1, &window->descriptorSets[i], 0, NULL);
 
-        vkCmdDrawIndexed(window->commandBuffers[i], window->imageIndices.total, 1, 0, 0, 0);
+        //vkCmdDrawIndexed(window->commandBuffers[i], window->imageIndices.total, 1, 0, 0, 0);
+        vkCmdDrawIndexed(window->commandBuffers[i], 12, 1, 0, 0, 0);
+
         vkCmdEndRenderPass(window->commandBuffers[i]);
 
         if (vkEndCommandBuffer(window->commandBuffers[i]) != VK_SUCCESS)
@@ -1275,9 +1226,10 @@ int transitionImageLayout(struct Window* window, VkImage image, VkFormat format,
 
         sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
         destinationStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-    } else
+    } else {
+        fprintf(stderr, "unsupported layout transition!");
         return -1;
-    //printf("unsupported layout transition!");
+    }
 
     vkCmdPipelineBarrier(
         commandBuffer,
@@ -1294,7 +1246,7 @@ int transitionImageLayout(struct Window* window, VkImage image, VkFormat format,
 
 VkCommandBuffer beginSingleTimeCommands(struct Window* window)
 {
-    VkCommandBufferAllocateInfo allocInfo = {};
+    VkCommandBufferAllocateInfo allocInfo = { 0 };
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     allocInfo.commandPool = window->commandPool;
@@ -1303,7 +1255,7 @@ VkCommandBuffer beginSingleTimeCommands(struct Window* window)
     VkCommandBuffer commandBuffer;
     vkAllocateCommandBuffers(window->device, &allocInfo, &commandBuffer);
 
-    VkCommandBufferBeginInfo beginInfo = {};
+    VkCommandBufferBeginInfo beginInfo = { 0 };
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
@@ -1335,9 +1287,10 @@ int createBuffer(struct Window* window, VkDeviceSize size, VkBufferUsageFlags us
     bufferInfo.usage = usage;
     bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    if (vkCreateBuffer(window->device, &bufferInfo, NULL, buffer) != VK_SUCCESS)
+    if (vkCreateBuffer(window->device, &bufferInfo, NULL, buffer) != VK_SUCCESS) {
         return -1;
-    //printf("failed to create buffer!\n");
+        fprintf(stderr, "failed to create buffer!\n");
+    }
 
     VkMemoryRequirements memRequirements;
     vkGetBufferMemoryRequirements(window->device, *buffer, &memRequirements);
@@ -1347,9 +1300,10 @@ int createBuffer(struct Window* window, VkDeviceSize size, VkBufferUsageFlags us
     allocInfo.allocationSize = memRequirements.size;
     allocInfo.memoryTypeIndex = findMemoryType(window, memRequirements.memoryTypeBits, properties);
 
-    if (vkAllocateMemory(window->device, &allocInfo, NULL, bufferMemory) != VK_SUCCESS)
+    if (vkAllocateMemory(window->device, &allocInfo, NULL, bufferMemory) != VK_SUCCESS) {
         return -1;
-    //printf("failed to allocate buffer memory!\n");
+        fprintf(stderr, "failed to allocate buffer memory!\n");
+    }
 
     vkBindBufferMemory(window->device, *buffer, *bufferMemory, 0);
 
@@ -1398,7 +1352,8 @@ uint32_t findMemoryType(struct Window* window, uint32_t typeFilter, VkMemoryProp
 
 int createVertexBuffer(struct Window* window)
 {
-    VkDeviceSize bufferSize = sizeof(window->imageVertices.items[0]) * window->imageVertices.total;
+    VkDeviceSize bufferSize = sizeof(struct Vertex) * 8; //window->imageVertices.total;
+    //VkDeviceSize bufferSize = sizeof(window->imageVertices.items[0]) * window->imageVertices.total;
 
     VkBuffer stagingBuffer = { 0 };
     VkDeviceMemory stagingBufferMemory = { 0 };
@@ -1406,7 +1361,7 @@ int createVertexBuffer(struct Window* window)
 
     void* data;
     vkMapMemory(window->device, stagingBufferMemory, 0, bufferSize, 0, &data);
-    memcpy(data, window->imageVertices.items, bufferSize);
+    memcpy(data, window->imageVertices, bufferSize);
     vkUnmapMemory(window->device, stagingBufferMemory);
 
     createBuffer(window, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &window->vertexBuffer, &window->vertexBufferMemory);
@@ -1432,7 +1387,8 @@ void copyBuffer(struct Window* window, VkBuffer srcBuffer, VkBuffer dstBuffer, V
 
 int createIndexBuffer(struct Window* window)
 {
-    VkDeviceSize bufferSize = sizeof(window->imageIndices.items[0]) * window->imageIndices.total;
+    VkDeviceSize bufferSize = sizeof(uint16_t) * 12; //window->imageIndices.total;
+    //VkDeviceSize bufferSize = sizeof(window->imageIndices.items[0]) * window->imageIndices.total;
 
     VkBuffer stagingBuffer = { 0 };
     VkDeviceMemory stagingBufferMemory = { 0 };
@@ -1440,7 +1396,7 @@ int createIndexBuffer(struct Window* window)
 
     void* data;
     vkMapMemory(window->device, stagingBufferMemory, 0, bufferSize, 0, &data);
-    memcpy(data, window->imageIndices.items, bufferSize);
+    memcpy(data, window->imageIndices, bufferSize);
     vkUnmapMemory(window->device, stagingBufferMemory);
 
     createBuffer(window, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &window->indexBuffer, &window->indexBufferMemory);
@@ -1515,7 +1471,8 @@ int createDescriptorSets(struct Window* window)
         imageInfo.imageView = window->textureImageView;
         imageInfo.sampler = window->textureSampler;
 
-        VkWriteDescriptorSet descriptorWrites[2];
+        int descriptorSize = 2;
+        VkWriteDescriptorSet descriptorWrites[descriptorSize];
         memset(descriptorWrites, 0, sizeof(descriptorWrites));
 
         descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -1534,7 +1491,7 @@ int createDescriptorSets(struct Window* window)
         descriptorWrites[1].descriptorCount = 1;
         descriptorWrites[1].pImageInfo = &imageInfo;
 
-        vkUpdateDescriptorSets(window->device, 2, descriptorWrites, 0, NULL);
+        vkUpdateDescriptorSets(window->device, descriptorSize, descriptorWrites, 0, NULL);
     }
 
     return 0;

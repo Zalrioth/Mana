@@ -1,10 +1,11 @@
 #include "datastructures/vector.h"
 
-void vector_init(struct Vector* v)
+void vector_init(struct Vector* v, int memorySize)
 {
+    v->memorySize = memorySize;
     v->capacity = VECTOR_INIT_CAPACITY;
     v->total = 0;
-    v->items = malloc(sizeof(void*) * v->capacity);
+    v->items = malloc(sizeof(memorySize) * v->capacity);
 }
 
 int vector_total(struct Vector* v)
@@ -14,8 +15,9 @@ int vector_total(struct Vector* v)
 
 void vector_resize(struct Vector* v, int capacity)
 {
-    void** items = realloc(v->items, sizeof(void*) * capacity);
+    void* items = realloc(v->items, sizeof(v->memorySize) * capacity);
     if (items) {
+        free(v->items);
         v->items = items;
         v->capacity = capacity;
     }
@@ -25,19 +27,20 @@ void vector_add(struct Vector* v, void* item)
 {
     if (v->capacity == v->total)
         vector_resize(v, v->capacity * 2);
-    v->items[v->total++] = item;
+    memcpy((char*)v->items + (v->memorySize * v->total), item, v->memorySize);
+    v->total++;
 }
 
 void vector_set(struct Vector* v, int index, void* item)
 {
     if (index >= 0 && index < v->total)
-        v->items[index] = item;
+        memcpy((char*)v->items + (v->memorySize * index), item, v->memorySize);
 }
 
 void* vector_get(struct Vector* v, int index)
 {
     if (index >= 0 && index < v->total)
-        return v->items[index];
+        return (char*)v->items + (v->memorySize * index);
     return NULL;
 }
 
@@ -46,12 +49,10 @@ void vector_delete(struct Vector* v, int index)
     if (index < 0 || index >= v->total)
         return;
 
-    v->items[index] = NULL;
-
-    for (int i = index; i < v->total - 1; i++) {
-        v->items[i] = v->items[i + 1];
-        v->items[i + 1] = NULL;
-    }
+    if (index != v->total - 1)
+        memmove((char*)v->items + (v->memorySize * index), (char*)v->items + (v->memorySize * (index + 1)), v->memorySize);
+    else
+        memset((char*)v->items + (v->memorySize * index), 0, v->memorySize);
 
     v->total--;
 

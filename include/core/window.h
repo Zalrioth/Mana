@@ -92,8 +92,11 @@ struct Window {
     VkImageView textureImageView;
     VkSampler textureSampler;
 
-    struct Vector imageVertices;
-    struct Vector imageIndices;
+    //struct Vector imageVertices;
+    //struct Vector imageIndices;
+
+    struct Vertex imageVertices[8];
+    uint16_t imageIndices[12];
 
     VkBuffer uniformBuffers[MAX_SWAP_CHAIN_FRAMES];
     VkDeviceMemory uniformBuffersMemory[MAX_SWAP_CHAIN_FRAMES];
@@ -107,7 +110,7 @@ struct Window {
     VkDeviceMemory depthImageMemory;
     VkImageView depthImageView;
 
-    VkCommandBuffer commandBuffers[SMALL_BUFFER];
+    VkCommandBuffer commandBuffers[MAX_SWAP_CHAIN_FRAMES];
     VkSemaphore imageAvailableSemaphores[MAX_FRAMES_IN_FLIGHT];
     VkSemaphore renderFinishedSemaphores[MAX_FRAMES_IN_FLIGHT];
     VkFence inFlightFences[MAX_FRAMES_IN_FLIGHT];
