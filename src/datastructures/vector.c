@@ -5,7 +5,7 @@ void vector_init(struct Vector* v, int memorySize)
     v->memorySize = memorySize;
     v->capacity = VECTOR_INIT_CAPACITY;
     v->total = 0;
-    v->items = malloc(sizeof(memorySize) * v->capacity);
+    v->items = malloc(memorySize * v->capacity);
 }
 
 int vector_total(struct Vector* v)
@@ -15,10 +15,9 @@ int vector_total(struct Vector* v)
 
 void vector_resize(struct Vector* v, int capacity)
 {
-    void* items = realloc(v->items, sizeof(v->memorySize) * capacity);
-    if (items) {
-        free(v->items);
-        v->items = items;
+    void* newItems = realloc((char*)v->items, v->memorySize * capacity);
+    if (newItems) {
+        v->items = newItems;
         v->capacity = capacity;
     }
 }

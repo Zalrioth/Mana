@@ -27,7 +27,8 @@ int createUniformBuffers(struct Window* window);
 int createDescriptorPool(struct Window* window);
 int createDescriptorSets(struct Window* window);
 
-void assign_vertex(struct Vertex* vertex, float r, float g, float b, float x, float y, float z, float u, float v);
+void assign_vertex(struct Vector* vertex, float r, float g, float b, float x, float y, float z, float u, float v);
+void assign_indice(struct Vector* vertex, uint16_t indice);
 
 int createCommandBuffers(struct Window* window);
 int createSyncObjects(struct Window* window);
@@ -160,18 +161,26 @@ cleanup:
     return errorCode;
 }
 
-void assign_vertex(struct Vertex* vertex, float x, float y, float z, float r, float g, float b, float u, float v)
+void assign_vertex(struct Vector* vector, float x, float y, float z, float r, float g, float b, float u, float v)
 {
-    vertex->pos[0] = x;
-    vertex->pos[1] = y;
-    vertex->pos[2] = z;
+    struct Vertex vertex = { { 0 } };
+    vertex.pos[0] = x;
+    vertex.pos[1] = y;
+    vertex.pos[2] = z;
 
-    vertex->color[0] = r;
-    vertex->color[1] = g;
-    vertex->color[2] = b;
+    vertex.color[0] = r;
+    vertex.color[1] = g;
+    vertex.color[2] = b;
 
-    vertex->texCoord[0] = u;
-    vertex->texCoord[1] = v;
+    vertex.texCoord[0] = u;
+    vertex.texCoord[1] = v;
+
+    vector_add(vector, &vertex);
+}
+
+void assign_indice(struct Vector* vector, uint16_t indice)
+{
+    vector_add(vector, &indice);
 }
 
 void delete_window(struct Window* window)
@@ -259,31 +268,34 @@ int createWindow(struct Window* window, int width, int height)
     if (!window->glfwWindow)
         return CREATE_WINDOW_ERROR;
 
-    assign_vertex(&window->imageVertices[0], -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-    assign_vertex(&window->imageVertices[1], 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f);
-    assign_vertex(&window->imageVertices[2], 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
-    assign_vertex(&window->imageVertices[3], -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+    vector_init(&window->imageVertices, sizeof(struct Vertex));
+
+    assign_vertex(&window->imageVertices, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+    assign_vertex(&window->imageVertices, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f);
+    assign_vertex(&window->imageVertices, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
+    assign_vertex(&window->imageVertices, -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 
     /////////////////////////////
-    assign_vertex(&window->imageVertices[4], -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-    assign_vertex(&window->imageVertices[5], 0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f);
-    assign_vertex(&window->imageVertices[6], 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
-    assign_vertex(&window->imageVertices[7], -0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+    assign_vertex(&window->imageVertices, -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+    assign_vertex(&window->imageVertices, 0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f);
+    assign_vertex(&window->imageVertices, 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
+    assign_vertex(&window->imageVertices, -0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 
-    window->imageIndices[0] = 0;
-    window->imageIndices[1] = 1;
-    window->imageIndices[2] = 2;
-    window->imageIndices[3] = 2;
-    window->imageIndices[4] = 3;
-    window->imageIndices[5] = 0;
+    vector_init(&window->imageIndices, sizeof(uint16_t));
 
-    /////////////////////////////
-    window->imageIndices[6] = 4;
-    window->imageIndices[7] = 5;
-    window->imageIndices[8] = 6;
-    window->imageIndices[9] = 6;
-    window->imageIndices[10] = 7;
-    window->imageIndices[11] = 4;
+    assign_indice(&window->imageIndices, 0);
+    assign_indice(&window->imageIndices, 1);
+    assign_indice(&window->imageIndices, 2);
+    assign_indice(&window->imageIndices, 2);
+    assign_indice(&window->imageIndices, 3);
+    assign_indice(&window->imageIndices, 0);
+
+    assign_indice(&window->imageIndices, 4);
+    assign_indice(&window->imageIndices, 5);
+    assign_indice(&window->imageIndices, 6);
+    assign_indice(&window->imageIndices, 6);
+    assign_indice(&window->imageIndices, 7);
+    assign_indice(&window->imageIndices, 4);
 
     return NO_ERROR;
 }
@@ -1354,7 +1366,7 @@ uint32_t findMemoryType(struct Window* window, uint32_t typeFilter, VkMemoryProp
 
 int createVertexBuffer(struct Window* window)
 {
-    VkDeviceSize bufferSize = sizeof(struct Vertex) * 8; //window->imageVertices.total;
+    VkDeviceSize bufferSize = sizeof(struct Vertex) * window->imageVertices.total;
     //VkDeviceSize bufferSize = sizeof(window->imageVertices.items[0]) * window->imageVertices.total;
 
     VkBuffer stagingBuffer = { 0 };
@@ -1363,7 +1375,7 @@ int createVertexBuffer(struct Window* window)
 
     void* data;
     vkMapMemory(window->device, stagingBufferMemory, 0, bufferSize, 0, &data);
-    memcpy(data, window->imageVertices, bufferSize);
+    memcpy(data, window->imageVertices.items, bufferSize);
     vkUnmapMemory(window->device, stagingBufferMemory);
 
     createBuffer(window, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &window->vertexBuffer, &window->vertexBufferMemory);
@@ -1389,7 +1401,7 @@ void copyBuffer(struct Window* window, VkBuffer srcBuffer, VkBuffer dstBuffer, V
 
 int createIndexBuffer(struct Window* window)
 {
-    VkDeviceSize bufferSize = sizeof(uint16_t) * 12; //window->imageIndices.total;
+    VkDeviceSize bufferSize = sizeof(uint16_t) * window->imageIndices.total;
     //VkDeviceSize bufferSize = sizeof(window->imageIndices.items[0]) * window->imageIndices.total;
 
     VkBuffer stagingBuffer = { 0 };
@@ -1398,7 +1410,7 @@ int createIndexBuffer(struct Window* window)
 
     void* data;
     vkMapMemory(window->device, stagingBufferMemory, 0, bufferSize, 0, &data);
-    memcpy(data, window->imageIndices, bufferSize);
+    memcpy(data, window->imageIndices.items, bufferSize);
     vkUnmapMemory(window->device, stagingBufferMemory);
 
     createBuffer(window, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &window->indexBuffer, &window->indexBufferMemory);

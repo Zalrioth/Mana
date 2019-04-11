@@ -95,8 +95,11 @@ struct Window {
     //struct Vector imageVertices;
     //struct Vector imageIndices;
 
-    struct Vertex imageVertices[8];
-    uint16_t imageIndices[12];
+    //struct Vertex imageVertices[8];
+    //uint16_t imageIndices[12];
+
+    struct Vector imageVertices;
+    struct Vector imageIndices;
 
     VkBuffer uniformBuffers[MAX_SWAP_CHAIN_FRAMES];
     VkDeviceMemory uniformBuffersMemory[MAX_SWAP_CHAIN_FRAMES];
