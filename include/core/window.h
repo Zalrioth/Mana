@@ -41,9 +41,9 @@ struct QueueFamilyIndices {
 };
 
 struct UniformBufferObject {
-    mat4 model;
-    mat4 view;
-    mat4 proj;
+    alignas(16) mat4 model;
+    alignas(16) mat4 view;
+    alignas(16) mat4 proj;
 };
 
 struct Vertex {

@@ -36,11 +36,11 @@ bool isDeviceSuitable(struct Window* window, VkPhysicalDevice device);
 VkImageView createImageView(struct Window* window, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 int createImage(struct Window* window, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage* image, VkDeviceMemory* imageMemory);
 VkFormat findDepthFormat(struct Window* window);
-int transitionImageLayout(struct Window* window, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+int transitionImageLayout(struct Window* window, VkImage* image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 VkCommandBuffer beginSingleTimeCommands();
 void endSingleTimeCommands(struct Window* window, VkCommandBuffer commandBuffer);
 int createBuffer(struct Window* window, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer* buffer, VkDeviceMemory* bufferMemory);
-void copyBufferToImage(struct Window* window, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+void copyBufferToImage(struct Window* window, VkBuffer* buffer, VkImage* image, uint32_t width, uint32_t height);
 uint32_t findMemoryType(struct Window* window, uint32_t typeFilter, VkMemoryPropertyFlags properties);
 void copyBuffer(struct Window* window, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 void cleanupSwapChain(struct Window* window);
@@ -264,6 +264,7 @@ int createWindow(struct Window* window, int width, int height)
     assign_vertex(&window->imageVertices[2], 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
     assign_vertex(&window->imageVertices[3], -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 
+    /////////////////////////////
     assign_vertex(&window->imageVertices[4], -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
     assign_vertex(&window->imageVertices[5], 0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f);
     assign_vertex(&window->imageVertices[6], 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
@@ -275,6 +276,8 @@ int createWindow(struct Window* window, int width, int height)
     window->imageIndices[3] = 2;
     window->imageIndices[4] = 3;
     window->imageIndices[5] = 0;
+
+    /////////////////////////////
     window->imageIndices[6] = 4;
     window->imageIndices[7] = 5;
     window->imageIndices[8] = 6;
@@ -894,9 +897,9 @@ int createTextureImage(struct Window* window)
 
     createImage(window, texWidth, texHeight, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &window->textureImage, &window->textureImageMemory);
 
-    transitionImageLayout(window, window->textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-    copyBufferToImage(window, stagingBuffer, window->textureImage, texWidth, texHeight);
-    transitionImageLayout(window, window->textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    transitionImageLayout(window, &window->textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    copyBufferToImage(window, &stagingBuffer, &window->textureImage, texWidth, texHeight);
+    transitionImageLayout(window, &window->textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     vkDestroyBuffer(window->device, stagingBuffer, NULL);
     vkFreeMemory(window->device, stagingBufferMemory, NULL);
@@ -954,7 +957,7 @@ int createDepthResources(struct Window* window)
     createImage(window, window->swapChainExtent.width, window->swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &window->depthImage, &window->depthImageMemory);
     window->depthImageView = createImageView(window, window->depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 
-    transitionImageLayout(window, window->depthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+    transitionImageLayout(window, &window->depthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 
     return 0;
 }
@@ -1012,7 +1015,6 @@ int createCommandBuffers(struct Window* window)
 
         //vkCmdDrawIndexed(window->commandBuffers[i], window->imageIndices.total, 1, 0, 0, 0);
         vkCmdDrawIndexed(window->commandBuffers[i], 12, 1, 0, 0, 0);
-
         vkCmdEndRenderPass(window->commandBuffers[i]);
 
         if (vkEndCommandBuffer(window->commandBuffers[i]) != VK_SUCCESS)
@@ -1181,7 +1183,7 @@ int createImage(struct Window* window, uint32_t width, uint32_t height, VkFormat
     return 0;
 }
 
-int transitionImageLayout(struct Window* window, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
+int transitionImageLayout(struct Window* window, VkImage* image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
 {
     VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
@@ -1191,7 +1193,7 @@ int transitionImageLayout(struct Window* window, VkImage image, VkFormat format,
     barrier.newLayout = newLayout;
     barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barrier.image = image;
+    barrier.image = *image;
 
     if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
         barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
@@ -1310,7 +1312,7 @@ int createBuffer(struct Window* window, VkDeviceSize size, VkBufferUsageFlags us
     return 0;
 }
 
-void copyBufferToImage(struct Window* window, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
+void copyBufferToImage(struct Window* window, VkBuffer* buffer, VkImage* image, uint32_t width, uint32_t height)
 {
     VkCommandBuffer commandBuffer = beginSingleTimeCommands(window);
 
@@ -1329,7 +1331,7 @@ void copyBufferToImage(struct Window* window, VkBuffer buffer, VkImage image, ui
     region.imageExtent.height = height;
     region.imageExtent.depth = 1;
 
-    vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+    vkCmdCopyBufferToImage(commandBuffer, *buffer, *image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
     endSingleTimeCommands(window, commandBuffer);
 }
@@ -1435,9 +1437,10 @@ int createDescriptorPool(struct Window* window)
     poolInfo.pPoolSizes = poolSizes;
     poolInfo.maxSets = MAX_SWAP_CHAIN_FRAMES;
 
-    if (vkCreateDescriptorPool(window->device, &poolInfo, NULL, &window->descriptorPool) != VK_SUCCESS)
+    if (vkCreateDescriptorPool(window->device, &poolInfo, NULL, &window->descriptorPool) != VK_SUCCESS) {
+        fprintf(stderr, "failed to create descriptor pool!\n");
         return -1;
-    //printf("failed to create descriptor pool!\n");
+    }
 
     return 0;
 }
@@ -1456,9 +1459,10 @@ int createDescriptorSets(struct Window* window)
     allocInfo.descriptorSetCount = MAX_SWAP_CHAIN_FRAMES;
     allocInfo.pSetLayouts = layouts;
 
-    if (vkAllocateDescriptorSets(window->device, &allocInfo, window->descriptorSets) != VK_SUCCESS)
+    if (vkAllocateDescriptorSets(window->device, &allocInfo, window->descriptorSets) != VK_SUCCESS) {
+        fprintf(stderr, "failed to allocate descriptor sets!\n");
         return -1;
-    //printf("failed to allocate descriptor sets!\n");
+    }
 
     for (size_t i = 0; i < MAX_SWAP_CHAIN_FRAMES; i++) {
         VkDescriptorBufferInfo bufferInfo = { 0 };

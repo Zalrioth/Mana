@@ -185,17 +185,16 @@ void updateUniformBuffer(struct Window* window, uint32_t currentImage)
     time = 1.0;
 
     struct UniformBufferObject ubo = { { { 0 } } };
-    //ubo.model = (mat4){ { 1.0f } };
+
     ubo.model[0][0] = 1.0f;
-    ubo.model[0][1] = 1.0f;
-    ubo.model[0][2] = 1.0f;
-    ubo.model[0][3] = 1.0f;
+    ubo.model[1][1] = 1.0f;
+    ubo.model[2][2] = 1.0f;
+    ubo.model[3][3] = 1.0f;
 
     glm_rotate(ubo.model, time * glm_rad(90.0f), (vec3){ 0.0f, 0.0f, 1.0f });
     glm_lookat((vec3){ 2.0f, 2.0f, 2.0f }, (vec3){ 0.0f, 0.0f, 0.0f }, (vec3){ 0.0f, 0.0f, 1.0f }, ubo.view);
     glm_perspective(glm_rad(45.0f), (float)window->swapChainExtent.width / (float)window->swapChainExtent.height, 0.1f, 10.0f, ubo.proj);
     ubo.proj[1][1] *= -1;
-    //ubo.proj[3][2] /= 2;
 
     void* data;
     vkMapMemory(window->device, window->uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);
