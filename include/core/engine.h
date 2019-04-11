@@ -12,6 +12,8 @@
 
 #define KEY_LIMIT 512
 
+//https://fvcaputo.github.io/2019/02/06/memory-alignment.html
+
 enum KeyState { PRESSED,
     RELEASED };
 

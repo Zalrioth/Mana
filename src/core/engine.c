@@ -180,9 +180,7 @@ void process_input(struct Engine* engine)
 
 void updateUniformBuffer(struct Window* window, uint32_t currentImage)
 {
-    double time = fmod(get_time(), M_2_PI);
-
-    time = 1.0;
+    double time = fmod(get_time(), M_PI * 2);
 
     struct UniformBufferObject ubo = { { { 0 } } };
 
@@ -191,7 +189,7 @@ void updateUniformBuffer(struct Window* window, uint32_t currentImage)
     ubo.model[2][2] = 1.0f;
     ubo.model[3][3] = 1.0f;
 
-    glm_rotate(ubo.model, time * glm_rad(90.0f), (vec3){ 0.0f, 0.0f, 1.0f });
+    glm_rotate(ubo.model, time, (vec3){ 0.0f, 0.0f, 1.0f });
     glm_lookat((vec3){ 2.0f, 2.0f, 2.0f }, (vec3){ 0.0f, 0.0f, 0.0f }, (vec3){ 0.0f, 0.0f, 1.0f }, ubo.view);
     glm_perspective(glm_rad(45.0f), (float)window->swapChainExtent.width / (float)window->swapChainExtent.height, 0.1f, 10.0f, ubo.proj);
     ubo.proj[1][1] *= -1;
