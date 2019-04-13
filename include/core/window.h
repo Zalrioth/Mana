@@ -6,7 +6,6 @@
 #define WINDOW_H_
 
 #include "core/common.h"
-#include <cglm/cglm.h>
 
 #ifdef NDEBUG
 static const bool enableValidationLayers = false;
@@ -46,11 +45,11 @@ struct UniformBufferObject {
     alignas(16) mat4 proj;
 };
 
-struct Vertex {
+/*struct Vertex {
     vec3 pos;
     vec3 color;
     vec2 texCoord;
-};
+};*/
 
 //presentModes
 
@@ -87,19 +86,8 @@ struct Window {
     VkDescriptorPool descriptorPool;
     VkDescriptorSet descriptorSets[MAX_SWAP_CHAIN_FRAMES];
 
-    VkImage textureImage;
-    VkDeviceMemory textureImageMemory;
-    VkImageView textureImageView;
-    VkSampler textureSampler;
-
-    //struct Vector imageVertices;
-    //struct Vector imageIndices;
-
-    //struct Vertex imageVertices[8];
-    //uint16_t imageIndices[12];
-
-    struct Vector imageVertices;
-    struct Vector imageIndices;
+    struct Mesh imageMesh;
+    struct Texture imageTexture;
 
     VkBuffer uniformBuffers[MAX_SWAP_CHAIN_FRAMES];
     VkDeviceMemory uniformBuffersMemory[MAX_SWAP_CHAIN_FRAMES];

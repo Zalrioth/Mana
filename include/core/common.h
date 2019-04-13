@@ -17,7 +17,13 @@
 #include <unistd.h>
 #endif
 
+#include "core/window.h"
 #include "datastructures/vector.h"
+#include "graphics/mesh.h"
+#include "graphics/model.h"
+#include "graphics/texture.h"
+#include <cglm/cglm.h>
+#include <graphics/stb_image.h>
 
 #define NO_ERROR 0
 

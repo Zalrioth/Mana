@@ -1,6 +1,4 @@
 #include "core/window.h"
-#define STB_IMAGE_IMPLEMENTATION
-#include <core/stb_image.h>
 
 //https://stackoverflow.com/questions/2845748/function-defined-but-not-used-warning-in-c
 
@@ -161,43 +159,9 @@ cleanup:
     return errorCode;
 }
 
-void assign_vertex(struct Vector* vector, float x, float y, float z, float r, float g, float b, float u, float v)
-{
-    struct Vertex vertex = { { 0 } };
-    vertex.pos[0] = x;
-    vertex.pos[1] = y;
-    vertex.pos[2] = z;
-
-    vertex.color[0] = r;
-    vertex.color[1] = g;
-    vertex.color[2] = b;
-
-    vertex.texCoord[0] = u;
-    vertex.texCoord[1] = v;
-
-    vector_add(vector, &vertex);
-}
-
-void assign_indice(struct Vector* vector, uint16_t indice)
-{
-    vector_add(vector, &indice);
-}
-
 void delete_window(struct Window* window)
 {
     cleanupSwapChain(window);
-
-    //vector_clear(&window->imageVertices);
-    //vector_free(&window->imageVertices);
-
-    //vector_clear(&window->imageIndices);
-    //vector_free(&window->imageIndices);
-
-    vkDestroySampler(window->device, window->textureSampler, NULL);
-    vkDestroyImageView(window->device, window->textureImageView, NULL);
-
-    vkDestroyImage(window->device, window->textureImage, NULL);
-    vkFreeMemory(window->device, window->textureImageMemory, NULL);
 
     vkDestroyDescriptorPool(window->device, window->descriptorPool, NULL);
 
@@ -268,34 +232,31 @@ int createWindow(struct Window* window, int width, int height)
     if (!window->glfwWindow)
         return CREATE_WINDOW_ERROR;
 
-    vector_init(&window->imageVertices, sizeof(struct Vertex));
+    mesh_init(&window->imageMesh);
 
-    assign_vertex(&window->imageVertices, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-    assign_vertex(&window->imageVertices, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f);
-    assign_vertex(&window->imageVertices, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
-    assign_vertex(&window->imageVertices, -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+    assign_vertex(&window->imageMesh.vertices, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+    assign_vertex(&window->imageMesh.vertices, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f);
+    assign_vertex(&window->imageMesh.vertices, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
+    assign_vertex(&window->imageMesh.vertices, -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 
-    /////////////////////////////
-    assign_vertex(&window->imageVertices, -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-    assign_vertex(&window->imageVertices, 0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f);
-    assign_vertex(&window->imageVertices, 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
-    assign_vertex(&window->imageVertices, -0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+    assign_vertex(&window->imageMesh.vertices, -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+    assign_vertex(&window->imageMesh.vertices, 0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f);
+    assign_vertex(&window->imageMesh.vertices, 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
+    assign_vertex(&window->imageMesh.vertices, -0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 
-    vector_init(&window->imageIndices, sizeof(uint16_t));
+    assign_indice(&window->imageMesh.indices, 0);
+    assign_indice(&window->imageMesh.indices, 1);
+    assign_indice(&window->imageMesh.indices, 2);
+    assign_indice(&window->imageMesh.indices, 2);
+    assign_indice(&window->imageMesh.indices, 3);
+    assign_indice(&window->imageMesh.indices, 0);
 
-    assign_indice(&window->imageIndices, 0);
-    assign_indice(&window->imageIndices, 1);
-    assign_indice(&window->imageIndices, 2);
-    assign_indice(&window->imageIndices, 2);
-    assign_indice(&window->imageIndices, 3);
-    assign_indice(&window->imageIndices, 0);
-
-    assign_indice(&window->imageIndices, 4);
-    assign_indice(&window->imageIndices, 5);
-    assign_indice(&window->imageIndices, 6);
-    assign_indice(&window->imageIndices, 6);
-    assign_indice(&window->imageIndices, 7);
-    assign_indice(&window->imageIndices, 4);
+    assign_indice(&window->imageMesh.indices, 4);
+    assign_indice(&window->imageMesh.indices, 5);
+    assign_indice(&window->imageMesh.indices, 6);
+    assign_indice(&window->imageMesh.indices, 6);
+    assign_indice(&window->imageMesh.indices, 7);
+    assign_indice(&window->imageMesh.indices, 4);
 
     return NO_ERROR;
 }
@@ -760,12 +721,12 @@ int createGraphicsPipeline(struct Window* window)
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
     VkVertexInputBindingDescription bindingDescription = getBindingDescription();
-    VkVertexInputAttributeDescription attributeDescriptions[3];
+    VkVertexInputAttributeDescription attributeDescriptions[5];
     memset(attributeDescriptions, 0, sizeof(attributeDescriptions));
     getAttributeDescriptions(attributeDescriptions);
 
     vertexInputInfo.vertexBindingDescriptionCount = 1;
-    vertexInputInfo.vertexAttributeDescriptionCount = 3; // Note: length of attributeDescriptions
+    vertexInputInfo.vertexAttributeDescriptionCount = 5; // Note: length of attributeDescriptions
     vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
     vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions;
 
@@ -886,70 +847,6 @@ int createFramebuffers(struct Window* window)
     return NO_ERROR;
 }
 
-int createTextureImage(struct Window* window)
-{
-    int texWidth, texHeight, texChannels;
-    stbi_uc* pixels = stbi_load("./Assets/textures/texture.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-    VkDeviceSize imageSize = texWidth * texHeight * 4;
-
-    if (!pixels)
-        return -1;
-    //printf("failed to load texture image!\n");
-
-    VkBuffer stagingBuffer = { 0 };
-    VkDeviceMemory stagingBufferMemory = { 0 };
-    createBuffer(window, imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &stagingBuffer, &stagingBufferMemory);
-
-    void* data;
-    vkMapMemory(window->device, stagingBufferMemory, 0, imageSize, 0, &data);
-    memcpy(data, pixels, imageSize);
-    vkUnmapMemory(window->device, stagingBufferMemory);
-
-    stbi_image_free(pixels);
-
-    createImage(window, texWidth, texHeight, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &window->textureImage, &window->textureImageMemory);
-
-    transitionImageLayout(window, &window->textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-    copyBufferToImage(window, &stagingBuffer, &window->textureImage, texWidth, texHeight);
-    transitionImageLayout(window, &window->textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-    vkDestroyBuffer(window->device, stagingBuffer, NULL);
-    vkFreeMemory(window->device, stagingBufferMemory, NULL);
-
-    return 0;
-}
-
-int createTextureImageView(struct Window* window)
-{
-    window->textureImageView = createImageView(window, window->textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
-
-    return 0;
-}
-
-int createTextureSampler(struct Window* window)
-{
-    VkSamplerCreateInfo samplerInfo = { 0 };
-    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-    samplerInfo.magFilter = VK_FILTER_LINEAR;
-    samplerInfo.minFilter = VK_FILTER_LINEAR;
-    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerInfo.anisotropyEnable = VK_TRUE;
-    samplerInfo.maxAnisotropy = 16;
-    samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-    samplerInfo.unnormalizedCoordinates = VK_FALSE;
-    samplerInfo.compareEnable = VK_FALSE;
-    samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-
-    if (vkCreateSampler(window->device, &samplerInfo, NULL, &window->textureSampler) != VK_SUCCESS)
-        return -1;
-    //printf("failed to create texture sampler!\n");
-
-    return 0;
-}
-
 int createCommandPool(struct Window* window)
 {
     VkCommandPoolCreateInfo poolInfo = { 0 };
@@ -1025,8 +922,8 @@ int createCommandBuffers(struct Window* window)
 
         vkCmdBindDescriptorSets(window->commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, window->pipelineLayout, 0, 1, &window->descriptorSets[i], 0, NULL);
 
-        //vkCmdDrawIndexed(window->commandBuffers[i], window->imageIndices.total, 1, 0, 0, 0);
-        vkCmdDrawIndexed(window->commandBuffers[i], 12, 1, 0, 0, 0);
+        vkCmdDrawIndexed(window->commandBuffers[i], window->imageMesh.indices.total, 1, 0, 0, 0);
+        //vkCmdDrawIndexed(window->commandBuffers[i], 12, 1, 0, 0, 0);
         vkCmdEndRenderPass(window->commandBuffers[i]);
 
         if (vkEndCommandBuffer(window->commandBuffers[i]) != VK_SUCCESS)
@@ -1366,7 +1263,7 @@ uint32_t findMemoryType(struct Window* window, uint32_t typeFilter, VkMemoryProp
 
 int createVertexBuffer(struct Window* window)
 {
-    VkDeviceSize bufferSize = sizeof(struct Vertex) * window->imageVertices.total;
+    VkDeviceSize bufferSize = window->imageMesh.vertices.memorySize * window->imageMesh.vertices.total;
     //VkDeviceSize bufferSize = sizeof(window->imageVertices.items[0]) * window->imageVertices.total;
 
     VkBuffer stagingBuffer = { 0 };
@@ -1375,7 +1272,7 @@ int createVertexBuffer(struct Window* window)
 
     void* data;
     vkMapMemory(window->device, stagingBufferMemory, 0, bufferSize, 0, &data);
-    memcpy(data, window->imageVertices.items, bufferSize);
+    memcpy(data, window->imageMesh.vertices.items, bufferSize);
     vkUnmapMemory(window->device, stagingBufferMemory);
 
     createBuffer(window, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &window->vertexBuffer, &window->vertexBufferMemory);
@@ -1401,7 +1298,7 @@ void copyBuffer(struct Window* window, VkBuffer srcBuffer, VkBuffer dstBuffer, V
 
 int createIndexBuffer(struct Window* window)
 {
-    VkDeviceSize bufferSize = sizeof(uint16_t) * window->imageIndices.total;
+    VkDeviceSize bufferSize = window->imageMesh.indices.memorySize * window->imageMesh.indices.total;
     //VkDeviceSize bufferSize = sizeof(window->imageIndices.items[0]) * window->imageIndices.total;
 
     VkBuffer stagingBuffer = { 0 };
@@ -1410,7 +1307,7 @@ int createIndexBuffer(struct Window* window)
 
     void* data;
     vkMapMemory(window->device, stagingBufferMemory, 0, bufferSize, 0, &data);
-    memcpy(data, window->imageIndices.items, bufferSize);
+    memcpy(data, window->imageMesh.indices.items, bufferSize);
     vkUnmapMemory(window->device, stagingBufferMemory);
 
     createBuffer(window, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &window->indexBuffer, &window->indexBufferMemory);
@@ -1484,30 +1381,38 @@ int createDescriptorSets(struct Window* window)
 
         VkDescriptorImageInfo imageInfo = { 0 };
         imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        imageInfo.imageView = window->textureImageView;
-        imageInfo.sampler = window->textureSampler;
+        imageInfo.imageView = window->imageTexture.textureImageView;
+        imageInfo.sampler = window->imageTexture.textureSampler;
 
-        int descriptorSize = 2;
-        VkWriteDescriptorSet descriptorWrites[descriptorSize];
-        memset(descriptorWrites, 0, sizeof(descriptorWrites));
+        //int descriptorSize = 2;
+        struct Vector descriptorWrites;
+        vector_init(&descriptorWrites, sizeof(VkWriteDescriptorSet));
+        //VkWriteDescriptorSet descriptorWrites[descriptorSize];
+        //memset(descriptorWrites, 0, sizeof(descriptorWrites));
 
-        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrites[0].dstSet = window->descriptorSets[i];
-        descriptorWrites[0].dstBinding = 0;
-        descriptorWrites[0].dstArrayElement = 0;
-        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptorWrites[0].descriptorCount = 1;
-        descriptorWrites[0].pBufferInfo = &bufferInfo;
+        VkWriteDescriptorSet dcs1 = { 0 };
+        dcs1.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        dcs1.dstSet = window->descriptorSets[i];
+        dcs1.dstBinding = descriptorWrites.total;
+        dcs1.dstArrayElement = 0;
+        dcs1.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        dcs1.descriptorCount = 1;
+        dcs1.pBufferInfo = &bufferInfo;
 
-        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrites[1].dstSet = window->descriptorSets[i];
-        descriptorWrites[1].dstBinding = 1;
-        descriptorWrites[1].dstArrayElement = 0;
-        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        descriptorWrites[1].descriptorCount = 1;
-        descriptorWrites[1].pImageInfo = &imageInfo;
+        vector_add(&descriptorWrites, &dcs1);
 
-        vkUpdateDescriptorSets(window->device, descriptorSize, descriptorWrites, 0, NULL);
+        VkWriteDescriptorSet dcs2 = { 0 };
+        dcs2.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        dcs2.dstSet = window->descriptorSets[i];
+        dcs2.dstBinding = descriptorWrites.total;
+        dcs2.dstArrayElement = 0;
+        dcs2.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        dcs2.descriptorCount = 1;
+        dcs2.pImageInfo = &imageInfo;
+
+        vector_add(&descriptorWrites, &dcs2);
+
+        vkUpdateDescriptorSets(window->device, descriptorWrites.total, descriptorWrites.items, 0, NULL);
     }
 
     return 0;
@@ -1570,15 +1475,25 @@ void getAttributeDescriptions(VkVertexInputAttributeDescription* attributeDescri
     attributeDescriptions[0].binding = 0;
     attributeDescriptions[0].location = 0;
     attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-    attributeDescriptions[0].offset = offsetof(struct Vertex, pos);
+    attributeDescriptions[0].offset = offsetof(struct Vertex, position);
 
     attributeDescriptions[1].binding = 0;
     attributeDescriptions[1].location = 1;
     attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-    attributeDescriptions[1].offset = offsetof(struct Vertex, color);
+    attributeDescriptions[1].offset = offsetof(struct Vertex, normal);
 
     attributeDescriptions[2].binding = 0;
     attributeDescriptions[2].location = 2;
     attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
     attributeDescriptions[2].offset = offsetof(struct Vertex, texCoord);
+
+    attributeDescriptions[3].binding = 0;
+    attributeDescriptions[3].location = 3;
+    attributeDescriptions[3].format = VK_FORMAT_R32G32B32_SFLOAT;
+    attributeDescriptions[3].offset = offsetof(struct Vertex, tangent);
+
+    attributeDescriptions[4].binding = 0;
+    attributeDescriptions[4].location = 4;
+    attributeDescriptions[4].format = VK_FORMAT_R32G32B32_SFLOAT;
+    attributeDescriptions[4].offset = offsetof(struct Vertex, bitTangent);
 }
