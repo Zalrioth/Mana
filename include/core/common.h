@@ -1,6 +1,7 @@
 #define _CRT_SECURE_NO_DEPRECATE
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+#include <cglm/cglm.h>
 #include <omp.h>
 #include <stdalign.h>
 #include <stdbool.h>
@@ -16,14 +17,6 @@
 #else
 #include <unistd.h>
 #endif
-
-#include "core/window.h"
-#include "datastructures/vector.h"
-#include "graphics/mesh.h"
-#include "graphics/model.h"
-#include "graphics/texture.h"
-#include <cglm/cglm.h>
-#include <graphics/stb_image.h>
 
 #define NO_ERROR 0
 

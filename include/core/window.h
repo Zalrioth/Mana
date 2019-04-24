@@ -6,6 +6,10 @@
 #define WINDOW_H_
 
 #include "core/common.h"
+#include "datastructures/vector.h"
+#include "graphics/mesh.h"
+#include "graphics/model.h"
+#include "graphics/texture.h"
 
 #ifdef NDEBUG
 static const bool enableValidationLayers = false;
@@ -86,8 +90,8 @@ struct Window {
     VkDescriptorPool descriptorPool;
     VkDescriptorSet descriptorSets[MAX_SWAP_CHAIN_FRAMES];
 
-    struct Mesh imageMesh;
-    struct Texture imageTexture;
+    struct Mesh* imageMesh;
+    struct Texture* imageTexture;
 
     VkBuffer uniformBuffers[MAX_SWAP_CHAIN_FRAMES];
     VkDeviceMemory uniformBuffersMemory[MAX_SWAP_CHAIN_FRAMES];

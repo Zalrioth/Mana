@@ -2,6 +2,8 @@
 #ifndef MANA_H_
 #define MANA_H_
 
+//#pragma clang diagnostic warning "-Wpragma-pack"
+
 #include "core/common.h"
 #include "core/engine.h"
 

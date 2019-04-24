@@ -48,7 +48,7 @@ file(GLOB_RECURSE mana_SRC
         include/*.hpp
         src/*.cpp)
 
-add_library(Mana SHARED ${mana_SRC})
+add_library(Mana STATIC ${mana_SRC})
 
 set(includePath ${CMAKE_CURRENT_SOURCE_DIR}/../../)
 
@@ -59,6 +59,8 @@ set_target_properties(Mana
   RUNTIME_OUTPUT_DIRECTORY ${includePath}grindstone/build/buildgrindstone
 )
 
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w -Wno-pragma-pack")
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w -Wno-pragma-pack")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")
 
@@ -73,8 +75,13 @@ set(ASSIMP_BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 add_subdirectory(${includePath}assimp-4.1.0 buildassimp)
 
+#string(REPLACE " -w -Wno-pragma-pack" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+#string(REPLACE " -w -Wno-pragma-pack" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 string(REPLACE " -w" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 string(REPLACE " -w" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-pragma-pack")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-pragma-pack")
 
 target_link_libraries(Mana
         ${includePath}VulkanSDK/1.1.101.0/Lib/vulkan-1.lib

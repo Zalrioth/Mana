@@ -3,6 +3,9 @@
 #define MESH_H_
 
 #include "core/common.h"
+#include "datastructures/vector.h"
+#include "graphics/texture.h"
+#include <cglm/cglm.h>
 
 struct Vertex {
     vec3 position;

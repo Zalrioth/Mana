@@ -3,14 +3,16 @@
 #define MODEL_H_
 
 #include "core/common.h"
+#include "datastructures/vector.h"
+#include "graphics/mesh.h"
 #include <assimp/cimport.h> // Plain-C interface
 #include <assimp/postprocess.h> // Post processing flags
 #include <assimp/scene.h> // Output data structure
 
 struct Model {
     struct aiMatrix4x4 rootMatrix;
-    struct Vector textures_loaded;
-    struct Vector meshes;
+    struct Vector* textures_loaded;
+    struct Vector* meshes;
     bool gammaCorrection;
 };
 
