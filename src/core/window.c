@@ -122,8 +122,8 @@ int init_window(struct Window* window, int width, int height)
     if ((errorCode = createFramebuffers(window)) != NO_ERROR)
         goto cleanup;
 
-    memset(window->imageTexture, 0, sizeof(struct Texture));
-    texture_init(window->imageTexture, "./Assets/textures/texture.jpg");
+    //memset(window->imageTexture, 0, sizeof(struct Texture));
+    //texture_init(window->imageTexture, "./Assets/textures/texture.jpg");
 
     if ((errorCode = createTextureImage(window, window->imageTexture)) != NO_ERROR)
         goto cleanup;
@@ -215,8 +215,13 @@ int createWindow(struct Window* window, int width, int height)
 {
     memset(window, 0, sizeof(struct Window));
 
+    window->imageMesh = malloc(sizeof(struct Mesh));
     memset(window->imageMesh, 0, sizeof(struct Mesh));
+    mesh_init(window->imageMesh);
+
+    window->imageTexture = malloc(sizeof(struct Texture));
     memset(window->imageTexture, 0, sizeof(struct Texture));
+    texture_init(window->imageTexture, "./Assets/textures/texture.jpg");
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);

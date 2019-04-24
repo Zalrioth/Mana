@@ -2,8 +2,13 @@
 
 void mesh_init(struct Mesh* mesh)
 {
-    vector_init(&mesh->vertices, sizeof(struct Vertex));
-    vector_init(&mesh->indices, sizeof(uint16_t));
+    mesh->vertices = malloc(sizeof(struct Vector));
+    memset(mesh->vertices, 0, sizeof(struct Vector));
+    vector_init(mesh->vertices, sizeof(struct Vertex));
+
+    mesh->indices = malloc(sizeof(struct Vector));
+    memset(mesh->indices, 0, sizeof(struct Vector));
+    vector_init(mesh->indices, sizeof(uint16_t));
 }
 
 void mesh_delete(struct Mesh* mesh)
