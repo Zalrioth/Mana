@@ -25,9 +25,6 @@ int createUniformBuffers(struct Window* window);
 int createDescriptorPool(struct Window* window);
 int createDescriptorSets(struct Window* window);
 
-void assign_vertex(struct Vector* vertex, float r, float g, float b, float x, float y, float z, float u, float v);
-void assign_indice(struct Vector* vertex, uint16_t indice);
-
 int createCommandBuffers(struct Window* window);
 int createSyncObjects(struct Window* window);
 

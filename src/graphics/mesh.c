@@ -34,7 +34,7 @@ void assign_vertex(struct Vector* vector, float x, float y, float z, float r, fl
     vector_add(vector, &vertex);
 }
 
-void assign_indice(struct Vector* vector, uint16_t indice)
+void assign_indice(struct Vector* vector, uint32_t indice)
 {
     vector_add(vector, &indice);
 }

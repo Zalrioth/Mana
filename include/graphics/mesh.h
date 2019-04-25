@@ -24,6 +24,6 @@ struct Mesh {
 void mesh_init(struct Mesh* mesh);
 void mesh_delete(struct Mesh* mesh);
 void assign_vertex(struct Vector* vector, float x, float y, float z, float r, float g, float b, float u, float v);
-void assign_indice(struct Vector* vector, uint16_t indice);
+void assign_indice(struct Vector* vector, uint32_t indice);
 
 #endif // MESH_H_
