@@ -14,9 +14,7 @@ private:
     GLuint VAO;
     Shader* ssaoShader = nullptr;
     Shader* ssaoBlurShader = nullptr;
-    GLuint gSSAOFBO;
-    GLuint gSSAOTexture;
-    GLuint gNoiseTexture;
+
     std::vector<glm::vec3> ssaoKernel;
     GLuint createSSAONoiseTexture();
     float lerp(float a, float b, float f);
@@ -25,6 +23,9 @@ public:
     SSAOEffect(int width, int height);
     ~SSAOEffect();
     void render(GBuffer* gBuffer, PostProcess* postProcess);
+    GLuint gSSAOFBO;
+    GLuint gSSAOTexture;
+    GLuint gNoiseTexture;
 };
 
 #endif // SSAO_EFFECT_HPP_

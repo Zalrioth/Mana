@@ -21,18 +21,17 @@ FXAAEffect::~FXAAEffect()
     delete this->fxaaShader;
 }
 
-void FXAAEffect::render(GBuffer* gBuffer, PostProcess* postProcess)
+void FXAAEffect::render(PostProcess* postProcess)
 {
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     glBlendEquation(GL_FUNC_ADD);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, gBuffer->gColorTexture);
+    glBindTexture(GL_TEXTURE_2D, postProcess->getTexture());
 
     glDisable(GL_DEPTH_TEST);
 
     this->fxaaShader->use();
-
     this->fxaaShader->setInt("uColorTexture", 0);
 
     glBindVertexArray(this->VAO);

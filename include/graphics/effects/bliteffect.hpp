@@ -14,6 +14,7 @@ public:
     BlitEffect();
     ~BlitEffect();
     void render(GLuint texture);
+    void renderCurrent(GLuint texture);
 };
 
 #endif // BLIT_EFFECT_HPP_

@@ -29,6 +29,10 @@ CloudSystem::CloudSystem(int width, int height)
     this->weatherTex = createWeatherTexture();
 }
 
+CloudSystem::~CloudSystem()
+{
+}
+
 GLuint CloudSystem::createPerlinTexture()
 {
     module::Perlin myModule;
@@ -155,12 +159,14 @@ GLuint CloudSystem::createWeatherTexture()
     return noiseTexture;
 }
 
-CloudSystem::~CloudSystem()
-{
-}
-
 void CloudSystem::render(EngineSettings* engineSettings)
 {
+    //engineSettings->gGBuffer->stop(engineSettings->projectionMatrix);
+
+    GLint drawFboId = 0, readFboId = 0;
+    glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFboId);
+    glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &readFboId);
+
     glBindFramebuffer(GL_FRAMEBUFFER, this->gCloudFBO);
 
     const GLenum buffers[]{ GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
@@ -241,10 +247,17 @@ void CloudSystem::render(EngineSettings* engineSettings)
     glBindTexture(GL_TEXTURE_2D, 0);
 
     //copy to lastFrameFBO
-    glBindFramebuffer(GL_FRAMEBUFFER, this->gCopyFrameFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, engineSettings->gGBuffer->gGBufferFBO);
 
-    const GLenum buffers2[]{ GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
-    glDrawBuffers(2, buffers2);
+    const GLenum buffers2[]{ GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
+    glDrawBuffers(4, buffers2);
+
+    //engineSettings->gGBuffer->start();
+
+    //const GLenum buffers2[]{ GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+    //glDrawBuffers(2, buffers2);
+
+    glDisable(GL_DEPTH_TEST);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->gCloudTextures[2]);
@@ -253,8 +266,8 @@ void CloudSystem::render(EngineSettings* engineSettings)
     glBindTexture(GL_TEXTURE_2D, this->gCloudTextures[1]);
 
     this->copyFrameShader->use();
-    this->volumetricCloudShader->setInt("colorTex", 0);
-    this->volumetricCloudShader->setInt("alphanessTex", 1);
+    this->copyFrameShader->setInt("colorTex", 0);
+    this->copyFrameShader->setInt("alphanessTex", 1);
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
@@ -264,6 +277,8 @@ void CloudSystem::render(EngineSettings* engineSettings)
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
+
+    glEnable(GL_DEPTH_TEST);
 
     //copy last VP matrix
     this->oldFrameVP = vp;

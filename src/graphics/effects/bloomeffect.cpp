@@ -26,7 +26,7 @@ BloomEffect::~BloomEffect()
     glDeleteFramebuffers(2, this->gBloomPingPongFBO);
 }
 
-void BloomEffect::render(GBuffer* gBuffer, PostProcess* postProcess)
+void BloomEffect::render(PostProcess* postProcess)
 {
     postProcess->stop();
 

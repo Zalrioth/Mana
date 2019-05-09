@@ -15,7 +15,7 @@ private:
 public:
     FXAAEffect(int width, int height);
     ~FXAAEffect();
-    void render(GBuffer* gBuffer, PostProcess* postProcess);
+    void render(PostProcess* postProcess);
 };
 
 #endif // FXAA_EFFECT_HPP_

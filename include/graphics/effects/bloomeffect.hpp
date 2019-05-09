@@ -19,7 +19,7 @@ private:
 public:
     BloomEffect(int width, int height);
     ~BloomEffect();
-    void render(GBuffer* gBuffer, PostProcess* postProcess);
+    void render(PostProcess* postProcess);
 };
 
 #endif // BLOOM_EFFECT_HPP_
