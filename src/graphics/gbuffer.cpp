@@ -5,13 +5,16 @@ GBuffer::GBuffer(int width, int height)
     this->gGBufferFBO = createFBO();
     this->gColorTexture = createTexture(width, height);
     this->gNormalTexture = createTexture(width, height);
-    this->gLinearDepthTexture = createTexture(width, height);
+    this->gLightScatterTexture = createTexture(width, height);
     this->gPositionTexture = createFloatingTexture(width, height);
+    //this->gLinearDepthTexture = createTexture(width, height);
     this->gDepthTexture = createDepthTexture(width, height);
+
     attachTextureNum(this->gGBufferFBO, this->gColorTexture, 0);
     attachTextureNum(this->gGBufferFBO, this->gNormalTexture, 1);
-    attachTextureNum(this->gGBufferFBO, this->gLinearDepthTexture, 2);
-    attachTextureNum(this->gGBufferFBO, this->gPositionTexture, 3);
+    attachTextureNum(this->gGBufferFBO, this->gPositionTexture, 2);
+    attachTextureNum(this->gGBufferFBO, this->gLightScatterTexture, 3);
+    //attachTextureNum(this->gGBufferFBO, this->gLinearDepthTexture, 4);
     attachDepthTexture(this->gGBufferFBO, this->gDepthTexture);
 
     glGenVertexArrays(1, &this->VAO);
@@ -28,8 +31,8 @@ void GBuffer::start()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, this->gGBufferFBO);
 
-    const GLenum buffers[]{ GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
-    glDrawBuffers(4, buffers);
+    const GLenum buffers[]{ GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 };
+    glDrawBuffers(5, buffers);
 }
 
 void GBuffer::stop(glm::mat4 projectionMatrix)

@@ -26,6 +26,7 @@ public:
     GLuint gLinearDepthTexture;
     GLuint gPositionTexture;
     GLuint gDepthTexture;
+    GLuint gLightScatterTexture;
     Shader* positionDepthShader = nullptr;
     glm::mat4 projectionMatrix;
     glm::mat4 invProjectionMatrix;
