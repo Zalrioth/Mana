@@ -7,10 +7,11 @@ LightScatteringEffect::LightScatteringEffect()
     glGenVertexArrays(1, &this->VAO);
 
     this->lightScatteringShader->use();
-    this->lightScatteringShader->setFloat("exposure", 10.0f);
+    //this->lightScatteringShader->setFloat("exposure", 0.00034f);
+    this->lightScatteringShader->setFloat("exposure", 0.00068f);
     this->lightScatteringShader->setFloat("decay", 1.0f);
-    this->lightScatteringShader->setFloat("density", 1.0f);
-    this->lightScatteringShader->setFloat("weight", 1.0f);
+    this->lightScatteringShader->setFloat("density", 0.84f);
+    this->lightScatteringShader->setFloat("weight", 5.65f);
     this->lightScatteringShader->setVec2("lightPositionOnScreen", 0.5f, 0.5f);
 }
 
@@ -21,6 +22,8 @@ LightScatteringEffect::~LightScatteringEffect()
 
 void LightScatteringEffect::render(PostProcess* postProcess)
 {
+    postProcess->start();
+
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     glBlendEquation(GL_FUNC_ADD);
 
@@ -30,7 +33,8 @@ void LightScatteringEffect::render(PostProcess* postProcess)
     glDisable(GL_DEPTH_TEST);
 
     this->lightScatteringShader->use();
-    this->lightScatteringShader->setInt("uColorTexture", 0);
+    glUniform1i(glGetUniformLocation(this->lightScatteringShader->ID, "uColorTexture"), 0);
+    //this->lightScatteringShader->setInt("uColorTexture", 0);
 
     glBindVertexArray(this->VAO);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
