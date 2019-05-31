@@ -18,7 +18,7 @@ public:
     GBuffer(int width, int height);
     ~GBuffer();
     void start();
-    void stop(glm::mat4 projectionMatrix);
+    void stop(glm::mat4 projectionMatrix, glm::mat4 vietMatrix);
     void clear();
     GLuint gGBufferFBO;
     GLuint gColorTexture;
@@ -30,6 +30,7 @@ public:
     Shader* positionDepthShader = nullptr;
     glm::mat4 projectionMatrix;
     glm::mat4 invProjectionMatrix;
+    glm::mat4 viewMatrix;
 };
 
 #endif // GBUFFER_HPP_

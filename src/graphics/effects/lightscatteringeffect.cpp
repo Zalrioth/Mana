@@ -20,7 +20,30 @@ LightScatteringEffect::~LightScatteringEffect()
     delete this->lightScatteringShader;
 }
 
-void LightScatteringEffect::render(PostProcess* postProcess)
+inline glm::mat4 aiMatrix4x4ToGlm(const aiMatrix4x4& from)
+{
+    glm::mat4 to;
+    // the a,b,c,d in assimp is the row ; the 1,2,3,4 is the column
+    to[0][0] = from.a1;
+    to[1][0] = from.a2;
+    to[2][0] = from.a3;
+    to[3][0] = from.a4;
+    to[0][1] = from.b1;
+    to[1][1] = from.b2;
+    to[2][1] = from.b3;
+    to[3][1] = from.b4;
+    to[0][2] = from.c1;
+    to[1][2] = from.c2;
+    to[2][2] = from.c3;
+    to[3][2] = from.c4;
+    to[0][3] = from.d1;
+    to[1][3] = from.d2;
+    to[2][3] = from.d3;
+    to[3][3] = from.d4;
+    return to;
+}
+
+void LightScatteringEffect::render(Window* window, ModelEntity* lightSource, GBuffer* gBuffer, PostProcess* postProcess)
 {
     postProcess->start();
 
@@ -33,8 +56,23 @@ void LightScatteringEffect::render(PostProcess* postProcess)
     glDisable(GL_DEPTH_TEST);
 
     this->lightScatteringShader->use();
-    glUniform1i(glGetUniformLocation(this->lightScatteringShader->ID, "uColorTexture"), 0);
-    //this->lightScatteringShader->setInt("uColorTexture", 0);
+    //glUniform1i(glGetUniformLocation(this->lightScatteringShader->ID, "uColorTexture"), 0);
+
+    glm::mat4 modelMatrix = aiMatrix4x4ToGlm(lightSource->ourModel->rootMatrix);
+    modelMatrix = glm::translate(modelMatrix, *lightSource->position);
+    modelMatrix = glm::scale(modelMatrix, *lightSource->scale);
+
+    glm::mat4 modelViewMatrix = gBuffer->viewMatrix * modelMatrix;
+
+    //gluProject(lightSource->position->x, lightSource->position->y, lightSource->position->z, modelMatrix, gBuffer->projectionMatrix.data(), &gBuffer->viewMatrix, &windowXPos, &windowYPos, &windowZPos);
+    //gluProject(lightSource->position->x, lightSource->position->y, lightSource->position->z, modelMatrix, gBuffer->projectionMatrix.data(), &gBuffer->viewMatrix, &windowXPos, &windowYPos, &windowZPos);
+    glm::vec4 viewport = glm::vec4(0.0f, 0.0f, (float)window->width, (float)window->height);
+    glm::vec3 windowCoords = glm::project(*lightSource->position, modelViewMatrix, gBuffer->projectionMatrix, viewport);
+    this->lightScatteringShader->setVec2("lightPositionOnScreen", windowCoords.x / window->width, windowCoords.y / window->height);
+    //this->lightScatteringShader->setVec2("lightPositionOnScreen", windowCoords.x, windowCoords.y);
+    this->lightScatteringShader->setInt("uColorTexture", 0);
+
+    std::cout << "XPos: " << windowCoords.x << " , YPos: " << windowCoords.y << " , ZPos: " << windowCoords.z << std::endl;
 
     glBindVertexArray(this->VAO);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);

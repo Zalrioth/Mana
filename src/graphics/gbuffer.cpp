@@ -35,7 +35,7 @@ void GBuffer::start()
     glDrawBuffers(5, buffers);
 }
 
-void GBuffer::stop(glm::mat4 projectionMatrix)
+void GBuffer::stop(glm::mat4 projectionMatrix, glm::mat4 viewMatrix)
 {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->gDepthTexture);
@@ -46,6 +46,7 @@ void GBuffer::stop(glm::mat4 projectionMatrix)
 
     this->projectionMatrix = projectionMatrix;
     this->invProjectionMatrix = glm::inverse(projectionMatrix);
+    this->viewMatrix = viewMatrix;
     this->positionDepthShader->setMat4("invProjMatrix", invProjectionMatrix);
     glUniform1i(glGetUniformLocation(this->positionDepthShader->ID, "gDepthTexture"), 0);
 

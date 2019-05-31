@@ -11,19 +11,17 @@
 #include "graphics/shader.hpp"
 
 class ModelEntity : public Entity {
- private:
-  Shader* ourShader = nullptr;
-  Model* ourModel = nullptr;
-  glm::vec3* position = new glm::vec3(0.0, 0.0, 0.0);
-  glm::vec3* scale = new glm::vec3(1.0, 1.0, 1.0);
-
- public:
-  ModelEntity(const char* vertex, const char* fragment, const char* model);
-  ~ModelEntity();
-  void render(EngineSettings* engineSettings);
-  void update(EngineSettings* engineSettings);
-  void setPosition(float x, float y, float z);
-  void setScale(float x, float y, float z);
+public:
+    ModelEntity(const char* vertex, const char* fragment, const char* model);
+    ~ModelEntity();
+    void render(EngineSettings* engineSettings);
+    void update(EngineSettings* engineSettings);
+    void setPosition(float x, float y, float z);
+    void setScale(float x, float y, float z);
+    Shader* ourShader = nullptr;
+    Model* ourModel = nullptr;
+    glm::vec3* position = new glm::vec3(0.0, 0.0, 0.0);
+    glm::vec3* scale = new glm::vec3(1.0, 1.0, 1.0);
 };
 
-#endif  // MODEL_ENTITY_HPP_
+#endif // MODEL_ENTITY_HPP_
