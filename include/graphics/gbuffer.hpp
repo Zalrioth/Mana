@@ -8,6 +8,7 @@
 
 #include "graphics/graphicsutils.hpp"
 #include "graphics/shader.hpp"
+#include "graphics/window.hpp"
 
 class GBuffer {
 
@@ -18,7 +19,7 @@ public:
     GBuffer(int width, int height);
     ~GBuffer();
     void start();
-    void stop(glm::mat4 projectionMatrix, glm::mat4 vietMatrix);
+    void stop(Window* window, glm::mat4 projectionMatrix, glm::mat4 vietMatrix);
     void clear();
     GLuint gGBufferFBO;
     GLuint gColorTexture;
@@ -31,6 +32,7 @@ public:
     glm::mat4 projectionMatrix;
     glm::mat4 invProjectionMatrix;
     glm::mat4 viewMatrix;
+    float centerDepth;
 };
 
 #endif // GBUFFER_HPP_

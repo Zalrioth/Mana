@@ -1,5 +1,8 @@
 #include "graphics/gbuffer.hpp"
 
+//https://stackoverflow.com/questions/34081833/android-opengl-reading-pixel-color-at-the-center-of-the-screen
+//https://community.khronos.org/t/how-to-read-value-from-texture/66373/3
+
 GBuffer::GBuffer(int width, int height)
 {
     this->gGBufferFBO = createFBO();
@@ -35,7 +38,7 @@ void GBuffer::start()
     glDrawBuffers(5, buffers);
 }
 
-void GBuffer::stop(glm::mat4 projectionMatrix, glm::mat4 viewMatrix)
+void GBuffer::stop(Window* window, glm::mat4 projectionMatrix, glm::mat4 viewMatrix)
 {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->gDepthTexture);
@@ -53,6 +56,13 @@ void GBuffer::stop(glm::mat4 projectionMatrix, glm::mat4 viewMatrix)
     glBindVertexArray(this->VAO);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
+
+    float depthValue[4];
+    glReadPixels(window->width / 2, window->height / 2, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, depthValue);
+
+    this->centerDepth = depthValue[0];
+
+    //std::cout << centerDepth << std::endl;
 
     glEnable(GL_DEPTH_TEST);
 
