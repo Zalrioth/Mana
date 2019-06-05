@@ -6,7 +6,7 @@
 GBuffer::GBuffer(int width, int height)
 {
     this->gGBufferFBO = createFBO();
-    this->gColorTexture = createTexture(width, height);
+    this->gColorTexture = createMipmapTexture(width, height);
     this->gNormalTexture = createTexture(width, height);
     this->gLightScatterTexture = createTexture(width, height);
     this->gPositionTexture = createFloatingTexture(width, height);
@@ -19,6 +19,13 @@ GBuffer::GBuffer(int width, int height)
     attachTextureNum(this->gGBufferFBO, this->gLightScatterTexture, 3);
     //attachTextureNum(this->gGBufferFBO, this->gLinearDepthTexture, 4);
     attachDepthTexture(this->gGBufferFBO, this->gDepthTexture);
+
+    //this->gColorDepthDownsampleFBO = createFBO();
+    //this->gColorDownsampleTexture = createTexture(width / 2, height / 2);
+    //this->gDepthDownsampleTexture = createDepthTexture(width / 2, height / 2);
+
+    //attachTextureNum(this->gColorDepthDownsampleFBO, this->gColorDownsampleTexture, 0);
+    //attachDepthTexture(this->gColorDepthDownsampleFBO, this->gDepthDownsampleTexture);
 
     glGenVertexArrays(1, &this->VAO);
 
@@ -40,6 +47,9 @@ void GBuffer::start()
 
 void GBuffer::stop(Window* window, glm::mat4 projectionMatrix, glm::mat4 viewMatrix)
 {
+    glBindTexture(GL_TEXTURE_2D, this->gColorTexture);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->gDepthTexture);
 

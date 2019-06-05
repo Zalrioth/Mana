@@ -36,8 +36,13 @@ void DOFEffect::render(GBuffer* gBuffer, PostProcess* postProcess)
 
     glDisable(GL_DEPTH_TEST);
 
+    //TODO: This will need to be changed to account for fps
+    this->dofSeek += (gBuffer->centerDepth - this->dofSeek) * 0.15f;
+
+    //std::cout << this->dofSeek << std::endl;
+
     this->dofShader->use();
-    this->dofShader->setFloat("focalDepth", gBuffer->centerDepth); // 35.0 45.0
+    this->dofShader->setFloat("focalDepth", this->dofSeek); // 35.0 45.0
     this->dofShader->setInt("renderTex", 0);
     this->dofShader->setInt("depthTex", 1);
 

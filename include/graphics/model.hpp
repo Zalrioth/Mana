@@ -22,9 +22,7 @@ using namespace std;
 
 #include "graphics/mesh.hpp"
 #include "graphics/shader.hpp"
-
-unsigned int TextureFromFile(const char* path, const string& directory,
-    bool gamma = false);
+#include "graphics/texture.hpp"
 
 class Model {
 public:

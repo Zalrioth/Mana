@@ -23,6 +23,8 @@ FXAAEffect::~FXAAEffect()
 
 void FXAAEffect::render(PostProcess* postProcess)
 {
+    postProcess->start();
+
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     glBlendEquation(GL_FUNC_ADD);
 

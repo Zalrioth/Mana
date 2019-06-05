@@ -16,6 +16,7 @@
 using namespace std;
 
 #include "graphics/shader.hpp"
+#include "graphics/texture.hpp"
 
 struct Vertex {
     // position
@@ -28,12 +29,6 @@ struct Vertex {
     glm::vec3 Tangent;
     // bitangent
     glm::vec3 Bitangent;
-};
-
-struct Texture {
-    unsigned int id;
-    string type;
-    string path;
 };
 
 class Mesh {

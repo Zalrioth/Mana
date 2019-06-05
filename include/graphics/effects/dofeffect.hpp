@@ -13,6 +13,7 @@ class DOFEffect : public Effect {
 private:
     GLuint VAO;
     Shader* dofShader = nullptr;
+    float dofSeek = 0.0f;
 
 public:
     DOFEffect(int width, int height);

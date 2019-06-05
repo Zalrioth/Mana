@@ -21,6 +21,7 @@ public:
     void start();
     void stop(Window* window, glm::mat4 projectionMatrix, glm::mat4 vietMatrix);
     void clear();
+
     GLuint gGBufferFBO;
     GLuint gColorTexture;
     GLuint gNormalTexture;
@@ -28,7 +29,14 @@ public:
     GLuint gPositionTexture;
     GLuint gDepthTexture;
     GLuint gLightScatterTexture;
+
+    //GLuint gColorDepthDownsampleFBO;
+    //GLuint gColorDownsampleTexture;
+    //GLuint gDepthDownsampleTexture;
+
     Shader* positionDepthShader = nullptr;
+    Shader* downsampleShader = nullptr;
+
     glm::mat4 projectionMatrix;
     glm::mat4 invProjectionMatrix;
     glm::mat4 viewMatrix;

@@ -59,7 +59,6 @@ void LightScatteringEffect::render(Window* window, ModelEntity* lightSource, GBu
     glDisable(GL_DEPTH_TEST);
 
     this->lightScatteringShader->use();
-    //glUniform1i(glGetUniformLocation(this->lightScatteringShader->ID, "uColorTexture"), 0);
 
     glm::mat4 modelMatrix = aiMatrix4x4ToGlm(lightSource->ourModel->rootMatrix);
     modelMatrix = glm::translate(modelMatrix, *lightSource->position);
