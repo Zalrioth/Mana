@@ -1,5 +1,10 @@
 #include "graphics/effects/lensflareeffect.hpp"
 
+//https://john-chapman.github.io/2017/11/05/pseudo-lens-flare.html
+//https://github.com/john-chapman/GfxSamples
+//http://john-chapman-graphics.blogspot.com/2013/02/pseudo-lens-flare.html
+//https://www.youtube.com/watch?v=AjSr0zLBnx8
+
 LensFlareEffect::LensFlareEffect(int width, int height)
 {
     this->lensFlareShader = new Shader("assets/shaders/lensflare/lensflare.vs", "assets/shaders/lensflare/lensflare.fs");
