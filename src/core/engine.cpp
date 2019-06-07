@@ -40,7 +40,6 @@ Engine::Engine(std::string title)
 
 Engine::~Engine()
 {
-
     delete this->engineSettings;
 }
 
@@ -108,6 +107,10 @@ void Engine::run()
             //std::cout << "Update FPS: " << updates << std::endl;
 
             fps = frames;
+
+            std::string newTitle = "Grindstone FPS: " + std::to_string(this->engineSettings->averageFps);
+
+            glfwSetWindowTitle(this->engineSettings->window->glWindow, newTitle.c_str());
 
             float averageCalc = 0;
             for (int loopNum = 10 - 1; loopNum >= 0; loopNum--) {

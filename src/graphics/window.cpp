@@ -14,7 +14,7 @@ Window::Window(bool vSync, int width, int height)
         GL_TRUE); // uncomment this statement to fix compilation on OS X
 #endif
 
-    GLFWwindow* window = glfwCreateWindow(width, height, "Hello Triangle", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(width, height, "Grindstone", NULL, NULL);
 
     if (!window)
         throw std::runtime_error("Unable to create OpenGL window");

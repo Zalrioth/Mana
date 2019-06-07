@@ -15,6 +15,7 @@ LightScatteringEffect::LightScatteringEffect()
     this->lightScatteringShader->setFloat("decay", 0.99f); //1.0f range 0-1 falloff of samples
     this->lightScatteringShader->setFloat("density", 1.0f); //0.84f distance between samples
     this->lightScatteringShader->setFloat("weight", 0.01f); //5.65f intensity of each sample
+    this->lightScatteringShader->setInt("samples", 50); //5.65f intensity of each sample
     //this->lightScatteringShader->setVec2("lightPositionOnScreen", 0.5f, 0.5f);
 }
 
