@@ -1,18 +1,21 @@
 #include "graphics/window.hpp"
 
+//https://nlguillemot.wordpress.com/2016/12/07/reversed-z-in-opengl/
+
 Window::Window(bool vSync, int width, int height)
 {
     if (!glfwInit())
         throw std::runtime_error("Unable to start GLFW");
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5); // 1 is highest on Mac
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#ifdef __APPLE__
-    glfwWindowHint(
-        GLFW_OPENGL_FORWARD_COMPAT,
-        GL_TRUE); // uncomment this statement to fix compilation on OS X
-#endif
+
+    //#ifdef __APPLE__
+    //    glfwWindowHint(
+    //        GLFW_OPENGL_FORWARD_COMPAT,
+    //        GL_TRUE); // uncomment this statement to fix compilation on OS X
+    //#endif
 
     GLFWwindow* window = glfwCreateWindow(width, height, "Grindstone", NULL, NULL);
 
@@ -36,6 +39,7 @@ Window::Window(bool vSync, int width, int height)
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glfwWindowHint(GLFW_SAMPLES, 4); // Antialiasing
+    glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE); // Higher accuracy depth buffer
 
     this->glWindow = window;
     this->vSync = vSync;

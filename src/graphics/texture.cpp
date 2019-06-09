@@ -1,5 +1,9 @@
 #include "graphics/texture.hpp"
 
+//OpenGL 3D Game Tutorial 41: Antialiasing and Anisotropic Filtering
+//https://www.youtube.com/watch?v=Pdn13TRWEM0
+//https://gamedev.stackexchange.com/questions/69374/how-to-achieve-anisotropic-filtering
+
 unsigned int TextureFromFile(const char* path, const std::string& directory, bool gamma)
 {
     std::string filename = std::string(path);
@@ -27,6 +31,11 @@ unsigned int TextureFromFile(const char* path, const std::string& directory, boo
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        // Anisotropic filtering
+        float aniso = 0.0f;
+        glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &aniso);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, aniso);
 
         stbi_image_free(data);
     } else {
