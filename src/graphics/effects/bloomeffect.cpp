@@ -4,9 +4,9 @@
 
 BloomEffect::BloomEffect(int width, int height)
 {
-    this->bloomShader = new Shader("assets/shaders/bloom/bloom.vs", "assets/shaders/bloom/bloom.fs");
-    this->bloomThresholdShader = new Shader("assets/shaders/bloom/bloom.vs", "assets/shaders/bloom/bloomthresh.fs");
-    this->bloomBlurShader = new Shader("assets/shaders/bloom/bloom.vs", "assets/shaders/bloom/bloomblur.fs");
+    this->bloomShader = new Shader("assets/shaders/screenspace.vs", "assets/shaders/bloom/bloom.fs");
+    this->bloomThresholdShader = new Shader("assets/shaders/screenspace.vs", "assets/shaders/bloom/bloomthresh.fs");
+    this->bloomBlurShader = new Shader("assets/shaders/screenspace.vs", "assets/shaders/bloom/bloomblur.fs");
 
     glGenVertexArrays(1, &this->VAO);
 

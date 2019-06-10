@@ -29,7 +29,7 @@ GBuffer::GBuffer(int width, int height)
 
     glGenVertexArrays(1, &this->VAO);
 
-    this->positionDepthShader = new Shader("assets/shaders/positiondepth.vs", "assets/shaders/positiondepth.fs");
+    this->positionDepthShader = new Shader("assets/shaders/screenspace.vs", "assets/shaders/positiondepth.fs");
 }
 
 GBuffer::~GBuffer()

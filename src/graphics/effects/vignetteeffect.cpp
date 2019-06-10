@@ -2,7 +2,7 @@
 
 VignetteEffect::VignetteEffect(int width, int height)
 {
-    this->vignetteShader = new Shader("assets/shaders/vignette.vs", "assets/shaders/vignette.fs");
+    this->vignetteShader = new Shader("assets/shaders/screenspace.vs", "assets/shaders/vignette.fs");
 
     glGenVertexArrays(1, &this->VAO);
 

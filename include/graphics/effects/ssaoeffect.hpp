@@ -10,6 +10,8 @@
 
 class SSAOEffect : public Effect {
 
+#define KERNEL_SIZE 64
+
 private:
     GLuint VAO;
     Shader* ssaoShader = nullptr;

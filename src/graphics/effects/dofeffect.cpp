@@ -5,7 +5,7 @@
 
 DOFEffect::DOFEffect(int width, int height)
 {
-    this->dofShader = new Shader("assets/shaders/dof.vs", "assets/shaders/dof.fs");
+    this->dofShader = new Shader("assets/shaders/screenspace.vs", "assets/shaders/dof.fs");
 
     glGenVertexArrays(1, &this->VAO);
 

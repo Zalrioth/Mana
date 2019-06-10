@@ -6,8 +6,8 @@
 
 SSAOEffect::SSAOEffect(int width, int height)
 {
-    this->ssaoShader = new Shader("assets/shaders/ssao/ssao.vs", "assets/shaders/ssao/ssao.fs");
-    this->ssaoBlurShader = new Shader("assets/shaders/ssao/ssao.vs", "assets/shaders/ssao/ssaoblur.fs");
+    this->ssaoShader = new Shader("assets/shaders/screenspace.vs", "assets/shaders/ssao/ssao.fs");
+    this->ssaoBlurShader = new Shader("assets/shaders/screenspace.vs", "assets/shaders/ssao/ssaoblur.fs");
 
     // MIGHT NOT NEED THIS HARDCODED IN SHADER
     glGenVertexArrays(1, &this->VAO);
@@ -18,15 +18,21 @@ SSAOEffect::SSAOEffect(int width, int height)
 
     this->gNoiseTexture = this->createSSAONoiseTexture();
 
-    for (unsigned int i = 0; i < 64; ++i) {
+    for (unsigned int i = 0; i < KERNEL_SIZE; ++i) {
         glm::vec3 sample(generateFloat() * 2.0 - 1.0, generateFloat() * 2.0 - 1.0, generateFloat());
         sample = glm::normalize(sample);
         sample *= generateFloat();
-        float scale = (float)i / 64.0;
+        float scale = (float)i / KERNEL_SIZE;
         scale = lerp(0.1f, 1.0f, scale * scale);
         sample *= scale;
         ssaoKernel.push_back(sample);
     }
+
+    this->ssaoShader->use();
+    this->ssaoShader->setInt("kernalSize", 16);
+    this->ssaoShader->setFloat("radius", 0.5);
+    this->ssaoShader->setFloat("bias", 0.1);
+    this->ssaoShader->setVec3a("samples", this->ssaoKernel);
 }
 
 SSAOEffect::~SSAOEffect()
@@ -69,7 +75,6 @@ void SSAOEffect::render(GBuffer* gBuffer, PostProcess* postProcess)
     this->ssaoShader->setInt("gLinearDepth", 1);
     this->ssaoShader->setInt("gPosition", 2);
     this->ssaoShader->setInt("noiseTexture", 3);
-    this->ssaoShader->setVec3a("samples", this->ssaoKernel);
     this->ssaoShader->setMat4("projMatrix", gBuffer->projectionMatrix);
     //this->ssaoShader->setMat4("invProjMatrix", gBuffer->invProjectionMatrix);
 

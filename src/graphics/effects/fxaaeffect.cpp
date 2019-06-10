@@ -2,7 +2,7 @@
 
 FXAAEffect::FXAAEffect(int width, int height)
 {
-    this->fxaaShader = new Shader("assets/shaders/fxaa.vs", "assets/shaders/fxaa.fs");
+    this->fxaaShader = new Shader("assets/shaders/screenspace.vs", "assets/shaders/fxaa.fs");
 
     glGenVertexArrays(1, &this->VAO);
 

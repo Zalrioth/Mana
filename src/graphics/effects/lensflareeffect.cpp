@@ -7,9 +7,9 @@
 
 LensFlareEffect::LensFlareEffect(int width, int height)
 {
-    this->lensFlareShader = new Shader("assets/shaders/lensflare/lensflare.vs", "assets/shaders/lensflare/lensflare.fs");
-    this->lensFlareBlurShader = new Shader("assets/shaders/lensflare/lensflare.vs", "assets/shaders/lensflare/lensflareblur.fs");
-    this->lensFlareCompositeeShader = new Shader("assets/shaders/lensflare/lensflare.vs", "assets/shaders/lensflare/lensflarecomposite.fs");
+    this->lensFlareShader = new Shader("assets/shaders/screenspace.vs", "assets/shaders/lensflare/lensflare.fs");
+    this->lensFlareBlurShader = new Shader("assets/shaders/screenspace.vs", "assets/shaders/lensflare/lensflareblur.fs");
+    this->lensFlareCompositeeShader = new Shader("assets/shaders/screenspace.vs", "assets/shaders/lensflare/lensflarecomposite.fs");
 
     glGenVertexArrays(1, &this->VAO);
 

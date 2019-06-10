@@ -24,9 +24,9 @@ CloudSystem::CloudSystem(int width, int height)
 
     this->coverage = 0.45;
 
-    //this->perlinTex = createPerlinTexture();
-    //this->worley32 = createWorleyTexture();
-    //this->weatherTex = createWeatherTexture();
+    this->perlinTex = createPerlinTexture();
+    this->worley32 = createWorleyTexture();
+    this->weatherTex = createWeatherTexture();
 }
 
 CloudSystem::~CloudSystem()

@@ -6,7 +6,7 @@
 
 LightScatteringEffect::LightScatteringEffect()
 {
-    this->lightScatteringShader = new Shader("assets/shaders/lightscattering.vs", "assets/shaders/lightscattering.fs");
+    this->lightScatteringShader = new Shader("assets/shaders/screenspace.vs", "assets/shaders/lightscattering.fs");
 
     glGenVertexArrays(1, &this->VAO);
 

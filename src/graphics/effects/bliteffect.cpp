@@ -2,7 +2,7 @@
 
 BlitEffect::BlitEffect()
 {
-    this->blitShader = new Shader("assets/shaders/blit.vs", "assets/shaders/blit.fs");
+    this->blitShader = new Shader("assets/shaders/screenspace.vs", "assets/shaders/blit.fs");
 
     // MIGHT NOT NEED THIS HARDCODED IN SHADER
     glGenVertexArrays(1, &this->VAO);
