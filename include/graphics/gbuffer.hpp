@@ -25,7 +25,7 @@ public:
     GLuint gGBufferFBO;
     GLuint gColorTexture;
     GLuint gNormalTexture;
-    GLuint gLinearDepthTexture;
+    //GLuint gLinearDepthTexture;
     GLuint gPositionTexture;
     GLuint gDepthTexture;
     GLuint gLightScatterTexture;

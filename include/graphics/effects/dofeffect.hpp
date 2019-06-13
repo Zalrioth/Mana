@@ -16,7 +16,7 @@ private:
     float dofSeek = 0.0f;
 
 public:
-    DOFEffect(int width, int height);
+    DOFEffect(int width, int height, float zNear, float zFar);
     ~DOFEffect();
     void render(GBuffer* gBuffer, PostProcess* postProcess);
 };

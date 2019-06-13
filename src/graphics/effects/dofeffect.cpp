@@ -3,7 +3,7 @@
 //https://www.popphoto.com/news/2012/06/how-to-calculate-f-stop-human-eye/
 //https://threejs.org/examples/webgl_postprocessing_dof2.html
 
-DOFEffect::DOFEffect(int width, int height)
+DOFEffect::DOFEffect(int width, int height, float zNear, float zFar)
 {
     this->dofShader = new Shader("assets/shaders/screenspace.vs", "assets/shaders/dof.fs");
 
@@ -14,6 +14,8 @@ DOFEffect::DOFEffect(int width, int height)
     this->dofShader->setInt("height", height);
     this->dofShader->setFloat("focalLength", 12.0f); // 35.0 45.0
     this->dofShader->setFloat("fstop", 1.4f); // 2.2 8.0
+    this->dofShader->setFloat("znear", zNear); // 35.0 45.0
+    this->dofShader->setFloat("zfar", zFar); // 2.2 8.0
 }
 
 DOFEffect::~DOFEffect()

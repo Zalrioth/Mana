@@ -83,7 +83,7 @@ void Engine::run()
         }
 
         this->engineSettings->projectionMatrix = glm::perspective(glm::radians(this->engineSettings->camera->Zoom),
-            (float)this->engineSettings->window->width / (float)this->engineSettings->window->height, 0.01f, 1000.0f);
+            (float)this->engineSettings->window->width / (float)this->engineSettings->window->height, this->engineSettings->camera->ZNear, this->engineSettings->camera->ZFar);
         this->engineSettings->viewMatrix = this->engineSettings->camera->GetViewMatrix();
         this->scene->render(this->engineSettings);
 

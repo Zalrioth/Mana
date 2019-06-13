@@ -47,10 +47,14 @@ void GBuffer::start()
 
 void GBuffer::stop(Window* window, glm::mat4 projectionMatrix, glm::mat4 viewMatrix)
 {
+    glActiveTexture(GL_TEXTURE0);
+
     glBindTexture(GL_TEXTURE_2D, this->gColorTexture);
     glGenerateMipmap(GL_TEXTURE_2D);
 
-    glActiveTexture(GL_TEXTURE0);
+    //glBindTexture(GL_TEXTURE_2D, this->gPositionTexture);
+    //glGenerateMipmap(GL_TEXTURE_2D);
+
     glBindTexture(GL_TEXTURE_2D, this->gDepthTexture);
 
     glDisable(GL_DEPTH_TEST);

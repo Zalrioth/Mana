@@ -1,11 +1,11 @@
-#include "graphics/effects/ssaoeffect.hpp"
+#include "graphics/effects/hbaoeffect.hpp"
 
 //https://learnopengl.com/Advanced-Lighting/SSAO
 //https://gamedev.stackexchange.com/questions/86621/how-can-i-pass-a-stdvectorvector3f-to-my-shader
 //https://forum.facepunch.com/games/odkn/PSA-raise-your-SSAO-bias/1/
 //https://sapphirenation.net/effects-games-anisotropic-filtering-ssao-hair-simulation/
 
-SSAOEffect::SSAOEffect(int width, int height)
+HBAOEffect::HBAOEffect(int width, int height)
 {
     this->ssaoShader = new Shader("assets/shaders/screenspace.vs", "assets/shaders/ssao/ssao.fs");
     this->ssaoBlurShader = new Shader("assets/shaders/screenspace.vs", "assets/shaders/ssao/ssaoblur.fs");
@@ -44,13 +44,13 @@ SSAOEffect::SSAOEffect(int width, int height)
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-SSAOEffect::~SSAOEffect()
+HBAOEffect::~HBAOEffect()
 {
     delete this->ssaoShader;
     delete this->ssaoBlurShader;
 }
 
-void SSAOEffect::render(GBuffer* gBuffer, PostProcess* postProcess)
+void HBAOEffect::render(GBuffer* gBuffer, PostProcess* postProcess)
 {
     postProcess->stop();
 
@@ -118,7 +118,7 @@ void SSAOEffect::render(GBuffer* gBuffer, PostProcess* postProcess)
     postProcess->swapBuffer();
 }
 
-GLuint SSAOEffect::createSSAONoiseTexture()
+GLuint HBAOEffect::createSSAONoiseTexture()
 {
     std::vector<glm::vec3> ssaoNoise;
     for (int i = 0; i < 16; i++) {
@@ -137,7 +137,7 @@ GLuint SSAOEffect::createSSAONoiseTexture()
     return noiseTexture;
 }
 
-inline float SSAOEffect::lerp(float a, float b, float f)
+inline float HBAOEffect::lerp(float a, float b, float f)
 {
     return a + f * (b - a);
 }
