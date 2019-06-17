@@ -35,6 +35,8 @@ GBuffer::GBuffer(int width, int height)
 GBuffer::~GBuffer()
 {
     glDeleteFramebuffers(1, &this->gGBufferFBO);
+
+    delete this->positionDepthShader;
 }
 
 void GBuffer::start()

@@ -7,8 +7,8 @@
 TransvoxelSystem::TransvoxelSystem(int size)
     : size(size)
 {
-    Voxel example;
-    volumeData.resize(size * size * size, example);
+    Voxel emptyVoxel;
+    volumeData.resize(size * size * size, emptyVoxel);
     setupVolumeData();
 
     this->volumeShader = new Shader("assets/shaders/volume.vert", "assets/shaders/volume.frag");
@@ -16,11 +16,10 @@ TransvoxelSystem::TransvoxelSystem(int size)
 
 TransvoxelSystem::~TransvoxelSystem()
 {
-    // Maybe delete some stuff
+    delete this->volumeShader;
 }
 
-void TransvoxelSystem::updateIsovalues(int x, int y, int z, float isovalue,
-    int radius)
+void TransvoxelSystem::updateIsovalues(int x, int y, int z, float isovalue, int radius)
 {
     for (int xd = -radius; xd <= radius; xd++) {
         for (int yd = -radius; yd <= radius; yd++) {
@@ -34,19 +33,13 @@ void TransvoxelSystem::updateIsovalues(int x, int y, int z, float isovalue,
             }
         }
     }
-    //    for (int xd = -(radius+1); xd <= radius+1; xd++) {
-    //        for (int yd = -(radius+1); yd <= radius+1; yd++) {
-    //            for (int zd = -(radius+1); zd <= radius+1; zd++) {
-    //                recomputeVertices(x + xd, y + yd, z + zd);
-    //            }
-    //        }
-    //    }
 }
 
 VoxelCube TransvoxelSystem::voxelForVolumePos(int x, int y, int z)
 {
     glm::vec3 pos(x, y, z);
     Voxel voxel = volumeData[x * size * size + y * size + z];
+
     return { pos, voxel.isovalue };
 }
 
@@ -73,8 +66,7 @@ glm::vec3 TransvoxelSystem::gradientForPoint(int x, int y, int z)
     return glm::vec3(gradx, grady, gradz);
 }
 
-glm::vec3 TransvoxelSystem::interpolateVertex(float isorange, VoxelCube v1,
-    VoxelCube v2)
+glm::vec3 TransvoxelSystem::interpolateVertex(float isorange, VoxelCube v1, VoxelCube v2)
 {
     glm::vec3 p1 = v1.pos;
     glm::vec3 p2 = v2.pos;
@@ -89,15 +81,13 @@ glm::vec3 TransvoxelSystem::interpolateVertex(float isorange, VoxelCube v1,
         iso2 = temp2;
     }
 
-    if (abs(iso1 - iso2) > 0.00001) {
+    if (abs(iso1 - iso2) > 0.00001)
         return p1 + (p2 - p1) / (iso2 - iso1) * (isorange - iso1);
-    } else {
+    else
         return p1;
-    }
 }
 
-glm::vec3 TransvoxelSystem::interpolateNormal(int x, int y, int z, int isorange,
-    int corner1, int corner2)
+glm::vec3 TransvoxelSystem::interpolateNormal(int x, int y, int z, int isorange, int corner1, int corner2)
 {
     // Get gradient for each corner
     glm::vec3 grad[2];
@@ -108,12 +98,8 @@ glm::vec3 TransvoxelSystem::interpolateNormal(int x, int y, int z, int isorange,
         cornerOffset[0] = cornerOffsets[corner][0] * voxelScale;
         cornerOffset[1] = cornerOffsets[corner][1] * voxelScale;
         cornerOffset[2] = cornerOffsets[corner][2] * voxelScale;
-        grad[i] = gradientForPoint(x + cornerOffsets[corner][0] * voxelScale,
-            y + cornerOffsets[corner][1] * voxelScale,
-            z + cornerOffsets[corner][2] * voxelScale);
-        voxels[i] = voxelForVolumePos(x + cornerOffsets[corner][0] * voxelScale,
-            y + cornerOffsets[corner][1] * voxelScale,
-            z + cornerOffsets[corner][2] * voxelScale);
+        grad[i] = gradientForPoint(x + cornerOffsets[corner][0] * voxelScale, y + cornerOffsets[corner][1] * voxelScale, z + cornerOffsets[corner][2] * voxelScale);
+        voxels[i] = voxelForVolumePos(x + cornerOffsets[corner][0] * voxelScale, y + cornerOffsets[corner][1] * voxelScale, z + cornerOffsets[corner][2] * voxelScale);
     }
 
     glm::vec3 grad1 = grad[0];
@@ -129,16 +115,13 @@ glm::vec3 TransvoxelSystem::interpolateNormal(int x, int y, int z, int isorange,
         grad2 = temp2;
     }
 
-    if (abs(iso1 - iso2) > 0.00001) {
+    if (abs(iso1 - iso2) > 0.00001)
         return grad1 + (grad2 - grad1) / (iso2 - iso1) * (isorange - iso1);
-    } else {
+    else
         return grad1;
-    }
 }
 
-glm::vec3 TransvoxelSystem::interpolateTransNormal(int x, int y, int z,
-    int isorange, int corner1,
-    int corner2)
+glm::vec3 TransvoxelSystem::interpolateTransNormal(int x, int y, int z, int isorange, int corner1, int corner2)
 {
     // Get gradient for each corner
     glm::vec3 grad[2];
@@ -149,10 +132,8 @@ glm::vec3 TransvoxelSystem::interpolateTransNormal(int x, int y, int z,
         cornerOffset[0] = transCornerOffsets[corner][0] * voxelScale / 2; // Divide by 2 because offset table uses values 2x as large
         cornerOffset[1] = transCornerOffsets[corner][1] * voxelScale / 2;
         cornerOffset[2] = transCornerOffsets[corner][2] * voxelScale / 2;
-        grad[i] = gradientForPoint(x + cornerOffset[0], y + cornerOffset[1],
-            z + cornerOffset[2]);
-        voxels[i] = voxelForVolumePos(x + cornerOffset[0], y + cornerOffset[1],
-            z + cornerOffset[2]);
+        grad[i] = gradientForPoint(x + cornerOffset[0], y + cornerOffset[1], z + cornerOffset[2]);
+        voxels[i] = voxelForVolumePos(x + cornerOffset[0], y + cornerOffset[1], z + cornerOffset[2]);
     }
 
     glm::vec3 grad1 = grad[0];
@@ -168,11 +149,10 @@ glm::vec3 TransvoxelSystem::interpolateTransNormal(int x, int y, int z,
         grad2 = temp2;
     }
 
-    if (abs(iso1 - iso2) > 0.00001) {
+    if (abs(iso1 - iso2) > 0.00001)
         return grad1 + (grad2 - grad1) / (iso2 - iso1) * (isorange - iso1);
-    } else {
+    else
         return grad1;
-    }
 }
 
 void TransvoxelSystem::setupVolumeIsovalues()
@@ -258,20 +238,27 @@ void TransvoxelSystem::computeTrianglesForVoxel(int x, int y, int z)
     std::vector<glm::vec3> edgeNormals;
     for (int i = 0; i < cellData.GetVertexCount(); i++) {
         auto vertex = vertexData[i];
+
         if (!vertex)
             break;
+
         unsigned char corner1 = (vertex >> 4) & 0x000F;
         unsigned char corner2 = vertex & 0x000F;
+
         float isovalue1 = volumeData[cornerIndices[corner1]].isovalue;
         float isovalue2 = volumeData[cornerIndices[corner2]].isovalue;
+
         glm::vec3 cornerPos1 = cornerPositions[corner1];
         glm::vec3 cornerPos2 = cornerPositions[corner2];
+
         if (lodSmoothing) {
             int lod = voxelScale;
+
             while (lod > 1) {
                 glm::vec3 centerVoxelPosition = (cornerPos1 + cornerPos2) / 2.0f;
                 int centerVoxelIndex = (int)centerVoxelPosition[0] * size * size + (int)centerVoxelPosition[1] * size + (int)centerVoxelPosition[2];
                 Voxel centerVoxel = volumeData[centerVoxelIndex];
+
                 if (centerVoxel.isovalue <= 0) {
                     if (isovalue1 <= 0) {
                         isovalue1 = centerVoxel.isovalue;
@@ -289,9 +276,11 @@ void TransvoxelSystem::computeTrianglesForVoxel(int x, int y, int z)
                         cornerPos2 = centerVoxelPosition;
                     }
                 }
+
                 lod /= 2;
             }
         }
+
         float t = isovalue2 / (isovalue2 - isovalue1);
         glm::vec3 vertexPos = cornerPos1 * t + cornerPos2 * (1 - t);
         edgeVertices.push_back(vertexPos);
@@ -363,9 +352,8 @@ void TransvoxelSystem::computeTrianglesForTransvoxel(int x, int y, int z)
     auto cellClass = regularCellClass[cubeIndex];
     auto cellData = regularCellData[cellClass];
     unsigned short vertexData[12] = { 0 };
-    for (int i = 0; i < 12; i++) {
+    for (int i = 0; i < 12; i++)
         vertexData[i] = regularVertexData[cubeIndex][i];
-    }
 
     /* Find the vertices where the surface intersects the cube for each edge */
     std::vector<glm::vec3> edgeVertices;
@@ -380,6 +368,7 @@ void TransvoxelSystem::computeTrianglesForTransvoxel(int x, int y, int z)
         float isovalue2 = volumeData[cornerIndices[corner2]].isovalue;
         glm::vec3 cornerPos1 = cornerPositions[corner1];
         glm::vec3 cornerPos2 = cornerPositions[corner2];
+
         if (lodSmoothing) {
             int lod = voxelScale;
             while (lod > 1) {
@@ -417,6 +406,7 @@ void TransvoxelSystem::computeTrianglesForTransvoxel(int x, int y, int z)
                 cornerPos2.z += voxelScale * 0.5f;
             }
         }
+
         float t = isovalue2 / (isovalue2 - isovalue1);
         glm::vec3 vertexPos = cornerPos1 * t + cornerPos2 * (1 - t);
         edgeVertices.push_back(vertexPos);
@@ -449,13 +439,6 @@ void TransvoxelSystem::computeTrianglesForTransvoxel(int x, int y, int z)
         glm::vec3(x - voxelScale, y, z - voxelScale),
         glm::vec3(x, y, z - voxelScale),
     };
-
-    /*std::cout << "Trans Corner Positions:" << std::endl;
-  for (int i = 0; i < 13; i++) {
-          std::cout << i << ": (" << transCornerPositions[i][0] << ", " <<
-  transCornerPositions[i][1] << ", " << transCornerPositions[i][2] << ")" <<
-  std::endl;
-  }*/
 
     int transCornerIndices[13] = {
         (x - voxelScale) * size * size + (y - voxelScale) * size + (z - voxelScale),
@@ -501,9 +484,8 @@ void TransvoxelSystem::computeTrianglesForTransvoxel(int x, int y, int z)
     auto transCellClass = transitionCellClass[transCubeIndex];
     auto transCellData = transitionCellData[transCellClass & 0x7F];
     unsigned short transVertexData[12] = { 0 };
-    for (int i = 0; i < 12; i++) {
+    for (int i = 0; i < 12; i++)
         transVertexData[i] = transitionVertexData[transCubeIndex][i];
-    }
 
     /* Find the vertices where the surface intersects the cube for each edge */
     std::vector<glm::vec3> transEdgeVertices;
@@ -512,22 +494,29 @@ void TransvoxelSystem::computeTrianglesForTransvoxel(int x, int y, int z)
     // " / " << transCellData.GetTriangleCount() << std::endl;
     for (int i = 0; i < transCellData.GetVertexCount(); i++) {
         unsigned short vertex = transVertexData[i];
+
         if (!vertex)
             break;
+
         unsigned char corner1 = (vertex >> 4) & 0x000F;
         unsigned char corner2 = vertex & 0x000F;
         // std::cout << "Corners: (" << (int)corner1 << "," << (int)corner2 << ")";
+
         float isovalue1 = volumeData[transCornerIndices[corner1]].isovalue;
         float isovalue2 = volumeData[transCornerIndices[corner2]].isovalue;
         // std::cout << " Iso: (" << isovalue1 << "," << isovalue2 << ")";
+
         glm::vec3 cornerPos1 = transCornerPositions[corner1];
         glm::vec3 cornerPos2 = transCornerPositions[corner2];
+
         if (lodSmoothing) {
             int lod = voxelScale;
+
             while (lod > 1) {
                 glm::vec3 centerVoxelPosition = (cornerPos1 + cornerPos2) / 2.0f;
                 int centerVoxelIndex = (int)centerVoxelPosition[0] * size * size + (int)centerVoxelPosition[1] * size + (int)centerVoxelPosition[2];
                 Voxel centerVoxel = volumeData[centerVoxelIndex];
+
                 if (centerVoxel.isovalue <= 0) {
                     if (isovalue1 <= 0) {
                         if (corner1 < 9) { // Corner is on high-res face && LOD > 2
@@ -576,6 +565,7 @@ void TransvoxelSystem::computeTrianglesForTransvoxel(int x, int y, int z)
                 lod /= 2;
             }
         }
+
         // Scale the normal cell to be half the volume size along the transvoxel
         // axes
         // TODO: Implement the other cases
@@ -587,22 +577,14 @@ void TransvoxelSystem::computeTrianglesForTransvoxel(int x, int y, int z)
                 cornerPos2.z += voxelScale * 0.5f;
             }
         }
+
         float t = isovalue2 / (isovalue2 - isovalue1);
         // std::cout << " T: " << t;
         glm::vec3 vertexPos = cornerPos1 * t + cornerPos2 * (1 - t);
         // std::cout << " Pos: (" << vertexPos[0] << "," << vertexPos[1] << "," <<
         // vertexPos[2] << ")" << std::endl;
         glm::vec3 normal = interpolateTransNormal(x, y, z, isorange, corner1, corner2);
-        //        glm::vec3 delta(0, 0, voxelScale * 0.1f);
-        //        int k = log2((float)voxelScale);
-        //        glm::vec3 delta(0, 0, (1 - pow(2, -k) * x) * voxelScale/2);
-        //        glm::mat3 transform(1-normal[0]*normal[0], -normal[0]*normal[1],
-        //        -normal[0]*normal[2],
-        //                            -normal[0]*normal[1], 1-normal[1]*normal[1],
-        //                            -normal[1]*normal[2], -normal[0]*normal[2],
-        //                            -normal[1]*normal[2], 1-normal[2]*normal[2]);
-        //        if (corner1 >= 9 && corner2 >= 9)
-        //            vertexPos += transform * delta;
+
         transEdgeVertices.push_back(vertexPos);
         transEdgeNormals.push_back(normal);
     }
@@ -631,12 +613,6 @@ void TransvoxelSystem::computeTrianglesForTransvoxel(int x, int y, int z)
         }
         // std::cout << ")" << std::endl;
     }
-    //    for (auto vertexIndex : transCellData.vertexIndex) {
-    //        for (int i = 0; i < 3; i++) {
-    //            trianglesVector.push_back(transEdgeVertices[vertexIndex][i]);
-    //            normalsVector.push_back(transEdgeNormals[vertexIndex][i]);
-    //        }
-    //    }
 }
 
 void TransvoxelSystem::setupVolumeTriangles()
@@ -693,13 +669,11 @@ void TransvoxelSystem::setupVolumeTriangles()
     // generate vertex buffer to hand off to OGL
     glGenBuffers(1, &volumeVBO);
     glBindBuffer(GL_ARRAY_BUFFER, volumeVBO);
-    glBufferData(GL_ARRAY_BUFFER, trianglesVector.size() * sizeof(float),
-        trianglesVector.data(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, trianglesVector.size() * sizeof(float), trianglesVector.data(), GL_DYNAMIC_DRAW);
     //    glBufferData(GL_ARRAY_BUFFER, scene.volumeData.size() * sizeof(Voxel),
     //    scene.volumeData.data(), GL_DYNAMIC_DRAW); glVertexAttribPointer(0, 3,
     //    GL_FLOAT, GL_FALSE, sizeof(Voxel), (GLvoid*)offsetof(Voxel, vertices));
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
-        (GLvoid*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (GLvoid*)0);
     glEnableVertexAttribArray(0);
 
     // std::cout << "Normals Vector Size: " << normalsVector.size() / 3 <<
@@ -708,8 +682,7 @@ void TransvoxelSystem::setupVolumeTriangles()
     //    std::endl;
     glGenBuffers(1, &volumeVBO);
     glBindBuffer(GL_ARRAY_BUFFER, volumeVBO);
-    glBufferData(GL_ARRAY_BUFFER, normalsVector.size() * sizeof(float),
-        normalsVector.data(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, normalsVector.size() * sizeof(float), normalsVector.data(), GL_DYNAMIC_DRAW);
     //    glBufferData(GL_ARRAY_BUFFER, scene.volumeData.size() * sizeof(Voxel),
     //    scene.volumeData.data(), GL_DYNAMIC_DRAW); glVertexAttribPointer(1, 3,
     //    GL_FLOAT, GL_FALSE, sizeof(Voxel), (GLvoid*)offsetof(Voxel, normals));
