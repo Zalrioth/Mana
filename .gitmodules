@@ -1,0 +1,18 @@
+[submodule "lib/glfw"]
+	path = lib/glfw
+	url = https://github.com/glfw/glfw
+[submodule "lib/cglm"]
+	path = lib/cglm
+	url = https://github.com/recp/cglm
+[submodule "lib/assimp"]
+	path = lib/assimp
+	url = https://github.com/assimp/assimp
+[submodule "lib/openmp"]
+	path = lib/openmp
+	url = https://github.com/llvm-mirror/openmp
+[submodule "lib/MoltenVK"]
+	path = lib/MoltenVK
+	url = https://github.com/KhronosGroup/MoltenVK
+[submodule "lib/Chaos"]
+	path = lib/Chaos
+	url = https://github.com/Zalrioth/Chaos
