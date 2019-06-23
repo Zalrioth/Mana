@@ -7,9 +7,6 @@
 [submodule "lib/assimp"]
 	path = lib/assimp
 	url = https://github.com/assimp/assimp
-[submodule "lib/openmp"]
-	path = lib/openmp
-	url = https://github.com/llvm-mirror/openmp
 [submodule "lib/MoltenVK"]
 	path = lib/MoltenVK
 	url = https://github.com/KhronosGroup/MoltenVK
