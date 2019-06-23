@@ -6,6 +6,9 @@ set(CMAKE_CXX_STANDARD 14)
 
 set(CMAKE_DEBUG_POSTFIX d)
 
+# Might be needed for OpenMP on Mac/Liunux
+#https://stackoverflow.com/questions/56202041/compiling-and-linking-against-openmp-with-appleclang-on-mac-os-x-mojave
+
 file(GLOB_RECURSE mana_SRC
         include/*.h
         src/*.c
@@ -77,7 +80,6 @@ SET(includeList
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/VulkanSDK/1.1.101.0/Include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/Chaos/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/assimp/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/../build/buildmana/buildassimp/include
         ${OpenMP_CXX_LIBRARIES})
 
 target_include_directories(Mana PUBLIC ${includeList})
