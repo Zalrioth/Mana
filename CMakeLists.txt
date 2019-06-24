@@ -11,9 +11,7 @@ set(CMAKE_DEBUG_POSTFIX d)
 
 file(GLOB_RECURSE mana_SRC
         include/*.h
-        src/*.c
-        include/*.hpp
-        src/*.cpp)
+        src/*.c)
         
 add_library(Mana SHARED ${mana_SRC})
 
