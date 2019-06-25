@@ -698,8 +698,8 @@ int createGraphicsPipeline(struct Window* window)
     int vertexLength = 0;
     int fragmentLength = 0;
 
-    char* vertShaderCode = readShaderFile("./Assets/shaders/textureVert.spv", &vertexLength);
-    char* fragShaderCode = readShaderFile("./Assets/shaders/textureFrag.spv", &fragmentLength);
+    char* vertShaderCode = readShaderFile("./assets/shaders/spirv/texture.vert.spv", &vertexLength);
+    char* fragShaderCode = readShaderFile("./assets/shaders/spirv/texture.frag.spv", &fragmentLength);
 
     VkShaderModule vertShaderModule = createShaderModule(window, vertShaderCode, vertexLength);
     VkShaderModule fragShaderModule = createShaderModule(window, fragShaderCode, fragmentLength);
