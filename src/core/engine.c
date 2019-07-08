@@ -1,6 +1,6 @@
 #include "core/engine.h"
 
-int init_engine(struct Engine* engine)
+int engine_init(struct Engine* engine)
 {
     if (!glfwInit())
         return GLFW_ERROR;
@@ -29,7 +29,7 @@ int init_engine(struct Engine* engine)
     return 0;
 }
 
-void delete_engine(struct Engine* engine)
+void engine_delete(struct Engine* engine)
 {
 }
 
@@ -103,7 +103,7 @@ void render(struct Window* window)
 }
 
 // TODO: Make this whole function in python?
-void update_engine(struct Engine* engine)
+void engine_update(struct Engine* engine)
 {
     engine->fpsCounter.nowTime = get_time();
     engine->fpsCounter.deltaTime += (engine->fpsCounter.nowTime - engine->fpsCounter.lastTime) / engine->fpsCounter.limitUpdateFPS;

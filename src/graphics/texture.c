@@ -4,8 +4,17 @@
 
 void texture_init(struct Texture* texture, char* path)
 {
-    texture->path = malloc(strlen(path));
+    // Note: Extra 0 needed to ensure end of string
+    int pathLength = strlen(path);
+    texture->path = malloc(pathLength + 1);
+    memset(texture->path, 0, pathLength);
     strcpy(texture->path, path);
+
+    // Todo: Extract filetype
+    int typeLength = 4;
+    texture->type = malloc(typeLength + 1);
+    memset(texture->type, 0, typeLength + 1);
+    strcpy(texture->type, ".tst");
 }
 
 void texture_delete(struct Window* window, struct Texture* texture)
@@ -17,6 +26,7 @@ void texture_delete(struct Window* window, struct Texture* texture)
     vkFreeMemory(window->device, texture->textureImageMemory, NULL);
 
     free(texture->path);
+    free(texture->type);
 }
 
 int createTextureImage(struct Window* window, struct Texture* texture)

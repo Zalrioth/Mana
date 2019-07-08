@@ -6,6 +6,7 @@
 #include "core/window.h"
 
 struct Texture {
+    // TODO: Will probably need to use this later, maybe global static int that increments after each texture creation
     unsigned int id;
     char* type;
     char* path;
@@ -18,8 +19,8 @@ struct Texture {
 //https://stackoverflow.com/questions/9999512/forward-declaration-of-a-struct-in-c
 struct Window;
 
-void texture_init();
-void texture_delete();
+void texture_init(struct Texture* texture, char* path);
+void texture_delete(struct Window* window, struct Texture* texture);
 int createTextureImage(struct Window* window, struct Texture* texture);
 int createTextureSampler(struct Window* window, struct Texture* texture);
 int createTextureImageView(struct Window* window, struct Texture* texture);

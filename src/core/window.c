@@ -73,7 +73,7 @@ static void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMesse
     }
 }
 
-int init_window(struct Window* window, int width, int height)
+int window_init(struct Window* window, int width, int height)
 {
     int errorCode;
 
@@ -155,16 +155,19 @@ int init_window(struct Window* window, int width, int height)
     return NO_ERROR;
 
 cleanup:
-    delete_window(window);
+    window_delete(window);
     return errorCode;
 }
 
-void delete_window(struct Window* window)
+void window_delete(struct Window* window)
 {
     cleanupSwapChain(window);
 
-    texture_delete(window->imageTexture);
+    texture_delete(window, window->imageTexture);
     mesh_delete(window->imageMesh);
+
+    free(window->imageTexture);
+    free(window->imageMesh);
 
     vkDestroyDescriptorPool(window->device, window->descriptorPool, NULL);
 

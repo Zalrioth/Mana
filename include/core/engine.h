@@ -51,9 +51,9 @@ struct Engine {
 };
 
 double get_time();
-int init_engine(struct Engine* engine);
-void delete_engine(struct Engine* engine);
-void update_engine(struct Engine* engine);
+int engine_init(struct Engine* engine);
+void engine_delete(struct Engine* engine);
+void engine_update(struct Engine* engine);
 void logic(struct Engine* engine, double deltaTime);
 void process_input(struct Engine* engine);
 void updateUniformBuffer(struct Window* window, uint32_t currentImage);

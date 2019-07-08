@@ -116,8 +116,8 @@ struct Window {
     bool framebufferResized;
 };
 
-int init_window(struct Window* window, int width, int height);
-void delete_window(struct Window* gameWindow);
+int window_init(struct Window* window, int width, int height);
+void window_delete(struct Window* gameWindow);
 int create_glfw_window(struct Window* gameWindow, int width, int height);
 bool checkValidationLayerSupport();
 void recreateSwapChain(struct Window* window);

@@ -15,7 +15,7 @@ void* readScript(void* vargp)
 
 int init()
 {
-    int engineError = init_engine(&engine);
+    int engineError = engine_init(&engine);
     switch (engineError) {
     default:
         break;
@@ -62,7 +62,7 @@ int init()
 
 int new_window(int width, int height)
 {
-    switch (init_window(&engine.window, width, height)) {
+    switch (window_init(&engine.window, width, height)) {
     default:
         break;
     case (CREATE_WINDOW_ERROR):
@@ -114,7 +114,7 @@ int new_window(int width, int height)
 
 void update()
 {
-    update_engine(&engine);
+    engine_update(&engine);
 }
 
 bool should_close()
@@ -127,12 +127,12 @@ bool should_close()
 
 void close_window()
 {
-    delete_window(&engine.window);
+    window_delete(&engine.window);
 }
 
 void cleanup()
 {
-    delete_engine(&engine);
+    engine_delete(&engine);
 }
 
 void print_fps()
