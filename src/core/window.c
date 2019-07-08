@@ -1192,6 +1192,10 @@ void recreateSwapChain(struct Window* window)
 
 void cleanupSwapChain(struct Window* window)
 {
+    // Test: Wait for frame to finish rendering before cleaning up
+    for (int loopNum = 0; loopNum < MAX_FRAMES_IN_FLIGHT; loopNum++)
+        vkWaitForFences(window->device, 1, &window->inFlightFences[loopNum], VK_TRUE, UINT64_MAX);
+
     vkDestroyImageView(window->device, window->depthImageView, NULL);
     vkDestroyImage(window->device, window->depthImage, NULL);
     vkFreeMemory(window->device, window->depthImageMemory, NULL);
@@ -1199,7 +1203,7 @@ void cleanupSwapChain(struct Window* window)
     for (int loopNum = 0; loopNum < MAX_SWAP_CHAIN_FRAMES; loopNum++)
         vkDestroyFramebuffer(window->device, window->swapChainFramebuffers[loopNum], NULL);
 
-    vkFreeCommandBuffers(window->device, window->commandPool, SMALL_BUFFER, window->commandBuffers);
+    vkFreeCommandBuffers(window->device, window->commandPool, 3, window->commandBuffers);
 
     vkDestroyPipeline(window->device, window->graphicsPipeline, NULL);
     vkDestroyPipelineLayout(window->device, window->pipelineLayout, NULL);
