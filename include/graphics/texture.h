@@ -10,10 +10,10 @@ struct Texture {
     unsigned int id;
     char* type;
     char* path;
-    VkImage textureImage;
-    VkDeviceMemory textureImageMemory;
-    VkImageView textureImageView;
-    VkSampler textureSampler;
+    VkImage textureImage; // Raw image data in ram
+    VkDeviceMemory textureImageMemory; // Image data in GPU/device ram
+    VkImageView textureImageView; // Texture format
+    VkSampler textureSampler; // Image sampling settings
 };
 
 //https://stackoverflow.com/questions/9999512/forward-declaration-of-a-struct-in-c
