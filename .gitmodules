@@ -13,3 +13,15 @@
 [submodule "lib/Chaos"]
 	path = lib/Chaos
 	url = https://github.com/Zalrioth/Chaos
+[submodule "lib/algorithms-in-c"]
+	path = lib/algorithms-in-c
+	url = https://github.com/Zalrioth/algorithms-in-c
+[submodule "lib/data-structures-in-c"]
+	path = lib/data-structures-in-c
+	url = https://github.com/Zalrioth/data-structures-in-c
+[submodule "lib/multithreading-in-c"]
+	path = lib/multithreading-in-c
+	url = https://github.com/Zalrioth/multithreading-in-c
+[submodule "lib/noise-in-c"]
+	path = lib/noise-in-c
+	url = https://github.com/Zalrioth/noise-in-c
