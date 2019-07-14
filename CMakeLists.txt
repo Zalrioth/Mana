@@ -73,6 +73,10 @@ target_link_libraries(Mana
 
 SET(includeList
         ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/algorithms-in-c/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/data-structures-in-c/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/multithreading-in-c/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/noise-in-c/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/cglm/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/glfw/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/VulkanSDK/1.1.101.0/Include

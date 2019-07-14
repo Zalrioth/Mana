@@ -3,8 +3,8 @@
 #define MODEL_H_
 
 #include "core/common.h"
-#include "datastructures/vector.h"
 #include "graphics/mesh.h"
+#include "vector.h"
 #include <assimp/cimport.h> // Plain-C interface
 #include <assimp/postprocess.h> // Post processing flags
 #include <assimp/scene.h> // Output data structure

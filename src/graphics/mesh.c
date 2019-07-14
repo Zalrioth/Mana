@@ -13,8 +13,8 @@ void mesh_init(struct Mesh* mesh)
 
 void mesh_delete(struct Mesh* mesh)
 {
-    vector_free(&mesh->vertices);
-    vector_free(&mesh->indices);
+    vector_free(mesh->vertices);
+    vector_free(mesh->indices);
 }
 
 void assign_vertex(struct Vector* vector, float x, float y, float z, float r, float g, float b, float u, float v)

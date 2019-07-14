@@ -3,8 +3,8 @@
 #define MESH_H_
 
 #include "core/common.h"
-#include "datastructures/vector.h"
 #include "graphics/texture.h"
+#include "vector.h"
 #include <cglm/cglm.h>
 
 struct Vertex {
