@@ -4,8 +4,6 @@
 
 #include "core/common.h"
 #include "graphics/texture.h"
-#include "vector.h"
-#include <cglm/cglm.h>
 
 struct Vertex {
     vec3 position;

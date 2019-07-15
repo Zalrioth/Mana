@@ -926,7 +926,7 @@ int createCommandBuffers(struct Window* window)
 
         vkCmdBindDescriptorSets(window->commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, window->pipelineLayout, 0, 1, &window->descriptorSets[i], 0, NULL);
 
-        vkCmdDrawIndexed(window->commandBuffers[i], window->imageMesh->indices->total, 1, 0, 0, 0);
+        vkCmdDrawIndexed(window->commandBuffers[i], window->imageMesh->indices->size, 1, 0, 0, 0);
         //vkCmdDrawIndexed(window->commandBuffers[i], 12, 1, 0, 0, 0);
         vkCmdEndRenderPass(window->commandBuffers[i]);
 
@@ -1017,7 +1017,7 @@ bool checkValidationLayerSupport()
 
 int createVertexBuffer(struct Window* window)
 {
-    VkDeviceSize bufferSize = window->imageMesh->vertices->memorySize * window->imageMesh->vertices->total;
+    VkDeviceSize bufferSize = window->imageMesh->vertices->memorySize * window->imageMesh->vertices->size;
     //VkDeviceSize bufferSize = sizeof(window->imageVertices.items[0]) * window->imageVertices.total;
 
     VkBuffer stagingBuffer = { 0 };
@@ -1052,7 +1052,7 @@ void copyBuffer(struct Window* window, VkBuffer srcBuffer, VkBuffer dstBuffer, V
 
 int createIndexBuffer(struct Window* window)
 {
-    VkDeviceSize bufferSize = window->imageMesh->indices->memorySize * window->imageMesh->indices->total;
+    VkDeviceSize bufferSize = window->imageMesh->indices->memorySize * window->imageMesh->indices->size;
     //VkDeviceSize bufferSize = sizeof(window->imageIndices.items[0]) * window->imageIndices.total;
 
     VkBuffer stagingBuffer = { 0 };
@@ -1140,33 +1140,33 @@ int createDescriptorSets(struct Window* window)
 
         //int descriptorSize = 2;
         struct Vector descriptorWrites;
-        vector_init(&descriptorWrites, sizeof(VkWriteDescriptorSet));
+        vector_Init(&descriptorWrites, sizeof(VkWriteDescriptorSet));
         //VkWriteDescriptorSet descriptorWrites[descriptorSize];
         //memset(descriptorWrites, 0, sizeof(descriptorWrites));
 
         VkWriteDescriptorSet dcs1 = { 0 };
         dcs1.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         dcs1.dstSet = window->descriptorSets[i];
-        dcs1.dstBinding = descriptorWrites.total;
+        dcs1.dstBinding = descriptorWrites.size;
         dcs1.dstArrayElement = 0;
         dcs1.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         dcs1.descriptorCount = 1;
         dcs1.pBufferInfo = &bufferInfo;
 
-        vector_add(&descriptorWrites, &dcs1);
+        vector_PushBack(&descriptorWrites, &dcs1);
 
         VkWriteDescriptorSet dcs2 = { 0 };
         dcs2.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         dcs2.dstSet = window->descriptorSets[i];
-        dcs2.dstBinding = descriptorWrites.total;
+        dcs2.dstBinding = descriptorWrites.size;
         dcs2.dstArrayElement = 0;
         dcs2.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         dcs2.descriptorCount = 1;
         dcs2.pImageInfo = &imageInfo;
 
-        vector_add(&descriptorWrites, &dcs2);
+        vector_PushBack(&descriptorWrites, &dcs2);
 
-        vkUpdateDescriptorSets(window->device, descriptorWrites.total, descriptorWrites.items, 0, NULL);
+        vkUpdateDescriptorSets(window->device, descriptorWrites.size, descriptorWrites.items, 0, NULL);
     }
 
     return 0;

@@ -9,7 +9,6 @@
 #include "graphics/mesh.h"
 #include "graphics/model.h"
 #include "graphics/texture.h"
-#include "vector.h"
 
 #ifdef NDEBUG
 static const bool enableValidationLayers = false;

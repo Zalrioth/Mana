@@ -1,5 +1,6 @@
 #define _CRT_SECURE_NO_DEPRECATE
 #define GLFW_INCLUDE_VULKAN
+#include "datastructures/datastructures.h"
 #include <GLFW/glfw3.h>
 #include <cglm/cglm.h>
 #include <omp.h>

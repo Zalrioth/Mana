@@ -4,17 +4,17 @@ void mesh_init(struct Mesh* mesh)
 {
     mesh->vertices = malloc(sizeof(struct Vector));
     memset(mesh->vertices, 0, sizeof(struct Vector));
-    vector_init(mesh->vertices, sizeof(struct Vertex));
+    vector_Init(mesh->vertices, sizeof(struct Vertex));
 
     mesh->indices = malloc(sizeof(struct Vector));
     memset(mesh->indices, 0, sizeof(struct Vector));
-    vector_init(mesh->indices, sizeof(uint16_t));
+    vector_Init(mesh->indices, sizeof(uint16_t));
 }
 
 void mesh_delete(struct Mesh* mesh)
 {
-    vector_free(mesh->vertices);
-    vector_free(mesh->indices);
+    vector_Delete(mesh->vertices);
+    vector_Delete(mesh->indices);
 }
 
 void assign_vertex(struct Vector* vector, float x, float y, float z, float r, float g, float b, float u, float v)
@@ -31,10 +31,10 @@ void assign_vertex(struct Vector* vector, float x, float y, float z, float r, fl
     vertex.texCoord[0] = u;
     vertex.texCoord[1] = v;
 
-    vector_add(vector, &vertex);
+    vector_PushBack(vector, &vertex);
 }
 
 void assign_indice(struct Vector* vector, uint32_t indice)
 {
-    vector_add(vector, &indice);
+    vector_PushBack(vector, &indice);
 }
