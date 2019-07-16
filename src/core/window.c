@@ -1017,7 +1017,7 @@ bool checkValidationLayerSupport()
 
 int createVertexBuffer(struct Window* window)
 {
-    VkDeviceSize bufferSize = window->imageMesh->vertices->memorySize * window->imageMesh->vertices->size;
+    VkDeviceSize bufferSize = window->imageMesh->vertices->memory_size * window->imageMesh->vertices->size;
     //VkDeviceSize bufferSize = sizeof(window->imageVertices.items[0]) * window->imageVertices.total;
 
     VkBuffer stagingBuffer = { 0 };
@@ -1052,7 +1052,7 @@ void copyBuffer(struct Window* window, VkBuffer srcBuffer, VkBuffer dstBuffer, V
 
 int createIndexBuffer(struct Window* window)
 {
-    VkDeviceSize bufferSize = window->imageMesh->indices->memorySize * window->imageMesh->indices->size;
+    VkDeviceSize bufferSize = window->imageMesh->indices->memory_size * window->imageMesh->indices->size;
     //VkDeviceSize bufferSize = sizeof(window->imageIndices.items[0]) * window->imageIndices.total;
 
     VkBuffer stagingBuffer = { 0 };
@@ -1140,7 +1140,7 @@ int createDescriptorSets(struct Window* window)
 
         //int descriptorSize = 2;
         struct Vector descriptorWrites;
-        vector_Init(&descriptorWrites, sizeof(VkWriteDescriptorSet));
+        vector_init(&descriptorWrites, sizeof(VkWriteDescriptorSet));
         //VkWriteDescriptorSet descriptorWrites[descriptorSize];
         //memset(descriptorWrites, 0, sizeof(descriptorWrites));
 
@@ -1153,7 +1153,7 @@ int createDescriptorSets(struct Window* window)
         dcs1.descriptorCount = 1;
         dcs1.pBufferInfo = &bufferInfo;
 
-        vector_PushBack(&descriptorWrites, &dcs1);
+        vector_push_back(&descriptorWrites, &dcs1);
 
         VkWriteDescriptorSet dcs2 = { 0 };
         dcs2.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -1164,7 +1164,7 @@ int createDescriptorSets(struct Window* window)
         dcs2.descriptorCount = 1;
         dcs2.pImageInfo = &imageInfo;
 
-        vector_PushBack(&descriptorWrites, &dcs2);
+        vector_push_back(&descriptorWrites, &dcs2);
 
         vkUpdateDescriptorSets(window->device, descriptorWrites.size, descriptorWrites.items, 0, NULL);
     }
