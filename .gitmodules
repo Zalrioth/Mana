@@ -22,6 +22,6 @@
 [submodule "lib/multithreading-in-c"]
 	path = lib/multithreading-in-c
 	url = https://github.com/Zalrioth/multithreading-in-c
-[submodule "lib/noise-in-c"]
-	path = lib/noise-in-c
-	url = https://github.com/Zalrioth/noise-in-c
+[submodule "lib/noise-in-c-and-glsl"]
+	path = lib/noise-in-c-and-glsl
+	url = https://github.com/Zalrioth/noise-in-c-and-glsl
