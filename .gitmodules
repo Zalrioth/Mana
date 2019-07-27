@@ -10,9 +10,6 @@
 [submodule "lib/MoltenVK"]
 	path = lib/MoltenVK
 	url = https://github.com/KhronosGroup/MoltenVK
-[submodule "lib/chaos"]
-	path = lib/chaos
-	url = https://github.com/Zalrioth/chaos
 [submodule "lib/algorithms-in-c"]
 	path = lib/algorithms-in-c
 	url = https://github.com/Zalrioth/algorithms-in-c
@@ -28,3 +25,6 @@
 [submodule "lib/transvoxel-in-c"]
 	path = lib/transvoxel-in-c
 	url = https://github.com/Zalrioth/transvoxel-in-c
+[submodule "lib/chaos"]
+	path = lib/chaos
+	url = https://github.com/Zalrioth/chaos
