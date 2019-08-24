@@ -21,6 +21,9 @@ set_target_properties(Mana
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build)
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2")
+
 if (WIN32)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Xclang -fopenmp")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Xclang -fopenmp")

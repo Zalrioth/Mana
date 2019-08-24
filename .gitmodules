@@ -22,9 +22,6 @@
 [submodule "lib/noise-in-c-and-glsl"]
 	path = lib/noise-in-c-and-glsl
 	url = https://github.com/Zalrioth/noise-in-c-and-glsl
-[submodule "lib/transvoxel-in-c"]
-	path = lib/transvoxel-in-c
-	url = https://github.com/Zalrioth/transvoxel-in-c
 [submodule "lib/chaos"]
 	path = lib/chaos
 	url = https://github.com/Zalrioth/chaos

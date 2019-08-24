@@ -16,8 +16,8 @@ static const bool enableValidationLayers = false;
 static const bool enableValidationLayers = true;
 #endif
 
-static const char* const validationLayers[] = { "VK_LAYER_LUNARG_standard_validation" };
-static const char* const deviceExtensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+static const char *const validationLayers[] = {"VK_LAYER_LUNARG_standard_validation"};
+static const char *const deviceExtensions[] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
 #define MAX_FRAMES_IN_FLIGHT 2
 #define MAX_SWAP_CHAIN_FRAMES MAX_FRAMES_IN_FLIGHT + 1
@@ -37,12 +37,15 @@ static const char* const deviceExtensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME 
 #define CREATE_COMMAND_BUFFER_ERROR 13
 #define CREATE_SYNC_OBJECT_ERROR 14
 
-struct QueueFamilyIndices {
+struct QueueFamilyIndices
+{
     uint32_t graphicsFamily;
     uint32_t presentFamily;
 };
 
-struct UniformBufferObject {
+// TODO: Check if this has to be aligned
+struct UniformBufferObject
+{
     alignas(16) mat4 model;
     alignas(16) mat4 view;
     alignas(16) mat4 proj;
@@ -60,14 +63,16 @@ struct UniformBufferObject {
 //vector_init(&myVector);
 //void vector_init(vector*);
 
-struct SwapChainSupportDetails {
+struct SwapChainSupportDetails
+{
     struct VkSurfaceCapabilitiesKHR capabilities;
     struct VkSurfaceFormatKHR formats[SMALL_BUFFER];
     enum VkPresentModeKHR presentModes[SMALL_BUFFER];
 };
 
-struct Window {
-    GLFWwindow* glfwWindow;
+struct Window
+{
+    GLFWwindow *glfwWindow;
     VkInstance instance;
     VkSurfaceKHR surface;
     VkPhysicalDevice physicalDevice;
@@ -89,8 +94,8 @@ struct Window {
     VkDescriptorPool descriptorPool;
     VkDescriptorSet descriptorSets[MAX_SWAP_CHAIN_FRAMES];
 
-    struct Mesh* imageMesh;
-    struct Texture* imageTexture;
+    struct Mesh *imageMesh;
+    struct Texture *imageTexture;
 
     VkBuffer uniformBuffers[MAX_SWAP_CHAIN_FRAMES];
     VkDeviceMemory uniformBuffersMemory[MAX_SWAP_CHAIN_FRAMES];
@@ -115,10 +120,10 @@ struct Window {
     bool framebufferResized;
 };
 
-int window_init(struct Window* window, int width, int height);
-void window_delete(struct Window* gameWindow);
-int create_glfw_window(struct Window* gameWindow, int width, int height);
+int window_init(struct Window *window, int width, int height);
+void window_delete(struct Window *gameWindow);
+int create_glfw_window(struct Window *gameWindow, int width, int height);
 bool checkValidationLayerSupport();
-void recreateSwapChain(struct Window* window);
+void recreateSwapChain(struct Window *window);
 
 #endif // WINDOW_H_
