@@ -7,7 +7,7 @@
 // C Error handeling
 //https://www.ibm.com/support/knowledgecenter/en/SSGMCP_5.2.0/com.ibm.cics.ts.applicationprogramming.doc/topics/dfhp3c00145.html
 
-void* readScript(void* vargp)
+void *readScript(void *vargp)
 {
     printf("Printing GeeksQuiz from Thread \n");
     return NULL;
@@ -16,7 +16,8 @@ void* readScript(void* vargp)
 int init()
 {
     int engineError = engine_init(&engine);
-    switch (engineError) {
+    switch (engineError)
+    {
     default:
         break;
     case (GLFW_ERROR):
@@ -62,7 +63,8 @@ int init()
 
 int new_window(int width, int height)
 {
-    switch (window_init(&engine.window, width, height)) {
+    switch (window_init(&engine.window, width, height))
+    {
     default:
         break;
     case (CREATE_WINDOW_ERROR):
@@ -119,7 +121,7 @@ void update()
 
 bool should_close()
 {
-    if (glfwWindowShouldClose(engine.window.glfwWindow))
+    if (glfwWindowShouldClose(engine.window.glfw_window))
         return true;
 
     return false;
@@ -137,8 +139,8 @@ void cleanup()
 
 void print_fps()
 {
-    printf("Target FPS: %lf\n", engine.fpsCounter.secondTargetFps);
-    printf("Average FPS: %lf\n", engine.fpsCounter.secondAverageFps);
-    printf("Draw FPS: %d\n", engine.fpsCounter.secondFrames);
-    printf("Update FPS: %d\n\n", engine.fpsCounter.secondUpdates);
+    printf("Target FPS: %lf\n", engine.fps_counter.second_target_fps);
+    printf("Average FPS: %lf\n", engine.fps_counter.second_average_fps);
+    printf("Draw FPS: %d\n", engine.fps_counter.second_frames);
+    printf("Update FPS: %d\n\n", engine.fps_counter.second_updates);
 }

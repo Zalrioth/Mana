@@ -11,13 +11,13 @@
 #include "graphics/texture.h"
 
 #ifdef NDEBUG
-static const bool enableValidationLayers = false;
+static const bool enable_validation_layers = false;
 #else
-static const bool enableValidationLayers = true;
+static const bool enable_validation_layers = true;
 #endif
 
-static const char *const validationLayers[] = {"VK_LAYER_LUNARG_standard_validation"};
-static const char *const deviceExtensions[] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+static const char *const validation_layers[] = {"VK_LAYER_LUNARG_standard_validation"};
+static const char *const device_extensions[] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
 #define MAX_FRAMES_IN_FLIGHT 2
 #define MAX_SWAP_CHAIN_FRAMES MAX_FRAMES_IN_FLIGHT + 1
@@ -39,11 +39,10 @@ static const char *const deviceExtensions[] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
 struct QueueFamilyIndices
 {
-    uint32_t graphicsFamily;
-    uint32_t presentFamily;
+    uint32_t graphics_family;
+    uint32_t present_family;
 };
 
-// TODO: Check if this has to be aligned
 struct UniformBufferObject
 {
     alignas(16) mat4 model;
@@ -51,79 +50,96 @@ struct UniformBufferObject
     alignas(16) mat4 proj;
 };
 
-/*struct Vertex {
-    vec3 pos;
-    vec3 color;
-    vec2 texCoord;
-};*/
-
-//presentModes
-
-//vector myVector
-//vector_init(&myVector);
-//void vector_init(vector*);
-
 struct SwapChainSupportDetails
 {
     struct VkSurfaceCapabilitiesKHR capabilities;
     struct VkSurfaceFormatKHR formats[SMALL_BUFFER];
-    enum VkPresentModeKHR presentModes[SMALL_BUFFER];
+    enum VkPresentModeKHR present_modes[SMALL_BUFFER];
 };
 
 struct Window
 {
-    GLFWwindow *glfwWindow;
+    GLFWwindow *glfw_window;
     VkInstance instance;
     VkSurfaceKHR surface;
-    VkPhysicalDevice physicalDevice;
+    VkPhysicalDevice physical_device;
     VkDevice device;
-    VkQueue graphicsQueue;
-    VkQueue presentQueue;
-    VkSwapchainKHR swapChain;
-    VkFormat swapChainImageFormat;
-    VkExtent2D swapChainExtent;
-    VkRenderPass renderPass;
-    VkDescriptorSetLayout descriptorSetLayout;
-    VkPipelineLayout pipelineLayout;
-    VkPipeline graphicsPipeline;
-    VkImage swapChainImages[MAX_SWAP_CHAIN_FRAMES];
-    VkImageView swapChainImageViews[MAX_SWAP_CHAIN_FRAMES];
-    VkFramebuffer swapChainFramebuffers[MAX_SWAP_CHAIN_FRAMES];
-    VkDebugUtilsMessengerEXT debugMessenger;
-    VkCommandPool commandPool;
-    VkDescriptorPool descriptorPool;
-    VkDescriptorSet descriptorSets[MAX_SWAP_CHAIN_FRAMES];
+    VkQueue graphics_queue;
+    VkQueue present_queue;
+    VkSwapchainKHR swap_chain;
+    VkFormat swap_chain_image_format;
+    VkExtent2D swap_chain_extent;
+    VkRenderPass render_pass;
+    VkDescriptorSetLayout descriptor_set_layout;
+    VkPipelineLayout pipeline_layout;
+    VkPipeline graphics_pipeline;
+    VkImage swap_chain_images[MAX_SWAP_CHAIN_FRAMES];
+    VkImageView swap_chain_image_views[MAX_SWAP_CHAIN_FRAMES];
+    VkFramebuffer swap_chain_framebuffers[MAX_SWAP_CHAIN_FRAMES];
+    VkDebugUtilsMessengerEXT debug_messenger;
+    VkCommandPool command_pool;
+    VkDescriptorPool descriptor_pool;
+    VkDescriptorSet descriptor_sets[MAX_SWAP_CHAIN_FRAMES];
 
-    struct Mesh *imageMesh;
-    struct Texture *imageTexture;
+    struct Mesh *image_mesh;
+    struct Texture *image_texture;
 
-    VkBuffer uniformBuffers[MAX_SWAP_CHAIN_FRAMES];
-    VkDeviceMemory uniformBuffersMemory[MAX_SWAP_CHAIN_FRAMES];
+    VkBuffer uniform_buffers[MAX_SWAP_CHAIN_FRAMES];
+    VkDeviceMemory uniform_buffers_memory[MAX_SWAP_CHAIN_FRAMES];
 
-    VkBuffer vertexBuffer;
-    VkDeviceMemory vertexBufferMemory;
-    VkBuffer indexBuffer;
-    VkDeviceMemory indexBufferMemory;
+    VkBuffer vertex_buffer;
+    VkDeviceMemory vertex_buffer_memory;
+    VkBuffer index_buffer;
+    VkDeviceMemory index_buffer_memory;
 
-    VkImage depthImage;
-    VkDeviceMemory depthImageMemory;
-    VkImageView depthImageView;
+    VkImage depth_image;
+    VkDeviceMemory depth_image_memory;
+    VkImageView depth_image_view;
 
-    VkCommandBuffer commandBuffers[MAX_SWAP_CHAIN_FRAMES];
-    VkSemaphore imageAvailableSemaphores[MAX_FRAMES_IN_FLIGHT];
-    VkSemaphore renderFinishedSemaphores[MAX_FRAMES_IN_FLIGHT];
-    VkFence inFlightFences[MAX_FRAMES_IN_FLIGHT];
-    size_t currentFrame;
+    VkCommandBuffer command_buffers[MAX_SWAP_CHAIN_FRAMES];
+    VkSemaphore image_available_semaphores[MAX_FRAMES_IN_FLIGHT];
+    VkSemaphore render_finished_semaphores[MAX_FRAMES_IN_FLIGHT];
+    VkFence in_flight_fences[MAX_FRAMES_IN_FLIGHT];
+    size_t current_frame;
     struct QueueFamilyIndices indices;
     int width;
     int height;
-    bool framebufferResized;
+    bool framebuffer_resized;
 };
 
 int window_init(struct Window *window, int width, int height);
-void window_delete(struct Window *gameWindow);
-int create_glfw_window(struct Window *gameWindow, int width, int height);
-bool checkValidationLayerSupport();
-void recreateSwapChain(struct Window *window);
+void window_delete(struct Window *game_window);
+int create_glfw_window(struct Window *game_window, int width, int height);
+bool check_validation_layer_support();
+void recreate_swap_chain(struct Window *window);
+
+int create_window(struct Window *window, int width, int height);
+int create_instance(struct Window *window);
+int setup_debug_messenger(struct Window *window);
+int create_surface(struct Window *window);
+int pick_physical_device(struct Window *window);
+int create_logical_device(struct Window *window);
+int create_swap_chain(struct Window *window);
+int create_image_views(struct Window *window);
+int create_render_pass(struct Window *window);
+int create_descriptor_set_layout(struct Window *window);
+int create_graphics_pipeline(struct Window *window);
+int create_framebuffers(struct Window *window);
+int create_command_pool(struct Window *window);
+int create_depth_resources(struct Window *window);
+int create_vertex_buffer(struct Window *window);
+int create_index_buffer(struct Window *window);
+int create_uniform_buffers(struct Window *window);
+int create_descriptor_pool(struct Window *window);
+int create_descriptor_sets(struct Window *window);
+
+int create_command_buffers(struct Window *window);
+int create_sync_objects(struct Window *window);
+
+bool is_device_suitable(struct Window *window, VkPhysicalDevice device);
+void copy_buffer(struct Window *window, VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size);
+void cleanup_swap_chain(struct Window *window);
+VkVertexInputBindingDescription get_binding_description();
+void get_attribute_descriptions(VkVertexInputAttributeDescription *attribute_descriptions);
 
 #endif // WINDOW_H_

@@ -12,50 +12,54 @@
 
 #define KEY_LIMIT 512
 
-//https://fvcaputo.github.io/2019/02/06/memory-alignment.html
+enum KeyState
+{
+    PRESSED,
+    RELEASED
+};
 
-enum KeyState { PRESSED,
-    RELEASED };
-
-struct Key {
+struct Key
+{
     enum KeyState state;
     bool held;
 };
 
-struct FPSCounter {
-    int fpsPast[FPS_COUNT];
-    double limitUpdateFPS;
+struct FPSCounter
+{
+    int fps_past[FPS_COUNT];
+    double limit_update_fps;
     // maybe cap fps at 144 for limit? 30, 60, 120, 144
-    double limitDrawFPS;
+    double limit_draw_fps;
     int input[128];
-    double lastTime, timer;
-    double deltaTime;
-    int nowTime;
+    double last_time, timer;
+    double delta_time;
+    int now_time;
     int frames;
-    double lastRenderTime;
+    double last_render_time;
     int fps;
-    double targetFps;
-    double averageFps;
+    double target_fps;
+    double average_fps;
     int updates;
     // frame safe
-    double secondTargetFps;
-    double secondAverageFps;
-    int secondFrames;
-    int secondUpdates;
+    double second_target_fps;
+    double second_average_fps;
+    int second_frames;
+    int second_updates;
 };
 
-struct Engine {
+struct Engine
+{
     struct Window window;
-    struct FPSCounter fpsCounter;
+    struct FPSCounter fps_counter;
     struct Key keys[KEY_LIMIT];
 };
 
 double get_time();
-int engine_init(struct Engine* engine);
-void engine_delete(struct Engine* engine);
-void engine_update(struct Engine* engine);
-void logic(struct Engine* engine, double deltaTime);
-void process_input(struct Engine* engine);
-void updateUniformBuffer(struct Window* window, uint32_t currentImage);
+int engine_init(struct Engine *engine);
+void engine_delete(struct Engine *engine);
+void engine_update(struct Engine *engine);
+void logic(struct Engine *engine, double delta_time);
+void process_input(struct Engine *engine);
+void update_uniform_buffer(struct Window *window, uint32_t current_image);
 
 #endif // ENGINE_H_
