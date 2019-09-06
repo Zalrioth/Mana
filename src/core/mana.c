@@ -1,146 +1,129 @@
 #include "core/mana.h"
 
 // C naming conventions
-//https://stackoverflow.com/questions/1722112/what-are-the-most-common-naming-conventions-in-c
-//https://stackoverflow.com/questions/4316314/pass-struct-by-reference-in-c
-//https://stackoverflow.com/questions/252780/why-should-we-typedef-a-struct-so-often-in-c
+// https://stackoverflow.com/questions/1722112/what-are-the-most-common-naming-conventions-in-c
+// https://stackoverflow.com/questions/4316314/pass-struct-by-reference-in-c
+// https://stackoverflow.com/questions/252780/why-should-we-typedef-a-struct-so-often-in-c
 // C Error handeling
-//https://www.ibm.com/support/knowledgecenter/en/SSGMCP_5.2.0/com.ibm.cics.ts.applicationprogramming.doc/topics/dfhp3c00145.html
+// https://www.ibm.com/support/knowledgecenter/en/SSGMCP_5.2.0/com.ibm.cics.ts.applicationprogramming.doc/topics/dfhp3c00145.html
 
-void *readScript(void *vargp)
-{
-    printf("Printing GeeksQuiz from Thread \n");
-    return NULL;
+void* readScript(void* vargp) {
+  printf("Printing GeeksQuiz from Thread \n");
+  return NULL;
 }
 
-int init()
-{
-    int engineError = engine_init(&engine);
-    switch (engineError)
-    {
+int init() {
+  int engineError = engine_init(&engine);
+  switch (engineError) {
     default:
-        break;
+      break;
     case (GLFW_ERROR):
-        printf("Error initializing GLFW!\n");
-        return ENGINE_ERROR;
+      printf("Error initializing GLFW!\n");
+      return ENGINE_ERROR;
     case (VULKAN_SUPPORT_ERROR):
-        printf("Vulkan support not found!\n");
-        return ENGINE_ERROR;
-    }
+      printf("Vulkan support not found!\n");
+      return ENGINE_ERROR;
+  }
 
-    //printf("Num of CPU: %d\n", omp_get_num_procs());
+  // printf("Num of CPU: %d\n", omp_get_num_procs());
 
-    /*omp_set_num_threads(4);
+  /*omp_set_num_threads(4);
 
-    #pragma omp parallel num_threads(4)
-    {
-        printf("thread %d\n", omp_get_thread_num());
-    }*/
+  #pragma omp parallel num_threads(4)
+  {
+      printf("thread %d\n", omp_get_thread_num());
+  }*/
 
-    /*omp_set_num_threads(omp_get_num_procs());
+  /*omp_set_num_threads(omp_get_num_procs());
 
 #pragma omp parallel for num_threads(4)
-    for (int loopNum = 0; loopNum < 10; loopNum++) {
-        printf("thread num %d\n", omp_get_thread_num());
-        printf("hello openmp!\n");
-    }*/
+  for (int loopNum = 0; loopNum < 10; loopNum++) {
+      printf("thread num %d\n", omp_get_thread_num());
+      printf("hello openmp!\n");
+  }*/
 
-    /*int nthreads, tid;
+  /*int nthreads, tid;
 
 #pragma omp parallel private(nthreads, tid)
-    {
-        tid = omp_get_thread_num();
-        printf("Hello World from thread = %d\n", tid);
+  {
+      tid = omp_get_thread_num();
+      printf("Hello World from thread = %d\n", tid);
 
-        if (tid == 0) {
-            nthreads = omp_get_num_threads();
-            printf("Number of threads = %d\n", nthreads);
-        }
-    }*/
+      if (tid == 0) {
+          nthreads = omp_get_num_threads();
+          printf("Number of threads = %d\n", nthreads);
+      }
+  }*/
 
-    return 0;
+  return 0;
 }
 
-int new_window(int width, int height)
-{
-    switch (window_init(&engine.window, width, height))
-    {
+int new_window(int width, int height) {
+  switch (window_init(&engine.window, width, height)) {
     default:
-        break;
+      break;
     case (CREATE_WINDOW_ERROR):
-        printf("Error creating GLFW window!\n");
-        return WINDOW_ERROR;
+      printf("Error creating GLFW window!\n");
+      return WINDOW_ERROR;
     case (CREATE_INSTANCE_ERROR):
-        printf("Failed to create Vulkan instance!\n");
-        return WINDOW_ERROR;
+      printf("Failed to create Vulkan instance!\n");
+      return WINDOW_ERROR;
     case (SETUP_DEBUG_MESSENGER_ERROR):
-        printf("Failed to set up debug messengerS!\n");
-        return WINDOW_ERROR;
+      printf("Failed to set up debug messengerS!\n");
+      return WINDOW_ERROR;
     case (CREATE_SURFACE_ERROR):
-        printf("Failed to create window surface!\n");
-        return WINDOW_ERROR;
+      printf("Failed to create window surface!\n");
+      return WINDOW_ERROR;
     case (PICK_PHYSICAL_DEVICE_ERROR):
-        printf("Failed to find a suitable GPU!\n");
-        return WINDOW_ERROR;
+      printf("Failed to find a suitable GPU!\n");
+      return WINDOW_ERROR;
     case (CREATE_LOGICAL_DEVICE_ERROR):
-        printf("Failed to create logical device!\n");
-        return WINDOW_ERROR;
+      printf("Failed to create logical device!\n");
+      return WINDOW_ERROR;
     case (CREATE_SWAP_CHAIN_ERROR):
-        printf("Failed to create swap chain!\n");
-        return WINDOW_ERROR;
+      printf("Failed to create swap chain!\n");
+      return WINDOW_ERROR;
     case (CREATE_IMAGE_VIEWS_ERROR):
-        printf("Failed to create image views!\n");
-        return WINDOW_ERROR;
+      printf("Failed to create image views!\n");
+      return WINDOW_ERROR;
     case (CREATE_RENDER_PASS_ERROR):
-        printf("Failed to create render pass!\n");
-        return WINDOW_ERROR;
+      printf("Failed to create render pass!\n");
+      return WINDOW_ERROR;
     case (CREATE_GRAPHICS_PIPELINE_ERROR):
-        printf("Failed to create pipeline layout!\n");
-        return WINDOW_ERROR;
+      printf("Failed to create pipeline layout!\n");
+      return WINDOW_ERROR;
     case (CREATE_FRAME_BUFFER_ERROR):
-        printf("Failed to create framebuffer!\n");
-        return WINDOW_ERROR;
+      printf("Failed to create framebuffer!\n");
+      return WINDOW_ERROR;
     case (CREATE_COMMAND_POOL_ERROR):
-        printf("Failed to create command pool!\n");
-        return WINDOW_ERROR;
+      printf("Failed to create command pool!\n");
+      return WINDOW_ERROR;
     case (CREATE_COMMAND_BUFFER_ERROR):
-        printf("Failed to begin recording command buffer!\n");
-        return WINDOW_ERROR;
+      printf("Failed to begin recording command buffer!\n");
+      return WINDOW_ERROR;
     case (CREATE_SYNC_OBJECT_ERROR):
-        printf("Failed to create synchronization objects for a frame!\n");
-        return WINDOW_ERROR;
-    }
+      printf("Failed to create synchronization objects for a frame!\n");
+      return WINDOW_ERROR;
+  }
 
-    return NO_ERROR;
+  return NO_ERROR;
 }
 
-void update()
-{
-    engine_update(&engine);
+void update() { engine_update(&engine); }
+
+bool should_close() {
+  if (glfwWindowShouldClose(engine.window.glfw_window)) return true;
+
+  return false;
 }
 
-bool should_close()
-{
-    if (glfwWindowShouldClose(engine.window.glfw_window))
-        return true;
+void close_window() { window_delete(&engine.window); }
 
-    return false;
-}
+void cleanup() { engine_delete(&engine); }
 
-void close_window()
-{
-    window_delete(&engine.window);
-}
-
-void cleanup()
-{
-    engine_delete(&engine);
-}
-
-void print_fps()
-{
-    printf("Target FPS: %lf\n", engine.fps_counter.second_target_fps);
-    printf("Average FPS: %lf\n", engine.fps_counter.second_average_fps);
-    printf("Draw FPS: %d\n", engine.fps_counter.second_frames);
-    printf("Update FPS: %d\n\n", engine.fps_counter.second_updates);
+void print_fps() {
+  printf("Target FPS: %lf\n", engine.fps_counter.second_target_fps);
+  printf("Average FPS: %lf\n", engine.fps_counter.second_average_fps);
+  printf("Draw FPS: %d\n", engine.fps_counter.second_frames);
+  printf("Update FPS: %d\n\n", engine.fps_counter.second_updates);
 }

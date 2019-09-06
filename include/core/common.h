@@ -1,6 +1,5 @@
 #define _CRT_SECURE_NO_DEPRECATE
 #define GLFW_INCLUDE_VULKAN
-#include "datastructures/datastructures.h"
 #include <GLFW/glfw3.h>
 #include <cglm/cglm.h>
 #include <omp.h>
@@ -11,8 +10,10 @@
 #include <string.h>
 #include <time.h>
 #include <vulkan/vulkan.h>
+#include "datastructures/datastructures.h"
 
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#if defined(WIN32) || defined(_WIN32) || \
+    defined(__WIN32) && !defined(__CYGWIN__)
 #define IS_WINDOWS
 #include <direct.h>
 #else

@@ -1,6 +1,6 @@
 #include "core/engine.h"
 
-int engine_init(struct Engine *engine)
+int engine_init(struct Engine* engine)
 {
     if (!glfwInit())
         return GLFW_ERROR;
@@ -29,9 +29,9 @@ int engine_init(struct Engine *engine)
     return 0;
 }
 
-void engine_delete(struct Engine *engine) {}
+void engine_delete(struct Engine* engine) {}
 
-void render(struct Window *window)
+void render(struct Window* window)
 {
     VkResult result = vkWaitForFences(window->device, 1, &window->in_flight_fences[window->current_frame], VK_TRUE, UINT64_MAX);
     // vkResetFences(window->device, 1,
@@ -40,21 +40,19 @@ void render(struct Window *window)
     uint32_t imageIndex;
     result = vkAcquireNextImageKHR(window->device, window->swap_chain, UINT64_MAX, window->image_available_semaphores[window->current_frame], VK_NULL_HANDLE, &imageIndex);
 
-    if (result == VK_ERROR_OUT_OF_DATE_KHR)
-    {
+    if (result == VK_ERROR_OUT_OF_DATE_KHR) {
         recreate_swap_chain(window);
         return;
-    }
-    else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
+    } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
         fprintf(stderr, "failed to acquire swap chain image!\n");
 
     update_uniform_buffer(window, imageIndex);
 
-    VkSubmitInfo submitInfo = {0};
+    VkSubmitInfo submitInfo = { 0 };
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-    VkSemaphore waitSemaphores[] = {window->image_available_semaphores[window->current_frame]};
-    VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+    VkSemaphore waitSemaphores[] = { window->image_available_semaphores[window->current_frame] };
+    VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
     submitInfo.waitSemaphoreCount = 1;
     submitInfo.pWaitSemaphores = waitSemaphores;
     submitInfo.pWaitDstStageMask = waitStages;
@@ -62,7 +60,7 @@ void render(struct Window *window)
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &window->command_buffers[imageIndex];
 
-    VkSemaphore signalSemaphores[] = {window->render_finished_semaphores[window->current_frame]};
+    VkSemaphore signalSemaphores[] = { window->render_finished_semaphores[window->current_frame] };
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
 
@@ -82,13 +80,13 @@ void render(struct Window *window)
         fprintf(stderr, "Error to submit draw command buffer!\n");
     // throw std::runtime_error("failed to submit draw command buffer!");
 
-    VkPresentInfoKHR presentInfo = {0};
+    VkPresentInfoKHR presentInfo = { 0 };
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
     presentInfo.waitSemaphoreCount = 1;
     presentInfo.pWaitSemaphores = signalSemaphores;
 
-    VkSwapchainKHR swapChains[] = {window->swap_chain};
+    VkSwapchainKHR swapChains[] = { window->swap_chain };
     presentInfo.swapchainCount = 1;
     presentInfo.pSwapchains = swapChains;
 
@@ -96,26 +94,23 @@ void render(struct Window *window)
 
     result = vkQueuePresentKHR(window->present_queue, &presentInfo);
 
-    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || window->framebuffer_resized)
-    {
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || window->framebuffer_resized) {
         window->framebuffer_resized = false;
         recreate_swap_chain(window);
-    }
-    else if (result != VK_SUCCESS)
+    } else if (result != VK_SUCCESS)
         fprintf(stderr, "failed to present swap chain image!\n");
 
     window->current_frame = (window->current_frame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
 // TODO: Make this whole function in python?
-void engine_update(struct Engine *engine)
+void engine_update(struct Engine* engine)
 {
     engine->fps_counter.now_time = get_time();
     engine->fps_counter.delta_time += (engine->fps_counter.now_time - engine->fps_counter.last_time) / engine->fps_counter.limit_update_fps;
     engine->fps_counter.last_time = engine->fps_counter.now_time;
 
-    while (engine->fps_counter.delta_time >= 1.0)
-    {
+    while (engine->fps_counter.delta_time >= 1.0) {
         logic(engine, engine->fps_counter.delta_time / 20);
         engine->fps_counter.updates++;
         engine->fps_counter.delta_time--;
@@ -135,8 +130,7 @@ void engine_update(struct Engine *engine)
 
     engine->fps_counter.frames++;
 
-    if (get_time() - engine->fps_counter.timer > 1.0)
-    {
+    if (get_time() - engine->fps_counter.timer > 1.0) {
         engine->fps_counter.timer++;
 
         engine->fps_counter.second_target_fps = engine->fps_counter.target_fps;
@@ -147,8 +141,7 @@ void engine_update(struct Engine *engine)
         engine->fps_counter.fps = engine->fps_counter.frames;
 
         float averageCalc = 0;
-        for (int loopNum = FPS_COUNT - 1; loopNum >= 0; loopNum--)
-        {
+        for (int loopNum = FPS_COUNT - 1; loopNum >= 0; loopNum--) {
             if (loopNum != 0)
                 engine->fps_counter.fps_past[loopNum] = engine->fps_counter.fps_past[loopNum - 1];
 
@@ -161,7 +154,7 @@ void engine_update(struct Engine *engine)
     }
 }
 
-void logic(struct Engine *engine, double deltaTime) {}
+void logic(struct Engine* engine, double deltaTime) {}
 
 double get_time()
 {
@@ -171,40 +164,36 @@ double get_time()
     return (double)currentTime.tv_sec + (double)currentTime.tv_nsec / 1000000000;
 }
 
-void process_input(struct Engine *engine)
+void process_input(struct Engine* engine)
 {
-    for (int loopNum = 0; loopNum < KEY_LIMIT; loopNum++)
-    {
-        if (glfwGetKey(engine->window.glfw_window, loopNum) == GLFW_PRESS)
-        {
+    for (int loopNum = 0; loopNum < KEY_LIMIT; loopNum++) {
+        if (glfwGetKey(engine->window.glfw_window, loopNum) == GLFW_PRESS) {
             engine->keys[loopNum].state = PRESSED;
             engine->keys[loopNum].held = true;
-        }
-        else if (glfwGetKey(engine->window.glfw_window, loopNum) == GLFW_RELEASE)
-        {
+        } else if (glfwGetKey(engine->window.glfw_window, loopNum) == GLFW_RELEASE) {
             engine->keys[loopNum].state = RELEASED;
             engine->keys[loopNum].held = false;
         }
     }
 }
 
-void update_uniform_buffer(struct Window *window, uint32_t currentImage)
+void update_uniform_buffer(struct Window* window, uint32_t currentImage)
 {
     double time = fmod(get_time(), M_PI * 2);
 
-    struct UniformBufferObject ubo = {{{0}}};
+    struct UniformBufferObject ubo = { { { 0 } } };
 
     ubo.model[0][0] = 1.0f;
     ubo.model[1][1] = 1.0f;
     ubo.model[2][2] = 1.0f;
     ubo.model[3][3] = 1.0f;
 
-    glm_rotate(ubo.model, time, (vec3){0.0f, 0.0f, 1.0f});
-    glm_lookat((vec3){2.0f, 2.0f, 2.0f}, (vec3){0.0f, 0.0f, 0.0f}, (vec3){0.0f, 0.0f, 1.0f}, ubo.view);
+    glm_rotate(ubo.model, time, (vec3){ 0.0f, 0.0f, 1.0f });
+    glm_lookat((vec3){ 2.0f, 2.0f, 2.0f }, (vec3){ 0.0f, 0.0f, 0.0f }, (vec3){ 0.0f, 0.0f, 1.0f }, ubo.view);
     glm_perspective(glm_rad(45.0f), (float)window->swap_chain_extent.width / (float)window->swap_chain_extent.height, 0.1f, 10.0f, ubo.proj);
     ubo.proj[1][1] *= -1;
 
-    void *data;
+    void* data;
     vkMapMemory(window->device, window->uniform_buffers_memory[currentImage], 0, sizeof(ubo), 0, &data);
     memcpy(data, &ubo, sizeof(ubo));
     vkUnmapMemory(window->device, window->uniform_buffers_memory[currentImage]);
