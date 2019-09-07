@@ -1,40 +1,36 @@
 #include "graphics/mesh.h"
 
-void mesh_init(struct Mesh* mesh)
-{
-    mesh->vertices = malloc(sizeof(struct Vector));
-    memset(mesh->vertices, 0, sizeof(struct Vector));
-    vector_init(mesh->vertices, sizeof(struct Vertex));
+void mesh_init(struct Mesh* mesh) {
+  mesh->vertices = malloc(sizeof(struct Vector));
+  memset(mesh->vertices, 0, sizeof(struct Vector));
+  vector_init(mesh->vertices, sizeof(struct Vertex));
 
-    mesh->indices = malloc(sizeof(struct Vector));
-    memset(mesh->indices, 0, sizeof(struct Vector));
-    vector_init(mesh->indices, sizeof(uint16_t));
+  mesh->indices = malloc(sizeof(struct Vector));
+  memset(mesh->indices, 0, sizeof(struct Vector));
+  vector_init(mesh->indices, sizeof(uint16_t));
 }
 
-void mesh_delete(struct Mesh* mesh)
-{
-    vector_delete(mesh->vertices);
-    vector_delete(mesh->indices);
+void mesh_delete(struct Mesh* mesh) {
+  vector_delete(mesh->vertices);
+  vector_delete(mesh->indices);
 }
 
-void assign_vertex(struct Vector* vector, float x, float y, float z, float r, float g, float b, float u, float v)
-{
-    struct Vertex vertex = { { 0 } };
-    vertex.position[0] = x;
-    vertex.position[1] = y;
-    vertex.position[2] = z;
+void assign_vertex(struct Vector* vector, float x, float y, float z, float r, float g, float b, float u, float v) {
+  struct Vertex vertex = {{0}};
+  vertex.position[0] = x;
+  vertex.position[1] = y;
+  vertex.position[2] = z;
 
-    vertex.normal[0] = r;
-    vertex.normal[1] = g;
-    vertex.normal[2] = b;
+  vertex.normal[0] = r;
+  vertex.normal[1] = g;
+  vertex.normal[2] = b;
 
-    vertex.texCoord[0] = u;
-    vertex.texCoord[1] = v;
+  vertex.texCoord[0] = u;
+  vertex.texCoord[1] = v;
 
-    vector_push_back(vector, &vertex);
+  vector_push_back(vector, &vertex);
 }
 
-void assign_indice(struct Vector* vector, uint32_t indice)
-{
-    vector_push_back(vector, &indice);
+void assign_indice(struct Vector* vector, uint32_t indice) {
+  vector_push_back(vector, &indice);
 }

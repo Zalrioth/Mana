@@ -29,6 +29,7 @@ static inline void copy_buffer(struct Window *window, VkBuffer src_buffer, VkBuf
   end_single_time_commands(window, command_buffer);
 }
 
+// TODO: Condense functions
 int window_init(struct Window *window, int width, int height) {
   int error_code;
 

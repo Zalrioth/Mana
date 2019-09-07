@@ -57,47 +57,47 @@ struct SwapChainSupportDetails {
 };
 
 struct Window {
-  GLFWwindow* glfw_window;
-  VkInstance instance;
-  VkSurfaceKHR surface;
-  VkPhysicalDevice physical_device;
-  VkDevice device;
-  VkQueue graphics_queue;
-  VkQueue present_queue;
-  VkSwapchainKHR swap_chain;
-  VkFormat swap_chain_image_format;
-  VkExtent2D swap_chain_extent;
-  VkRenderPass render_pass;
-  VkDescriptorSetLayout descriptor_set_layout;
-  VkPipelineLayout pipeline_layout;
-  VkPipeline graphics_pipeline;
-  VkImage swap_chain_images[MAX_SWAP_CHAIN_FRAMES];
-  VkImageView swap_chain_image_views[MAX_SWAP_CHAIN_FRAMES];
-  VkFramebuffer swap_chain_framebuffers[MAX_SWAP_CHAIN_FRAMES];
-  VkDebugUtilsMessengerEXT debug_messenger;
-  VkCommandPool command_pool;
-  VkDescriptorPool descriptor_pool;
-  VkDescriptorSet descriptor_sets[MAX_SWAP_CHAIN_FRAMES];
+  struct GLFWwindow* glfw_window;
+  struct VkInstance_T* instance;
+  struct VkSurfaceKHR_T* surface;
+  struct VkPhysicalDevice_T* physical_device;
+  struct VkDevice_T* device;
+  struct VkQueue_T* graphics_queue;
+  struct VkQueue_T* present_queue;
+  struct VkSwapchainKHR_T* swap_chain;
+  enum VkFormat swap_chain_image_format;
+  struct VkExtent2D swap_chain_extent;
+  struct VkRenderPass_T* render_pass;
+  struct VkDescriptorSetLayout_T* descriptor_set_layout;
+  struct VkPipelineLayout_T* pipeline_layout;
+  struct VkPipeline_T* graphics_pipeline;
+  struct VkImage_T* swap_chain_images[MAX_SWAP_CHAIN_FRAMES];
+  struct VkImageView_T* swap_chain_image_views[MAX_SWAP_CHAIN_FRAMES];
+  struct VkFramebuffer_T* swap_chain_framebuffers[MAX_SWAP_CHAIN_FRAMES];
+  struct VkDebugUtilsMessengerEXT_T* debug_messenger;
+  struct VkCommandPool_T* command_pool;
+  struct VkDescriptorPool_T* descriptor_pool;
+  struct VkDescriptorSet_T* descriptor_sets[MAX_SWAP_CHAIN_FRAMES];
 
   struct Mesh* image_mesh;
   struct Texture* image_texture;
 
-  VkBuffer uniform_buffers[MAX_SWAP_CHAIN_FRAMES];
-  VkDeviceMemory uniform_buffers_memory[MAX_SWAP_CHAIN_FRAMES];
+  struct VkBuffer_T* uniform_buffers[MAX_SWAP_CHAIN_FRAMES];
+  struct VkDeviceMemory_T* uniform_buffers_memory[MAX_SWAP_CHAIN_FRAMES];
 
-  VkBuffer vertex_buffer;
-  VkDeviceMemory vertex_buffer_memory;
-  VkBuffer index_buffer;
-  VkDeviceMemory index_buffer_memory;
+  struct VkBuffer_T* vertex_buffer;
+  struct VkDeviceMemory_T* vertex_buffer_memory;
+  struct VkBuffer_T* index_buffer;
+  struct VkDeviceMemory_T* index_buffer_memory;
 
-  VkImage depth_image;
-  VkDeviceMemory depth_image_memory;
-  VkImageView depth_image_view;
+  struct VkImage_T* depth_image;
+  struct VkDeviceMemory_T* depth_image_memory;
+  struct VkImageView_T* depth_image_view;
 
-  VkCommandBuffer command_buffers[MAX_SWAP_CHAIN_FRAMES];
-  VkSemaphore image_available_semaphores[MAX_FRAMES_IN_FLIGHT];
-  VkSemaphore render_finished_semaphores[MAX_FRAMES_IN_FLIGHT];
-  VkFence in_flight_fences[MAX_FRAMES_IN_FLIGHT];
+  struct VkCommandBuffer_T* command_buffers[MAX_SWAP_CHAIN_FRAMES];
+  struct VkSemaphore_T* image_available_semaphores[MAX_FRAMES_IN_FLIGHT];
+  struct VkSemaphore_T* render_finished_semaphores[MAX_FRAMES_IN_FLIGHT];
+  struct VkFence_T* in_flight_fences[MAX_FRAMES_IN_FLIGHT];
   size_t current_frame;
   struct QueueFamilyIndices indices;
   int width;
