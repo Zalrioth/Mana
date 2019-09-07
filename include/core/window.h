@@ -134,8 +134,6 @@ int create_command_buffers(struct Window* window);
 int create_sync_objects(struct Window* window);
 
 static inline void vulkan_sync_objects_cleanup(struct Window* window);
-static inline void vulkan_descriptor_pool_cleanup(struct Window* window);
-static inline void vulkan_uniform_buffer_cleanup(struct Window* window);
 static inline void vulkan_index_buffer_cleanup(struct Window* window);
 static inline void vulkan_vertex_buffer_cleanup(struct Window* window);
 static inline void vulkan_texture_cleanup(struct Window* window);

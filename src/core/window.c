@@ -72,13 +72,13 @@ int window_init(struct Window *window, int width, int height) {
   if ((error_code = create_index_buffer(window)) != NO_ERROR)
     goto vulkan_index_buffer_error;
   if ((error_code = create_uniform_buffers(window)) != NO_ERROR)
-    goto vulkan_uniform_buffer_error;
+    goto vulkan_index_buffer_error;
   if ((error_code = create_descriptor_pool(window)) != NO_ERROR)
-    goto vulkan_desriptor_pool_error;
+    goto vulkan_index_buffer_error;
   if ((error_code = create_descriptor_sets(window)) != NO_ERROR)
-    goto vulkan_desriptor_pool_error;
+    goto vulkan_index_buffer_error;
   if ((error_code = create_command_buffers(window)) != NO_ERROR)
-    goto vulkan_desriptor_pool_error;
+    goto vulkan_index_buffer_error;
   if ((error_code = create_sync_objects(window)) != NO_ERROR)
     goto vulkan_sync_objects_error;
 
@@ -86,10 +86,6 @@ int window_init(struct Window *window, int width, int height) {
 
 vulkan_sync_objects_error:
   vulkan_sync_objects_cleanup(window);
-vulkan_desriptor_pool_error:
-  vulkan_descriptor_pool_cleanup(window);
-vulkan_uniform_buffer_error:
-  vulkan_uniform_buffer_cleanup(window);
 vulkan_index_buffer_error:
   vulkan_index_buffer_cleanup(window);
 vulkan_vertex_buffer_error:
@@ -115,18 +111,16 @@ window_error:
 }
 
 void window_delete(struct Window *window) {
-  vulkan_sync_objects_cleanup(window);
-  vulkan_descriptor_pool_cleanup(window);
-  vulkan_uniform_buffer_cleanup(window);
+  vulkan_swap_chain_cleanup(window);
+  vulkan_texture_cleanup(window);
+  vulkan_descriptor_set_layout_cleanup(window);
   vulkan_index_buffer_cleanup(window);
   vulkan_vertex_buffer_cleanup(window);
-  vulkan_texture_cleanup(window);
+  vulkan_sync_objects_cleanup(window);
   vulkan_command_pool_cleanup(window);
-  vulkan_descriptor_set_layout_cleanup(window);
-  vulkan_swap_chain_cleanup(window);
   vulkan_device_cleanup(window);
-  vulkan_surface_cleanup(window);
   vulkan_debug_cleanup(window);
+  vulkan_surface_cleanup(window);
   window_cleanup(window);
 }
 
@@ -135,17 +129,6 @@ static inline void vulkan_sync_objects_cleanup(struct Window *window) {
     vkDestroySemaphore(window->device, window->render_finished_semaphores[i], NULL);
     vkDestroySemaphore(window->device, window->image_available_semaphores[i], NULL);
     vkDestroyFence(window->device, window->in_flight_fences[i], NULL);
-  }
-}
-
-static inline void vulkan_descriptor_pool_cleanup(struct Window *window) {
-  vkDestroyDescriptorPool(window->device, window->descriptor_pool, NULL);
-}
-
-static inline void vulkan_uniform_buffer_cleanup(struct Window *window) {
-  for (int loop_num = 0; loop_num < MAX_SWAP_CHAIN_FRAMES; loop_num++) {
-    vkDestroyBuffer(window->device, window->uniform_buffers[loop_num], NULL);
-    vkFreeMemory(window->device, window->uniform_buffers_memory[loop_num], NULL);
   }
 }
 
