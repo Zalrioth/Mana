@@ -2,7 +2,7 @@
 
 ## Getting Started
 
-Build as a lib or dll with CMake and you should be good to go.<br/>
+Build with CMake and you should be good to go<br/>
 
 ### Features
 
