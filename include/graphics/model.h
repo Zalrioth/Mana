@@ -2,23 +2,23 @@
 #ifndef MODEL_H_
 #define MODEL_H_
 
+#include <assimp/cimport.h>      // Plain-C interface
+#include <assimp/postprocess.h>  // Post processing flags
+#include <assimp/scene.h>        // Output data structure
 #include "core/common.h"
 #include "graphics/mesh.h"
-#include <assimp/cimport.h> // Plain-C interface
-#include <assimp/postprocess.h> // Post processing flags
-#include <assimp/scene.h> // Output data structure
 
 struct Model {
-    struct aiMatrix4x4 rootMatrix;
-    struct Vector* textures_loaded;
-    struct Vector* meshes;
-    bool gammaCorrection;
+  struct aiMatrix4x4 root_matrix;
+  struct Vector* textures_loaded;
+  struct Vector* meshes;
+  bool gamma;
 };
 
-void init_model(struct Model* model);
-void load_model(struct Model* model, char* directory, bool gamma);
-void draw_model(struct Model* model);
-struct Mesh* process_mode(struct Model* model, struct aiNode* node, struct aiScene* scene);
-struct Vector* load_material_textures(struct Model* model, struct aiMaterial* mat, enum aiTextureType type, char* typeName);
+void model_init(struct Model* model);
+int model_load(struct Model* model, char* directory, bool gamma);
+void model_draw(struct Model* model);
+struct Mesh* model_process_node(struct Model* model, struct aiNode* node, struct aiScene* scene);
+struct Vector* model_load_material_textures(struct Model* model, struct aiMaterial* mat, enum aiTextureType type, char* typeName);
 
-#endif // MODEL_H_
+#endif  // MODEL_H_
