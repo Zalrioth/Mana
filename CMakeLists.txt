@@ -22,11 +22,9 @@ set_target_properties(Mana
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2")
 
 if (WIN32)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Xclang -fopenmp")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Xclang -fopenmp")
 endif (WIN32)
 
 if(APPLE)
@@ -34,7 +32,6 @@ if(APPLE)
         find_package(OpenMP)
         if (OPENMP_FOUND)
                 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
         endif()
 endif()
 
@@ -43,7 +40,6 @@ if(UNIX AND NOT APPLE)
         find_package(OpenMP)
         if (OPENMP_FOUND)
                 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
         endif()
 endif()
 

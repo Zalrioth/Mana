@@ -1,19 +1,7 @@
 #include "core/mana.h"
 
-// C naming conventions
-// https://stackoverflow.com/questions/1722112/what-are-the-most-common-naming-conventions-in-c
-// https://stackoverflow.com/questions/4316314/pass-struct-by-reference-in-c
-// https://stackoverflow.com/questions/252780/why-should-we-typedef-a-struct-so-often-in-c
-// C Error handeling
-// https://www.ibm.com/support/knowledgecenter/en/SSGMCP_5.2.0/com.ibm.cics.ts.applicationprogramming.doc/topics/dfhp3c00145.html
-
-void* readScript(void* vargp) {
-  printf("Printing GeeksQuiz from Thread \n");
-  return NULL;
-}
-
-int init() {
-  int engineError = engine_init(&engine);
+int mana_init(struct Mana* mana) {
+  int engineError = engine_init(&mana->engine);
   switch (engineError) {
     default:
       break;
@@ -25,41 +13,11 @@ int init() {
       return ENGINE_ERROR;
   }
 
-  // printf("Num of CPU: %d\n", omp_get_num_procs());
-
-  /*omp_set_num_threads(4);
-
-  #pragma omp parallel num_threads(4)
-  {
-      printf("thread %d\n", omp_get_thread_num());
-  }*/
-
-  /*omp_set_num_threads(omp_get_num_procs());
-
-#pragma omp parallel for num_threads(4)
-  for (int loopNum = 0; loopNum < 10; loopNum++) {
-      printf("thread num %d\n", omp_get_thread_num());
-      printf("hello openmp!\n");
-  }*/
-
-  /*int nthreads, tid;
-
-#pragma omp parallel private(nthreads, tid)
-  {
-      tid = omp_get_thread_num();
-      printf("Hello World from thread = %d\n", tid);
-
-      if (tid == 0) {
-          nthreads = omp_get_num_threads();
-          printf("Number of threads = %d\n", nthreads);
-      }
-  }*/
-
   return 0;
 }
 
-int new_window(int width, int height) {
-  switch (window_init(&engine.window, width, height)) {
+int mana_new_window(struct Mana* mana, int width, int height) {
+  switch (window_init(&mana->engine.window, width, height)) {
     default:
       break;
     case (CREATE_WINDOW_ERROR):
@@ -109,21 +67,27 @@ int new_window(int width, int height) {
   return NO_ERROR;
 }
 
-void update() { engine_update(&engine); }
+void mana_update(struct Mana* mana) {
+  engine_update(&mana->engine);
+}
 
-bool should_close() {
-  if (glfwWindowShouldClose(engine.window.glfw_window)) return true;
+bool mana_should_close(struct Mana* mana) {
+  if (glfwWindowShouldClose(mana->engine.window.glfw_window)) return true;
 
   return false;
 }
 
-void close_window() { window_delete(&engine.window); }
+void mana_close_window(struct Mana* mana) {
+  window_delete(&mana->engine.window);
+}
 
-void cleanup() { engine_delete(&engine); }
+void mana_cleanup(struct Mana* mana) {
+  engine_delete(&mana->engine);
+}
 
-void print_fps() {
-  printf("Target FPS: %lf\n", engine.fps_counter.second_target_fps);
-  printf("Average FPS: %lf\n", engine.fps_counter.second_average_fps);
-  printf("Draw FPS: %d\n", engine.fps_counter.second_frames);
-  printf("Update FPS: %d\n\n", engine.fps_counter.second_updates);
+void mana_print_fps(struct Mana* mana) {
+  printf("Target FPS: %lf\n", mana->engine.fps_counter.second_target_fps);
+  printf("Average FPS: %lf\n", mana->engine.fps_counter.second_average_fps);
+  printf("Draw FPS: %d\n", mana->engine.fps_counter.second_frames);
+  printf("Update FPS: %d\n\n", mana->engine.fps_counter.second_updates);
 }
