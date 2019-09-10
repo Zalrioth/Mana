@@ -61,12 +61,16 @@ int window_init(struct Window *window, int width, int height) {
     goto vulkan_command_pool_error;
   if ((error_code = create_framebuffers(window)) != NO_ERROR)
     goto vulkan_command_pool_error;
-  if ((error_code = create_texture_image(window, window->image_texture)) != NO_ERROR)
+
+  //
+  if ((error_code = texture_create_image(window, window->image_texture)) != NO_ERROR)
     goto vulkan_texture_error;
-  if ((error_code = create_texture_image_view(window, window->image_texture)) != NO_ERROR)
+  if ((error_code = texture_create_texture_image_view(window, window->image_texture)) != NO_ERROR)
     goto vulkan_texture_error;
-  if ((error_code = create_texture_sampler(window, window->image_texture)) != NO_ERROR)
+  if ((error_code = texture_create_sampler(window, window->image_texture)) != NO_ERROR)
     goto vulkan_texture_error;
+  //
+
   if ((error_code = create_vertex_buffer(window)) != NO_ERROR)
     goto vulkan_vertex_buffer_error;
   if ((error_code = create_index_buffer(window)) != NO_ERROR)
@@ -238,29 +242,29 @@ int create_window(struct Window *window, int width, int height) {
 
   mesh_init(window->image_mesh);
 
-  assign_vertex(window->image_mesh->vertices, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-  assign_vertex(window->image_mesh->vertices, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f);
-  assign_vertex(window->image_mesh->vertices, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
-  assign_vertex(window->image_mesh->vertices, -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+  mesh_assign_vertex(window->image_mesh->vertices, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+  mesh_assign_vertex(window->image_mesh->vertices, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f);
+  mesh_assign_vertex(window->image_mesh->vertices, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
+  mesh_assign_vertex(window->image_mesh->vertices, -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 
-  assign_vertex(window->image_mesh->vertices, -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-  assign_vertex(window->image_mesh->vertices, 0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f);
-  assign_vertex(window->image_mesh->vertices, 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
-  assign_vertex(window->image_mesh->vertices, -0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+  mesh_assign_vertex(window->image_mesh->vertices, -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+  mesh_assign_vertex(window->image_mesh->vertices, 0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f);
+  mesh_assign_vertex(window->image_mesh->vertices, 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
+  mesh_assign_vertex(window->image_mesh->vertices, -0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 
-  assign_indice(window->image_mesh->indices, 0);
-  assign_indice(window->image_mesh->indices, 1);
-  assign_indice(window->image_mesh->indices, 2);
-  assign_indice(window->image_mesh->indices, 2);
-  assign_indice(window->image_mesh->indices, 3);
-  assign_indice(window->image_mesh->indices, 0);
+  mesh_assign_indice(window->image_mesh->indices, 0);
+  mesh_assign_indice(window->image_mesh->indices, 1);
+  mesh_assign_indice(window->image_mesh->indices, 2);
+  mesh_assign_indice(window->image_mesh->indices, 2);
+  mesh_assign_indice(window->image_mesh->indices, 3);
+  mesh_assign_indice(window->image_mesh->indices, 0);
 
-  assign_indice(window->image_mesh->indices, 4);
-  assign_indice(window->image_mesh->indices, 5);
-  assign_indice(window->image_mesh->indices, 6);
-  assign_indice(window->image_mesh->indices, 6);
-  assign_indice(window->image_mesh->indices, 7);
-  assign_indice(window->image_mesh->indices, 4);
+  mesh_assign_indice(window->image_mesh->indices, 4);
+  mesh_assign_indice(window->image_mesh->indices, 5);
+  mesh_assign_indice(window->image_mesh->indices, 6);
+  mesh_assign_indice(window->image_mesh->indices, 6);
+  mesh_assign_indice(window->image_mesh->indices, 7);
+  mesh_assign_indice(window->image_mesh->indices, 4);
 
   return NO_ERROR;
 }
@@ -822,10 +826,10 @@ int create_command_pool(struct Window *window) {
 int create_depth_resources(struct Window *window) {
   VkFormat depthFormat = find_depth_format(window);
 
-  create_image(window, window->swap_chain_extent.width, window->swap_chain_extent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &window->depth_image, &window->depth_image_memory);
-  window->depth_image_view = create_image_view(window, window->depth_image, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+  graphics_utils_create_image(window, window->swap_chain_extent.width, window->swap_chain_extent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &window->depth_image, &window->depth_image_memory);
+  window->depth_image_view = graphics_utils_create_image_view(window, window->depth_image, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 
-  transition_image_layout(window, &window->depth_image, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+  graphics_utils_transition_image_layout(window, &window->depth_image, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 
   return 0;
 }
@@ -970,14 +974,14 @@ int create_vertex_buffer(struct Window *window) {
 
   VkBuffer staging_buffer = {0};
   VkDeviceMemory stagingBufferMemory = {0};
-  create_buffer(window, buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &staging_buffer, &stagingBufferMemory);
+  graphics_utils_create_buffer(window, buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &staging_buffer, &stagingBufferMemory);
 
   void *data;
   vkMapMemory(window->device, stagingBufferMemory, 0, buffer_size, 0, &data);
   memcpy(data, window->image_mesh->vertices->items, buffer_size);
   vkUnmapMemory(window->device, stagingBufferMemory);
 
-  create_buffer(window, buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &window->vertex_buffer, &window->vertex_buffer_memory);
+  graphics_utils_create_buffer(window, buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &window->vertex_buffer, &window->vertex_buffer_memory);
 
   copy_buffer(window, staging_buffer, window->vertex_buffer, buffer_size);
 
@@ -993,14 +997,14 @@ int create_index_buffer(struct Window *window) {
 
   VkBuffer staging_buffer = {0};
   VkDeviceMemory staging_buffer_memory = {0};
-  create_buffer(window, buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &staging_buffer, &staging_buffer_memory);
+  graphics_utils_create_buffer(window, buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &staging_buffer, &staging_buffer_memory);
 
   void *data;
   vkMapMemory(window->device, staging_buffer_memory, 0, buffer_size, 0, &data);
   memcpy(data, window->image_mesh->indices->items, buffer_size);
   vkUnmapMemory(window->device, staging_buffer_memory);
 
-  create_buffer(window, buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &window->index_buffer, &window->index_buffer_memory);
+  graphics_utils_create_buffer(window, buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &window->index_buffer, &window->index_buffer_memory);
 
   copy_buffer(window, staging_buffer, window->index_buffer, buffer_size);
 
@@ -1014,7 +1018,7 @@ int create_uniform_buffers(struct Window *window) {
   VkDeviceSize buffer_size = sizeof(struct UniformBufferObject);
 
   for (size_t i = 0; i < MAX_SWAP_CHAIN_FRAMES; i++)
-    create_buffer(window, buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &window->uniform_buffers[i], &window->uniform_buffers_memory[i]);
+    graphics_utils_create_buffer(window, buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &window->uniform_buffers[i], &window->uniform_buffers_memory[i]);
 
   return 0;
 }
@@ -1148,7 +1152,7 @@ void get_attribute_descriptions(VkVertexInputAttributeDescription *attribute_des
   attribute_descriptions[2].binding = 0;
   attribute_descriptions[2].location = 2;
   attribute_descriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-  attribute_descriptions[2].offset = offsetof(struct Vertex, texCoord);
+  attribute_descriptions[2].offset = offsetof(struct Vertex, tex_coord);
 
   attribute_descriptions[3].binding = 0;
   attribute_descriptions[3].location = 3;
@@ -1158,5 +1162,30 @@ void get_attribute_descriptions(VkVertexInputAttributeDescription *attribute_des
   attribute_descriptions[4].binding = 0;
   attribute_descriptions[4].location = 4;
   attribute_descriptions[4].format = VK_FORMAT_R32G32B32_SFLOAT;
-  attribute_descriptions[4].offset = offsetof(struct Vertex, bitTangent);
+  attribute_descriptions[4].offset = offsetof(struct Vertex, bit_tangent);
+}
+
+#define TOTAL_CANDIDIATES 3
+VkFormat find_depth_format(struct Window *window) {
+  VkFormat candidate[TOTAL_CANDIDIATES] = {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT};
+  VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
+  VkFormatFeatureFlags features =
+      VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
+
+  for (int loopNum = 0; loopNum < TOTAL_CANDIDIATES; loopNum++) {
+    VkFormatProperties props;
+    vkGetPhysicalDeviceFormatProperties(window->physical_device, candidate[loopNum], &props);
+
+    if (tiling == VK_IMAGE_TILING_LINEAR &&
+        (props.linearTilingFeatures & features) == features) {
+      return candidate[loopNum];
+    } else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) {
+      return candidate[loopNum];
+    }
+  }
+
+  // printf("failed to find supported format!");
+
+  // return 0;
+  return -1;
 }

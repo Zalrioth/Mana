@@ -2,10 +2,11 @@
 // http://www.syntaxbook.com/post/25995O2-how-to-measure-time-in-milliseconds-using-ansi-c
 
 #pragma once
-#ifndef WINDOW_H_
-#define WINDOW_H_
+#ifndef WINDOW_H
+#define WINDOW_H
 
 #include "core/common.h"
+#include "graphics/graphicsutils.h"
 #include "graphics/mesh.h"
 #include "graphics/model.h"
 #include "graphics/texture.h"
@@ -16,10 +17,8 @@ static const bool enable_validation_layers = false;
 static const bool enable_validation_layers = true;
 #endif
 
-static const char* const validation_layers[] = {
-    "VK_LAYER_LUNARG_standard_validation"};
-static const char* const device_extensions[] = {
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+static const char* const validation_layers[] = {"VK_LAYER_LUNARG_standard_validation"};
+static const char* const device_extensions[] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
 #define MAX_FRAMES_IN_FLIGHT 2
 #define MAX_SWAP_CHAIN_FRAMES MAX_FRAMES_IN_FLIGHT + 1
@@ -62,6 +61,7 @@ struct Window {
   struct VkSurfaceKHR_T* surface;
   struct VkPhysicalDevice_T* physical_device;
   struct VkDevice_T* device;
+
   struct VkQueue_T* graphics_queue;
   struct VkQueue_T* present_queue;
   struct VkSwapchainKHR_T* swap_chain;
@@ -150,5 +150,6 @@ void copy_buffer(struct Window* window, VkBuffer src_buffer, VkBuffer dst_buffer
 void cleanup_swap_chain(struct Window* window);
 VkVertexInputBindingDescription get_binding_description();
 void get_attribute_descriptions(VkVertexInputAttributeDescription* attribute_descriptions);
+VkFormat find_depth_format(struct Window* window);
 
-#endif  // WINDOW_H_
+#endif  // WINDOW_H
