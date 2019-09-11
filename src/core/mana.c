@@ -72,7 +72,7 @@ void mana_update(struct Mana* mana) {
 }
 
 bool mana_should_close(struct Mana* mana) {
-  if (glfwWindowShouldClose(mana->engine.window.glfw_window)) return true;
+  if (glfwWindowShouldClose(mana->engine.window.renderer.vulkan_renderer.glfw_window)) return true;
 
   return false;
 }

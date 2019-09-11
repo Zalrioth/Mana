@@ -1,6 +1,6 @@
 #pragma once
-#ifndef ENGINE_H_
-#define ENGINE_H_
+#ifndef ENGINE_H
+#define ENGINE_H
 
 #include "core/common.h"
 #include "core/window.h"
@@ -12,7 +12,8 @@
 
 #define KEY_LIMIT 512
 
-enum KeyState { PRESSED, RELEASED };
+enum KeyState { PRESSED,
+                RELEASED };
 
 struct Key {
   enum KeyState state;
@@ -55,4 +56,4 @@ void logic(struct Engine* engine, double delta_time);
 void process_input(struct Engine* engine);
 void update_uniform_buffer(struct Window* window, uint32_t current_image);
 
-#endif  // ENGINE_H_
+#endif  // ENGINE_H
