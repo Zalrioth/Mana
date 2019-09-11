@@ -21,10 +21,8 @@
 #endif
 
 #define NO_ERROR 0
-
-#define SMALL_BUFFER 128
-#define LARGE_BUFFER 8192
-#define HUGE_BUFFER 32768
+#define ENGINE_ERROR 1
+#define WINDOW_ERROR 2
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))

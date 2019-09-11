@@ -7,87 +7,53 @@ int window_init(struct Window *window, int width, int height) {
   window->width = width;
   window->height = height;
 
-  int error_code;
-
-  if ((error_code = init_vulkan_renderer(&window->renderer.vulkan_renderer, width, height)) != NO_ERROR)
-    goto window_error;
-  if ((error_code = create_instance(&window->renderer.vulkan_renderer)) != NO_ERROR)
-    goto window_error;
-  if ((error_code = setup_debug_messenger(&window->renderer.vulkan_renderer)) != NO_ERROR)
-    goto vulkan_debug_error;
-  if ((error_code = create_surface(&window->renderer.vulkan_renderer)) != NO_ERROR)
-    goto vulkan_surface_error;
-  if ((error_code = pick_physical_device(&window->renderer.vulkan_renderer)) != NO_ERROR)
-    goto vulkan_surface_error;
-  if ((error_code = create_logical_device(&window->renderer.vulkan_renderer)) != NO_ERROR)
-    goto vulkan_device_error;
-  if ((error_code = create_swap_chain(&window->renderer.vulkan_renderer, width, height)) != NO_ERROR)
-    goto vulkan_swap_chain_error;
-  if ((error_code = create_image_views(&window->renderer.vulkan_renderer)) != NO_ERROR)
-    goto vulkan_swap_chain_error;
-  if ((error_code = create_render_pass(&window->renderer.vulkan_renderer)) != NO_ERROR)
-    goto vulkan_swap_chain_error;
-  if ((error_code = create_descriptor_set_layout(&window->renderer.vulkan_renderer)) != NO_ERROR)
-    goto vulkan_desriptor_set_layout_error;
-  if ((error_code = create_graphics_pipeline(&window->renderer.vulkan_renderer)) != NO_ERROR)
-    goto vulkan_desriptor_set_layout_error;
-  if ((error_code = create_command_pool(&window->renderer.vulkan_renderer)) != NO_ERROR)
-    goto vulkan_command_pool_error;
-  if ((error_code = create_depth_resources(&window->renderer.vulkan_renderer)) != NO_ERROR)
-    goto vulkan_command_pool_error;
-  if ((error_code = create_framebuffers(&window->renderer.vulkan_renderer)) != NO_ERROR)
-    goto vulkan_command_pool_error;
-
-  //
-  if ((error_code = texture_create_image(&window->renderer.vulkan_renderer, window->renderer.vulkan_renderer.image_texture)) != NO_ERROR)
-    goto vulkan_texture_error;
-  if ((error_code = texture_create_texture_image_view(&window->renderer.vulkan_renderer, window->renderer.vulkan_renderer.image_texture)) != NO_ERROR)
-    goto vulkan_texture_error;
-  if ((error_code = texture_create_sampler(&window->renderer.vulkan_renderer, window->renderer.vulkan_renderer.image_texture)) != NO_ERROR)
-    goto vulkan_texture_error;
-  //
-
-  if ((error_code = create_vertex_buffer(&window->renderer.vulkan_renderer)) != NO_ERROR)
-    goto vulkan_vertex_buffer_error;
-  if ((error_code = create_index_buffer(&window->renderer.vulkan_renderer)) != NO_ERROR)
-    goto vulkan_index_buffer_error;
-  if ((error_code = create_uniform_buffers(&window->renderer.vulkan_renderer)) != NO_ERROR)
-    goto vulkan_index_buffer_error;
-  if ((error_code = create_descriptor_pool(&window->renderer.vulkan_renderer)) != NO_ERROR)
-    goto vulkan_index_buffer_error;
-  if ((error_code = create_descriptor_sets(&window->renderer.vulkan_renderer)) != NO_ERROR)
-    goto vulkan_index_buffer_error;
-  if ((error_code = create_command_buffers(&window->renderer.vulkan_renderer)) != NO_ERROR)
-    goto vulkan_index_buffer_error;
-  if ((error_code = create_sync_objects(&window->renderer.vulkan_renderer)) != NO_ERROR)
-    goto vulkan_sync_objects_error;
-
-  return NO_ERROR;
-
-vulkan_sync_objects_error:
-  vulkan_sync_objects_cleanup(&window->renderer.vulkan_renderer);
-vulkan_index_buffer_error:
-  vulkan_index_buffer_cleanup(&window->renderer.vulkan_renderer);
-vulkan_vertex_buffer_error:
-  vulkan_vertex_buffer_cleanup(&window->renderer.vulkan_renderer);
-vulkan_texture_error:
-  vulkan_texture_cleanup(&window->renderer.vulkan_renderer);
-vulkan_command_pool_error:
-  vulkan_command_pool_cleanup(&window->renderer.vulkan_renderer);
-vulkan_desriptor_set_layout_error:
-  vulkan_descriptor_set_layout_cleanup(&window->renderer.vulkan_renderer);
-vulkan_swap_chain_error:
-  vulkan_swap_chain_cleanup(&window->renderer.vulkan_renderer);
-vulkan_device_error:
-  vulkan_device_cleanup(&window->renderer.vulkan_renderer);
-vulkan_surface_error:
-  vulkan_surface_cleanup(&window->renderer.vulkan_renderer);
-vulkan_debug_error:
-  vulkan_debug_cleanup(&window->renderer.vulkan_renderer);
-window_error:
-  window_cleanup(&window->renderer.vulkan_renderer);
-
-  return error_code;
+  switch (vulkan_renderer_init(&window->renderer.vulkan_renderer, width, height)) {
+    default:
+      return NO_ERROR;
+      break;
+    case (CREATE_WINDOW_ERROR):
+      printf("Error creating GLFW window!\n");
+      return WINDOW_ERROR;
+    case (CREATE_INSTANCE_ERROR):
+      printf("Failed to create Vulkan instance!\n");
+      return WINDOW_ERROR;
+    case (SETUP_DEBUG_MESSENGER_ERROR):
+      printf("Failed to set up debug messengerS!\n");
+      return WINDOW_ERROR;
+    case (CREATE_SURFACE_ERROR):
+      printf("Failed to create window surface!\n");
+      return WINDOW_ERROR;
+    case (PICK_PHYSICAL_DEVICE_ERROR):
+      printf("Failed to find a suitable GPU!\n");
+      return WINDOW_ERROR;
+    case (CREATE_LOGICAL_DEVICE_ERROR):
+      printf("Failed to create logical device!\n");
+      return WINDOW_ERROR;
+    case (CREATE_SWAP_CHAIN_ERROR):
+      printf("Failed to create swap chain!\n");
+      return WINDOW_ERROR;
+    case (CREATE_IMAGE_VIEWS_ERROR):
+      printf("Failed to create image views!\n");
+      return WINDOW_ERROR;
+    case (CREATE_RENDER_PASS_ERROR):
+      printf("Failed to create render pass!\n");
+      return WINDOW_ERROR;
+    case (CREATE_GRAPHICS_PIPELINE_ERROR):
+      printf("Failed to create pipeline layout!\n");
+      return WINDOW_ERROR;
+    case (CREATE_FRAME_BUFFER_ERROR):
+      printf("Failed to create framebuffer!\n");
+      return WINDOW_ERROR;
+    case (CREATE_COMMAND_POOL_ERROR):
+      printf("Failed to create command pool!\n");
+      return WINDOW_ERROR;
+    case (CREATE_COMMAND_BUFFER_ERROR):
+      printf("Failed to begin recording command buffer!\n");
+      return WINDOW_ERROR;
+    case (CREATE_SYNC_OBJECT_ERROR):
+      printf("Failed to create synchronization objects for a frame!\n");
+      return WINDOW_ERROR;
+  }
 }
 
 void window_delete(struct Window *window) {

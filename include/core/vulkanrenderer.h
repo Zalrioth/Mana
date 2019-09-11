@@ -48,8 +48,10 @@ struct UniformBufferObject {
 
 struct SwapChainSupportDetails {
   struct VkSurfaceCapabilitiesKHR capabilities;
-  struct VkSurfaceFormatKHR formats[SMALL_BUFFER];
-  enum VkPresentModeKHR present_modes[SMALL_BUFFER];
+  struct Vector* formats;
+  struct Vector* present_modes;
+  //struct VkSurfaceFormatKHR formats[SMALL_BUFFER];
+  //enum VkPresentModeKHR present_modes[SMALL_BUFFER];
 };
 
 struct VulkanRenderer {
@@ -100,7 +102,7 @@ struct VulkanRenderer {
   bool framebuffer_resized;
 };
 
-int init_vulkan_renderer(struct VulkanRenderer* vulkan_renderer, int width, int height);
+int vulkan_renderer_init(struct VulkanRenderer* vulkan_renderer, int width, int height);
 void vulkan_renderer_delete(struct VulkanRenderer* vulkan_renderer);
 bool check_validation_layer_support();
 void recreate_swap_chain(struct VulkanRenderer* vulkan_renderer);

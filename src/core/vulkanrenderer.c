@@ -5,7 +5,7 @@ static void framebuffer_resize_callback(GLFWwindow* window, int width, int heigh
   vulkan_renderer_handle->framebuffer_resized = true;
 }
 
-int init_vulkan_renderer(struct VulkanRenderer* vulkan_renderer, int width, int height) {
+int vulkan_renderer_init(struct VulkanRenderer* vulkan_renderer, int width, int height) {
   memset(vulkan_renderer, 0, sizeof(struct VulkanRenderer));
 
   vulkan_renderer->image_mesh = calloc(1, sizeof(struct Mesh));
@@ -61,9 +61,94 @@ int init_vulkan_renderer(struct VulkanRenderer* vulkan_renderer, int width, int 
   mesh_assign_indice(vulkan_renderer->image_mesh->indices, 7);
   mesh_assign_indice(vulkan_renderer->image_mesh->indices, 4);
 
+  int error_code;
+
+  if ((error_code = create_instance(vulkan_renderer)) != NO_ERROR)
+    goto window_error;
+  if ((error_code = setup_debug_messenger(vulkan_renderer)) != NO_ERROR)
+    goto vulkan_debug_error;
+  if ((error_code = create_surface(vulkan_renderer)) != NO_ERROR)
+    goto vulkan_surface_error;
+  if ((error_code = pick_physical_device(vulkan_renderer)) != NO_ERROR)
+    goto vulkan_surface_error;
+  if ((error_code = create_logical_device(vulkan_renderer)) != NO_ERROR)
+    goto vulkan_device_error;
+  if ((error_code = create_swap_chain(vulkan_renderer, width, height)) != NO_ERROR)
+    goto vulkan_swap_chain_error;
+  if ((error_code = create_image_views(vulkan_renderer)) != NO_ERROR)
+    goto vulkan_swap_chain_error;
+  if ((error_code = create_render_pass(vulkan_renderer)) != NO_ERROR)
+    goto vulkan_swap_chain_error;
+  if ((error_code = create_descriptor_set_layout(vulkan_renderer)) != NO_ERROR)
+    goto vulkan_desriptor_set_layout_error;
+  if ((error_code = create_graphics_pipeline(vulkan_renderer)) != NO_ERROR)
+    goto vulkan_desriptor_set_layout_error;
+  if ((error_code = create_command_pool(vulkan_renderer)) != NO_ERROR)
+    goto vulkan_command_pool_error;
+  if ((error_code = create_depth_resources(vulkan_renderer)) != NO_ERROR)
+    goto vulkan_command_pool_error;
+  if ((error_code = create_framebuffers(vulkan_renderer)) != NO_ERROR)
+    goto vulkan_command_pool_error;
+
+  //
+  if ((error_code = texture_create_image(vulkan_renderer, vulkan_renderer->image_texture)) != NO_ERROR)
+    goto vulkan_texture_error;
+  if ((error_code = texture_create_texture_image_view(vulkan_renderer, vulkan_renderer->image_texture)) != NO_ERROR)
+    goto vulkan_texture_error;
+  if ((error_code = texture_create_sampler(vulkan_renderer, vulkan_renderer->image_texture)) != NO_ERROR)
+    goto vulkan_texture_error;
+  //
+
+  if ((error_code = create_vertex_buffer(vulkan_renderer)) != NO_ERROR)
+    goto vulkan_vertex_buffer_error;
+  if ((error_code = create_index_buffer(vulkan_renderer)) != NO_ERROR)
+    goto vulkan_index_buffer_error;
+  if ((error_code = create_uniform_buffers(vulkan_renderer)) != NO_ERROR)
+    goto vulkan_index_buffer_error;
+  if ((error_code = create_descriptor_pool(vulkan_renderer)) != NO_ERROR)
+    goto vulkan_index_buffer_error;
+  if ((error_code = create_descriptor_sets(vulkan_renderer)) != NO_ERROR)
+    goto vulkan_index_buffer_error;
+  if ((error_code = create_command_buffers(vulkan_renderer)) != NO_ERROR)
+    goto vulkan_index_buffer_error;
+  if ((error_code = create_sync_objects(vulkan_renderer)) != NO_ERROR)
+    goto vulkan_sync_objects_error;
+
   return NO_ERROR;
+
+vulkan_sync_objects_error:
+  vulkan_sync_objects_cleanup(vulkan_renderer);
+vulkan_index_buffer_error:
+  vulkan_index_buffer_cleanup(vulkan_renderer);
+vulkan_vertex_buffer_error:
+  vulkan_vertex_buffer_cleanup(vulkan_renderer);
+vulkan_texture_error:
+  vulkan_texture_cleanup(vulkan_renderer);
+vulkan_command_pool_error:
+  vulkan_command_pool_cleanup(vulkan_renderer);
+  //
+  for (int buffer_num = 0; buffer_num < MAX_SWAP_CHAIN_FRAMES; buffer_num++) {
+    vkDestroyBuffer(vulkan_renderer->device, vulkan_renderer->uniform_buffers[buffer_num], NULL);
+    vkFreeMemory(vulkan_renderer->device, vulkan_renderer->uniform_buffers_memory[buffer_num], NULL);
+  }
+  //
+vulkan_desriptor_set_layout_error:
+  vulkan_descriptor_set_layout_cleanup(vulkan_renderer);
+vulkan_swap_chain_error:
+  vulkan_swap_chain_cleanup(vulkan_renderer);
+vulkan_device_error:
+  vulkan_device_cleanup(vulkan_renderer);
+vulkan_surface_error:
+  vulkan_surface_cleanup(vulkan_renderer);
+vulkan_debug_error:
+  vulkan_debug_cleanup(vulkan_renderer);
+window_error:
+  window_cleanup(vulkan_renderer);
+
+  return error_code;
 }
 
+// TODO: Clean up da poopoo code
 void vulkan_renderer_delete(struct VulkanRenderer* vulkan_renderer) {
   vulkan_swap_chain_cleanup(vulkan_renderer);
   vulkan_texture_cleanup(vulkan_renderer);
@@ -336,43 +421,56 @@ int create_logical_device(struct VulkanRenderer* vulkan_renderer) {
 int create_swap_chain(struct VulkanRenderer* vulkan_renderer, int width, int height) {
   struct SwapChainSupportDetails swap_chain_support = {{0}};
 
+  swap_chain_support.formats = calloc(1, sizeof(struct Vector));
+  swap_chain_support.present_modes = calloc(1, sizeof(struct Vector));
+
+  vector_init(swap_chain_support.formats, sizeof(struct VkSurfaceFormatKHR));
+  vector_init(swap_chain_support.present_modes, sizeof(enum VkPresentModeKHR));
+
   vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vulkan_renderer->physical_device, vulkan_renderer->surface, &swap_chain_support.capabilities);
 
   uint32_t formatCount;
   vkGetPhysicalDeviceSurfaceFormatsKHR(vulkan_renderer->physical_device, vulkan_renderer->surface, &formatCount, NULL);
 
-  if (formatCount != 0)
-    vkGetPhysicalDeviceSurfaceFormatsKHR(vulkan_renderer->physical_device, vulkan_renderer->surface, &formatCount, swap_chain_support.formats);
+  if (formatCount != 0) {
+    vector_resize(swap_chain_support.formats, formatCount);
+    vkGetPhysicalDeviceSurfaceFormatsKHR(vulkan_renderer->physical_device, vulkan_renderer->surface, &formatCount, swap_chain_support.formats->items);
+    swap_chain_support.formats->size = formatCount;
+  }
 
   uint32_t presentModeCount;
   vkGetPhysicalDeviceSurfacePresentModesKHR(vulkan_renderer->physical_device, vulkan_renderer->surface, &presentModeCount, NULL);
 
-  if (presentModeCount != 0)
-    vkGetPhysicalDeviceSurfacePresentModesKHR(vulkan_renderer->physical_device, vulkan_renderer->surface, &presentModeCount, swap_chain_support.present_modes);
+  if (presentModeCount != 0) {
+    vector_resize(swap_chain_support.present_modes, presentModeCount);
+    vkGetPhysicalDeviceSurfacePresentModesKHR(vulkan_renderer->physical_device, vulkan_renderer->surface, &presentModeCount, swap_chain_support.present_modes->items);
+    swap_chain_support.present_modes->size = presentModeCount;
+  }
 
   VkSurfaceFormatKHR surfaceFormat = {0};
 
-  if (formatCount == 1 && swap_chain_support.formats[0].format == VK_FORMAT_UNDEFINED) {
+  //if (formatCount == 1 && swap_chain_support.formats[0].format == VK_FORMAT_UNDEFINED) {
+  if (formatCount == 1 && ((struct VkSurfaceFormatKHR*)vector_get(swap_chain_support.formats, 0))->format == VK_FORMAT_UNDEFINED) {
     surfaceFormat.format = VK_FORMAT_B8G8R8A8_UNORM;
     surfaceFormat.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
   } else {
-    for (int loopNum = 0; loopNum < SMALL_BUFFER; loopNum++) {
-      if (swap_chain_support.formats[loopNum].format == VK_FORMAT_B8G8R8A8_UNORM && swap_chain_support.formats[loopNum].colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
-        surfaceFormat = swap_chain_support.formats[loopNum];
+    for (int loopNum = 0; loopNum < vector_size(swap_chain_support.formats); loopNum++) {
+      if (((struct VkSurfaceFormatKHR*)vector_get(swap_chain_support.formats, loopNum))->format == VK_FORMAT_B8G8R8A8_UNORM && ((struct VkSurfaceFormatKHR*)vector_get(swap_chain_support.formats, loopNum))->colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+        surfaceFormat = *(struct VkSurfaceFormatKHR*)vector_get(swap_chain_support.formats, loopNum);
         break;
       } else
-        surfaceFormat = swap_chain_support.formats[0];
+        surfaceFormat = *(struct VkSurfaceFormatKHR*)vector_get(swap_chain_support.formats, 0);
     }
   }
 
   VkPresentModeKHR presentMode = {0};
 
-  for (int loopNum = 0; loopNum < SMALL_BUFFER; loopNum++) {
-    if (swap_chain_support.present_modes[loopNum] == VK_PRESENT_MODE_MAILBOX_KHR) {
-      presentMode = swap_chain_support.present_modes[loopNum];
+  for (int loopNum = 0; loopNum < vector_size(swap_chain_support.present_modes); loopNum++) {
+    if ((enum VkPresentModeKHR)vector_get(swap_chain_support.present_modes, loopNum) == VK_PRESENT_MODE_MAILBOX_KHR) {
+      presentMode = (enum VkPresentModeKHR)vector_get(swap_chain_support.present_modes, loopNum);
       break;
-    } else if (swap_chain_support.present_modes[loopNum] == VK_PRESENT_MODE_IMMEDIATE_KHR)
-      presentMode = swap_chain_support.present_modes[loopNum];
+    } else if ((enum VkPresentModeKHR)vector_get(swap_chain_support.present_modes, loopNum) == VK_PRESENT_MODE_IMMEDIATE_KHR)
+      presentMode = (enum VkPresentModeKHR)vector_get(swap_chain_support.present_modes, loopNum);
   }
 
   // Force Vsync
@@ -423,6 +521,9 @@ int create_swap_chain(struct VulkanRenderer* vulkan_renderer, int width, int hei
 
   vulkan_renderer->swap_chain_image_format = surfaceFormat.format;
   vulkan_renderer->swap_chain_extent = extent;
+
+  vector_delete(swap_chain_support.formats);
+  vector_delete(swap_chain_support.present_modes);
 
   return NO_ERROR;
 }
