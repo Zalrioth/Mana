@@ -91,15 +91,5 @@ window_error:
 }
 
 void window_delete(struct Window *window) {
-  vulkan_swap_chain_cleanup(&window->renderer.vulkan_renderer);
-  vulkan_texture_cleanup(&window->renderer.vulkan_renderer);
-  vulkan_descriptor_set_layout_cleanup(&window->renderer.vulkan_renderer);
-  vulkan_index_buffer_cleanup(&window->renderer.vulkan_renderer);
-  vulkan_vertex_buffer_cleanup(&window->renderer.vulkan_renderer);
-  vulkan_sync_objects_cleanup(&window->renderer.vulkan_renderer);
-  vulkan_command_pool_cleanup(&window->renderer.vulkan_renderer);
-  vulkan_device_cleanup(&window->renderer.vulkan_renderer);
-  vulkan_debug_cleanup(&window->renderer.vulkan_renderer);
-  vulkan_surface_cleanup(&window->renderer.vulkan_renderer);
-  window_cleanup(&window->renderer.vulkan_renderer);
+  vulkan_renderer_delete(&window->renderer.vulkan_renderer);
 }

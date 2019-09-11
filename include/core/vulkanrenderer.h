@@ -101,6 +101,7 @@ struct VulkanRenderer {
 };
 
 int init_vulkan_renderer(struct VulkanRenderer* vulkan_renderer, int width, int height);
+void vulkan_renderer_delete(struct VulkanRenderer* vulkan_renderer);
 bool check_validation_layer_support();
 void recreate_swap_chain(struct VulkanRenderer* vulkan_renderer);
 int create_instance(struct VulkanRenderer* vulkan_renderer);

@@ -64,6 +64,28 @@ int init_vulkan_renderer(struct VulkanRenderer* vulkan_renderer, int width, int 
   return NO_ERROR;
 }
 
+void vulkan_renderer_delete(struct VulkanRenderer* vulkan_renderer) {
+  vulkan_swap_chain_cleanup(vulkan_renderer);
+  vulkan_texture_cleanup(vulkan_renderer);
+  vulkan_descriptor_set_layout_cleanup(vulkan_renderer);
+  vulkan_index_buffer_cleanup(vulkan_renderer);
+  vulkan_vertex_buffer_cleanup(vulkan_renderer);
+  vulkan_sync_objects_cleanup(vulkan_renderer);
+  vulkan_command_pool_cleanup(vulkan_renderer);
+
+  //
+  for (int buffer_num = 0; buffer_num < MAX_SWAP_CHAIN_FRAMES; buffer_num++) {
+    vkDestroyBuffer(vulkan_renderer->device, vulkan_renderer->uniform_buffers[buffer_num], NULL);
+    vkFreeMemory(vulkan_renderer->device, vulkan_renderer->uniform_buffers_memory[buffer_num], NULL);
+  }
+  //
+
+  vulkan_device_cleanup(vulkan_renderer);
+  vulkan_debug_cleanup(vulkan_renderer);
+  vulkan_surface_cleanup(vulkan_renderer);
+  window_cleanup(vulkan_renderer);
+}
+
 static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, VkDebugUtilsMessageTypeFlagsEXT message_type, const VkDebugUtilsMessengerCallbackDataEXT* p_callback_data, void* p_uiser_data) {
   fprintf(stderr, "validation layer: %s\n", p_callback_data->pMessage);
   return VK_FALSE;
@@ -121,6 +143,7 @@ void vulkan_command_pool_cleanup(struct VulkanRenderer* vulkan_renderer) {
 
 void vulkan_descriptor_set_layout_cleanup(struct VulkanRenderer* vulkan_renderer) {
   vkDestroyDescriptorSetLayout(vulkan_renderer->device, vulkan_renderer->descriptor_set_layout, NULL);
+  vkDestroyDescriptorPool(vulkan_renderer->device, vulkan_renderer->descriptor_pool, NULL);
 }
 
 void vulkan_swap_chain_cleanup(struct VulkanRenderer* vulkan_renderer) {
