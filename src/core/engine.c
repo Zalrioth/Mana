@@ -25,14 +25,18 @@ int engine_init(struct Engine* engine) {
   for (int loopNum = 0; loopNum < FPS_COUNT; loopNum++)
     engine->fps_counter.fps_past[loopNum] = engine->fps_counter.fps;
 
+  array_list_init(&engine->entities);
+
   return 0;
 }
 
 void engine_delete(struct Engine* engine) {}
 
-void render(struct Window* window) {
+void render(struct Engine* engine) {
+  struct Window* window = &engine->window;
   struct VulkanRenderer* vulkan_renderer = &window->renderer.vulkan_renderer;
   VkResult result = vkWaitForFences(vulkan_renderer->device, 1, &vulkan_renderer->in_flight_fences[vulkan_renderer->current_frame], VK_TRUE, UINT64_MAX);
+  vkResetCommandPool(vulkan_renderer->device, vulkan_renderer->command_pool, VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT);
   // vkResetFences(window->device, 1,
   // &window->inFlightFences[window->currentFrame]);
 
@@ -45,7 +49,7 @@ void render(struct Window* window) {
   } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
     fprintf(stderr, "failed to acquire swap chain image!\n");
 
-  update_uniform_buffer(window, imageIndex);
+  update_uniform_buffer(engine, imageIndex);
 
   VkSubmitInfo submitInfo = {0};
   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -114,7 +118,7 @@ void engine_update(struct Engine* engine) {
   }
 
   // Render frame
-  render(&engine->window);
+  render(engine);
 
   // glfwSwapBuffers(engine->window.glfw_window);
   glfwPollEvents();
@@ -172,23 +176,49 @@ void process_input(struct Engine* engine) {
   }
 }
 
-void update_uniform_buffer(struct Window* window, uint32_t currentImage) {
+void update_uniform_buffer(struct Engine* engine, uint32_t currentImage) {
+  struct Window* window = &engine->window;
+  struct VulkanRenderer* vulkan_renderer = &engine->window.renderer.vulkan_renderer;
+
   double time = fmod(get_time(), M_PI * 2);
 
-  struct UniformBufferObject ubo = {{{0}}};
+  for (size_t i = 0; i < MAX_SWAP_CHAIN_FRAMES; i++) {
+    command_buffer_start(&engine->window.renderer.vulkan_renderer, i);
 
-  ubo.model[0][0] = 1.0f;
-  ubo.model[1][1] = 1.0f;
-  ubo.model[2][2] = 1.0f;
-  ubo.model[3][3] = 1.0f;
+    vkCmdBindPipeline(vulkan_renderer->command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, vulkan_renderer->graphics_pipeline);
 
-  glm_rotate(ubo.model, time, (vec3){0.0f, 0.0f, 1.0f});
-  glm_lookat((vec3){2.0f, 2.0f, 2.0f}, (vec3){0.0f, 0.0f, 0.0f}, (vec3){0.0f, 0.0f, 1.0f}, ubo.view);
-  glm_perspective(glm_rad(45.0f), (float)window->renderer.vulkan_renderer.swap_chain_extent.width / (float)window->renderer.vulkan_renderer.swap_chain_extent.height, 0.1f, 10.0f, ubo.proj);
-  ubo.proj[1][1] *= -1;
+    for (int entity_num = 0; entity_num < array_list_size(&engine->entities); entity_num++) {
+      struct Sprite* entity = ((struct Sprite*)array_list_get(&engine->entities, entity_num));
 
-  void* data;
-  vkMapMemory(window->renderer.vulkan_renderer.device, window->renderer.vulkan_renderer.uniform_buffers_memory[currentImage], 0, sizeof(ubo), 0, &data);
-  memcpy(data, &ubo, sizeof(ubo));
-  vkUnmapMemory(window->renderer.vulkan_renderer.device, window->renderer.vulkan_renderer.uniform_buffers_memory[currentImage]);
+      VkBuffer vertexBuffers[] = {entity->vertex_buffer};
+      VkDeviceSize offsets[] = {0};
+      vkCmdBindVertexBuffers(vulkan_renderer->command_buffers[i], 0, 1, vertexBuffers, offsets);
+      vkCmdBindIndexBuffer(vulkan_renderer->command_buffers[i], entity->index_buffer, 0, VK_INDEX_TYPE_UINT32);
+      vkCmdBindDescriptorSets(vulkan_renderer->command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, vulkan_renderer->pipeline_layout, 0, 1, &entity->descriptor_sets[i], 0, NULL);
+
+      vkCmdDrawIndexed(vulkan_renderer->command_buffers[i], entity->image_mesh->indices->size, 1, 0, 0, 0);
+      //vkCmdDrawIndexed(vulkan_renderer->commandBuffers[i], 12, 1, 0, 0, 0);
+    }
+
+    command_buffer_end(&engine->window.renderer.vulkan_renderer, i);
+  }
+
+  for (int entity_num = 0; entity_num < array_list_size(&engine->entities); entity_num++) {
+    struct UniformBufferObject ubo = {{{0}}};
+
+    ubo.model[0][0] = 1.0f;
+    ubo.model[1][1] = 1.0f;
+    ubo.model[2][2] = 1.0f;
+    ubo.model[3][3] = 1.0f;
+
+    glm_rotate(ubo.model, time, (vec3){0.0f, 0.0f + entity_num / 2.0, 1.0f});
+    glm_lookat((vec3){2.0f, 2.0f, 2.0f}, (vec3){0.0f, 0.0f, 0.0f}, (vec3){0.0f, 0.0f, 1.0f}, ubo.view);
+    glm_perspective(glm_rad(45.0f), (float)window->renderer.vulkan_renderer.swap_chain_extent.width / (float)window->renderer.vulkan_renderer.swap_chain_extent.height, 0.1f, 10.0f, ubo.proj);
+    ubo.proj[1][1] *= -1;
+
+    void* data;
+    vkMapMemory(window->renderer.vulkan_renderer.device, ((struct Sprite*)array_list_get(&engine->entities, entity_num))->uniform_buffers_memory[currentImage], 0, sizeof(ubo), 0, &data);
+    memcpy(data, &ubo, sizeof(ubo));
+    vkUnmapMemory(window->renderer.vulkan_renderer.device, ((struct Sprite*)array_list_get(&engine->entities, entity_num))->uniform_buffers_memory[currentImage]);
+  }
 }

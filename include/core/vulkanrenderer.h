@@ -76,18 +76,6 @@ struct VulkanRenderer {
   struct VkDebugUtilsMessengerEXT_T* debug_messenger;
   struct VkCommandPool_T* command_pool;
   struct VkDescriptorPool_T* descriptor_pool;
-  struct VkDescriptorSet_T* descriptor_sets[MAX_SWAP_CHAIN_FRAMES];
-
-  struct Mesh* image_mesh;
-  struct Texture* image_texture;
-
-  struct VkBuffer_T* uniform_buffers[MAX_SWAP_CHAIN_FRAMES];
-  struct VkDeviceMemory_T* uniform_buffers_memory[MAX_SWAP_CHAIN_FRAMES];
-
-  struct VkBuffer_T* vertex_buffer;
-  struct VkDeviceMemory_T* vertex_buffer_memory;
-  struct VkBuffer_T* index_buffer;
-  struct VkDeviceMemory_T* index_buffer_memory;
 
   struct VkImage_T* depth_image;
   struct VkDeviceMemory_T* depth_image_memory;
@@ -123,14 +111,13 @@ int create_vertex_buffer(struct VulkanRenderer* vulkan_renderer);
 int create_index_buffer(struct VulkanRenderer* vulkan_renderer);
 int create_uniform_buffers(struct VulkanRenderer* vulkan_renderer);
 int create_descriptor_pool(struct VulkanRenderer* vulkan_renderer);
-int create_descriptor_sets(struct VulkanRenderer* vulkan_renderer);
 int create_command_buffers(struct VulkanRenderer* vulkan_renderer);
+int command_buffer_start(struct VulkanRenderer* vulkan_renderer, size_t i);
+int command_buffer_reset(struct VulkanRenderer* vulkan_renderer, size_t i);
+int command_buffer_end(struct VulkanRenderer* vulkan_renderer, size_t i);
 int create_sync_objects(struct VulkanRenderer* vulkan_renderer);
 
 void vulkan_sync_objects_cleanup(struct VulkanRenderer* vulkan_renderer);
-void vulkan_index_buffer_cleanup(struct VulkanRenderer* vulkan_renderer);
-void vulkan_vertex_buffer_cleanup(struct VulkanRenderer* vulkan_renderer);
-void vulkan_texture_cleanup(struct VulkanRenderer* vulkan_renderer);
 void vulkan_command_pool_cleanup(struct VulkanRenderer* vulkan_renderer);
 void vulkan_descriptor_set_layout_cleanup(struct VulkanRenderer* vulkan_renderer);
 void vulkan_swap_chain_cleanup(struct VulkanRenderer* vulkan_renderer);

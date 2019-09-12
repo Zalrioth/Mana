@@ -4,6 +4,7 @@
 
 #include "core/common.h"
 #include "core/window.h"
+#include "graphics/sprite.h"
 
 #define GLFW_ERROR 1
 #define VULKAN_SUPPORT_ERROR 2
@@ -46,6 +47,7 @@ struct Engine {
   struct Window window;
   struct FPSCounter fps_counter;
   struct Key keys[KEY_LIMIT];
+  struct ArrayList entities;
 };
 
 double get_time();
@@ -54,6 +56,6 @@ void engine_delete(struct Engine* engine);
 void engine_update(struct Engine* engine);
 void logic(struct Engine* engine, double delta_time);
 void process_input(struct Engine* engine);
-void update_uniform_buffer(struct Window* window, uint32_t current_image);
+void update_uniform_buffer(struct Engine* engine, uint32_t current_image);
 
 #endif  // ENGINE_H

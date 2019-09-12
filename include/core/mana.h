@@ -16,5 +16,6 @@ bool mana_should_close(struct Mana* mana);
 void mana_close_window(struct Mana* mana);
 void mana_cleanup(struct Mana* mana);
 void mana_print_fps(struct Mana* mana);
+void mana_add_texture(struct Mana* mana);
 
 #endif  // MANA_H

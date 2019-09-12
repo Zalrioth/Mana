@@ -8,12 +8,6 @@ static void framebuffer_resize_callback(GLFWwindow* window, int width, int heigh
 int vulkan_renderer_init(struct VulkanRenderer* vulkan_renderer, int width, int height) {
   memset(vulkan_renderer, 0, sizeof(struct VulkanRenderer));
 
-  vulkan_renderer->image_mesh = calloc(1, sizeof(struct Mesh));
-  mesh_init(vulkan_renderer->image_mesh);
-
-  vulkan_renderer->image_texture = calloc(1, sizeof(struct Texture));
-  texture_init(vulkan_renderer->image_texture, "./Assets/textures/texture.jpg");
-
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
@@ -35,32 +29,6 @@ int vulkan_renderer_init(struct VulkanRenderer* vulkan_renderer, int width, int 
   if (!vulkan_renderer->glfw_window)
     return CREATE_WINDOW_ERROR;
 
-  mesh_init(vulkan_renderer->image_mesh);
-
-  mesh_assign_vertex(vulkan_renderer->image_mesh->vertices, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-  mesh_assign_vertex(vulkan_renderer->image_mesh->vertices, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f);
-  mesh_assign_vertex(vulkan_renderer->image_mesh->vertices, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
-  mesh_assign_vertex(vulkan_renderer->image_mesh->vertices, -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
-
-  mesh_assign_vertex(vulkan_renderer->image_mesh->vertices, -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-  mesh_assign_vertex(vulkan_renderer->image_mesh->vertices, 0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f);
-  mesh_assign_vertex(vulkan_renderer->image_mesh->vertices, 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
-  mesh_assign_vertex(vulkan_renderer->image_mesh->vertices, -0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
-
-  mesh_assign_indice(vulkan_renderer->image_mesh->indices, 0);
-  mesh_assign_indice(vulkan_renderer->image_mesh->indices, 1);
-  mesh_assign_indice(vulkan_renderer->image_mesh->indices, 2);
-  mesh_assign_indice(vulkan_renderer->image_mesh->indices, 2);
-  mesh_assign_indice(vulkan_renderer->image_mesh->indices, 3);
-  mesh_assign_indice(vulkan_renderer->image_mesh->indices, 0);
-
-  mesh_assign_indice(vulkan_renderer->image_mesh->indices, 4);
-  mesh_assign_indice(vulkan_renderer->image_mesh->indices, 5);
-  mesh_assign_indice(vulkan_renderer->image_mesh->indices, 6);
-  mesh_assign_indice(vulkan_renderer->image_mesh->indices, 6);
-  mesh_assign_indice(vulkan_renderer->image_mesh->indices, 7);
-  mesh_assign_indice(vulkan_renderer->image_mesh->indices, 4);
-
   int error_code;
 
   if ((error_code = create_instance(vulkan_renderer)) != NO_ERROR)
@@ -80,37 +48,19 @@ int vulkan_renderer_init(struct VulkanRenderer* vulkan_renderer, int width, int 
   if ((error_code = create_render_pass(vulkan_renderer)) != NO_ERROR)
     goto vulkan_swap_chain_error;
   if ((error_code = create_descriptor_set_layout(vulkan_renderer)) != NO_ERROR)
-    goto vulkan_desriptor_set_layout_error;
+    goto vulkan_swap_chain_error;
   if ((error_code = create_graphics_pipeline(vulkan_renderer)) != NO_ERROR)
-    goto vulkan_desriptor_set_layout_error;
+    goto vulkan_swap_chain_error;
   if ((error_code = create_command_pool(vulkan_renderer)) != NO_ERROR)
     goto vulkan_command_pool_error;
   if ((error_code = create_depth_resources(vulkan_renderer)) != NO_ERROR)
     goto vulkan_command_pool_error;
   if ((error_code = create_framebuffers(vulkan_renderer)) != NO_ERROR)
     goto vulkan_command_pool_error;
-
-  //
-  if ((error_code = texture_create_image(vulkan_renderer, vulkan_renderer->image_texture)) != NO_ERROR)
-    goto vulkan_texture_error;
-  if ((error_code = texture_create_texture_image_view(vulkan_renderer, vulkan_renderer->image_texture)) != NO_ERROR)
-    goto vulkan_texture_error;
-  if ((error_code = texture_create_sampler(vulkan_renderer, vulkan_renderer->image_texture)) != NO_ERROR)
-    goto vulkan_texture_error;
-  //
-
-  if ((error_code = create_vertex_buffer(vulkan_renderer)) != NO_ERROR)
-    goto vulkan_vertex_buffer_error;
-  if ((error_code = create_index_buffer(vulkan_renderer)) != NO_ERROR)
-    goto vulkan_index_buffer_error;
-  if ((error_code = create_uniform_buffers(vulkan_renderer)) != NO_ERROR)
-    goto vulkan_index_buffer_error;
   if ((error_code = create_descriptor_pool(vulkan_renderer)) != NO_ERROR)
-    goto vulkan_index_buffer_error;
-  if ((error_code = create_descriptor_sets(vulkan_renderer)) != NO_ERROR)
-    goto vulkan_index_buffer_error;
+    goto vulkan_command_pool_error;
   if ((error_code = create_command_buffers(vulkan_renderer)) != NO_ERROR)
-    goto vulkan_index_buffer_error;
+    goto vulkan_command_pool_error;
   if ((error_code = create_sync_objects(vulkan_renderer)) != NO_ERROR)
     goto vulkan_sync_objects_error;
 
@@ -118,22 +68,8 @@ int vulkan_renderer_init(struct VulkanRenderer* vulkan_renderer, int width, int 
 
 vulkan_sync_objects_error:
   vulkan_sync_objects_cleanup(vulkan_renderer);
-vulkan_index_buffer_error:
-  vulkan_index_buffer_cleanup(vulkan_renderer);
-vulkan_vertex_buffer_error:
-  vulkan_vertex_buffer_cleanup(vulkan_renderer);
-vulkan_texture_error:
-  vulkan_texture_cleanup(vulkan_renderer);
 vulkan_command_pool_error:
   vulkan_command_pool_cleanup(vulkan_renderer);
-  //
-  for (int buffer_num = 0; buffer_num < MAX_SWAP_CHAIN_FRAMES; buffer_num++) {
-    vkDestroyBuffer(vulkan_renderer->device, vulkan_renderer->uniform_buffers[buffer_num], NULL);
-    vkFreeMemory(vulkan_renderer->device, vulkan_renderer->uniform_buffers_memory[buffer_num], NULL);
-  }
-  //
-vulkan_desriptor_set_layout_error:
-  vulkan_descriptor_set_layout_cleanup(vulkan_renderer);
 vulkan_swap_chain_error:
   vulkan_swap_chain_cleanup(vulkan_renderer);
 vulkan_device_error:
@@ -151,20 +87,9 @@ window_error:
 // TODO: Clean up da poopoo code
 void vulkan_renderer_delete(struct VulkanRenderer* vulkan_renderer) {
   vulkan_swap_chain_cleanup(vulkan_renderer);
-  vulkan_texture_cleanup(vulkan_renderer);
   vulkan_descriptor_set_layout_cleanup(vulkan_renderer);
-  vulkan_index_buffer_cleanup(vulkan_renderer);
-  vulkan_vertex_buffer_cleanup(vulkan_renderer);
   vulkan_sync_objects_cleanup(vulkan_renderer);
   vulkan_command_pool_cleanup(vulkan_renderer);
-
-  //
-  for (int buffer_num = 0; buffer_num < MAX_SWAP_CHAIN_FRAMES; buffer_num++) {
-    vkDestroyBuffer(vulkan_renderer->device, vulkan_renderer->uniform_buffers[buffer_num], NULL);
-    vkFreeMemory(vulkan_renderer->device, vulkan_renderer->uniform_buffers_memory[buffer_num], NULL);
-  }
-  //
-
   vulkan_device_cleanup(vulkan_renderer);
   vulkan_debug_cleanup(vulkan_renderer);
   vulkan_surface_cleanup(vulkan_renderer);
@@ -208,24 +133,6 @@ void vulkan_sync_objects_cleanup(struct VulkanRenderer* vulkan_renderer) {
   }
 }
 
-void vulkan_index_buffer_cleanup(struct VulkanRenderer* vulkan_renderer) {
-  vkDestroyBuffer(vulkan_renderer->device, vulkan_renderer->index_buffer, NULL);
-  vkFreeMemory(vulkan_renderer->device, vulkan_renderer->index_buffer_memory, NULL);
-}
-
-void vulkan_vertex_buffer_cleanup(struct VulkanRenderer* vulkan_renderer) {
-  vkDestroyBuffer(vulkan_renderer->device, vulkan_renderer->vertex_buffer, NULL);
-  vkFreeMemory(vulkan_renderer->device, vulkan_renderer->vertex_buffer_memory, NULL);
-}
-
-void vulkan_texture_cleanup(struct VulkanRenderer* vulkan_renderer) {
-  texture_delete(vulkan_renderer, vulkan_renderer->image_texture);
-  free(vulkan_renderer->image_texture);
-}
-void vulkan_command_pool_cleanup(struct VulkanRenderer* vulkan_renderer) {
-  vkDestroyCommandPool(vulkan_renderer->device, vulkan_renderer->command_pool, NULL);
-}
-
 void vulkan_descriptor_set_layout_cleanup(struct VulkanRenderer* vulkan_renderer) {
   vkDestroyDescriptorSetLayout(vulkan_renderer->device, vulkan_renderer->descriptor_set_layout, NULL);
   vkDestroyDescriptorPool(vulkan_renderer->device, vulkan_renderer->descriptor_pool, NULL);
@@ -267,11 +174,11 @@ void vulkan_debug_cleanup(struct VulkanRenderer* vulkan_renderer) {
   if (enable_validation_layers)
     destroy_debug_utils_messenger_ext(vulkan_renderer->instance, vulkan_renderer->debug_messenger, NULL);
 }
+void vulkan_command_pool_cleanup(struct VulkanRenderer* vulkan_renderer) {
+  vkDestroyCommandPool(vulkan_renderer->device, vulkan_renderer->command_pool, NULL);
+}
 
 void window_cleanup(struct VulkanRenderer* vulkan_renderer) {
-  mesh_delete(vulkan_renderer->image_mesh);
-  free(vulkan_renderer->image_mesh);
-
   glfwDestroyWindow(vulkan_renderer->glfw_window);
   glfwTerminate();
 }
@@ -836,9 +743,12 @@ int create_framebuffers(struct VulkanRenderer* vulkan_renderer) {
 }
 
 int create_command_pool(struct VulkanRenderer* vulkan_renderer) {
+  VkCommandPoolCreateFlags command_pool_flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+
   VkCommandPoolCreateInfo poolInfo = {0};
   poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
   poolInfo.queueFamilyIndex = vulkan_renderer->indices.graphics_family;
+  poolInfo.flags = command_pool_flags;
 
   if (vkCreateCommandPool(vulkan_renderer->device, &poolInfo, NULL, &vulkan_renderer->command_pool) != VK_SUCCESS)
     return CREATE_COMMAND_POOL_ERROR;
@@ -868,50 +778,87 @@ int create_command_buffers(struct VulkanRenderer* vulkan_renderer) {
     return CREATE_COMMAND_BUFFER_ERROR;
 
   for (size_t i = 0; i < MAX_SWAP_CHAIN_FRAMES; i++) {
-    VkCommandBufferBeginInfo beginInfo = {0};
-    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-
-    if (vkBeginCommandBuffer(vulkan_renderer->command_buffers[i], &beginInfo) != VK_SUCCESS)
-      return CREATE_COMMAND_BUFFER_ERROR;
-
-    VkRenderPassBeginInfo renderPassInfo = {0};
-    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassInfo.renderPass = vulkan_renderer->render_pass;
-    renderPassInfo.framebuffer = vulkan_renderer->swap_chain_framebuffers[i];
-    renderPassInfo.renderArea.offset.x = 0;
-    renderPassInfo.renderArea.offset.y = 0;
-    renderPassInfo.renderArea.extent = vulkan_renderer->swap_chain_extent;
-
-    VkClearValue clear_values[2];
-    memset(clear_values, 0, sizeof(clear_values));
-
-    //http://ogldev.atspace.co.uk/www/tutorial51/tutorial51.html
-    VkClearColorValue clear_color = {{0.0f, 0.0f, 0.0f, 1.0f}};
-    clear_values[0].color = clear_color;
-
-    VkClearDepthStencilValue depth_color = {1.0f, 0};
-    clear_values[1].depthStencil = depth_color;
-
-    renderPassInfo.clearValueCount = 2;
-    renderPassInfo.pClearValues = clear_values;
-
-    vkCmdBeginRenderPass(vulkan_renderer->command_buffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-    vkCmdBindPipeline(vulkan_renderer->command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, vulkan_renderer->graphics_pipeline);
-
-    VkBuffer vertexBuffers[] = {vulkan_renderer->vertex_buffer};
-    VkDeviceSize offsets[] = {0};
-    vkCmdBindVertexBuffers(vulkan_renderer->command_buffers[i], 0, 1, vertexBuffers, offsets);
-    vkCmdBindIndexBuffer(vulkan_renderer->command_buffers[i], vulkan_renderer->index_buffer, 0, VK_INDEX_TYPE_UINT16);
-    vkCmdBindDescriptorSets(vulkan_renderer->command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, vulkan_renderer->pipeline_layout, 0, 1, &vulkan_renderer->descriptor_sets[i], 0, NULL);
-
-    vkCmdDrawIndexed(vulkan_renderer->command_buffers[i], vulkan_renderer->image_mesh->indices->size, 1, 0, 0, 0);
-    //vkCmdDrawIndexed(vulkan_renderer->commandBuffers[i], 12, 1, 0, 0, 0);
-    vkCmdEndRenderPass(vulkan_renderer->command_buffers[i]);
-
-    if (vkEndCommandBuffer(vulkan_renderer->command_buffers[i]) != VK_SUCCESS)
-      return CREATE_COMMAND_BUFFER_ERROR;
+    command_buffer_start(vulkan_renderer, i);
+    command_buffer_end(vulkan_renderer, i);
   }
+
+  return NO_ERROR;
+}
+
+int command_buffer_start(struct VulkanRenderer* vulkan_renderer, size_t i) {
+  VkCommandBufferBeginInfo beginInfo = {0};
+  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+
+  if (vkBeginCommandBuffer(vulkan_renderer->command_buffers[i], &beginInfo) != VK_SUCCESS)
+    return CREATE_COMMAND_BUFFER_ERROR;
+
+  VkRenderPassBeginInfo renderPassInfo = {0};
+  renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+  renderPassInfo.renderPass = vulkan_renderer->render_pass;
+  renderPassInfo.framebuffer = vulkan_renderer->swap_chain_framebuffers[i];
+  renderPassInfo.renderArea.offset.x = 0;
+  renderPassInfo.renderArea.offset.y = 0;
+  renderPassInfo.renderArea.extent = vulkan_renderer->swap_chain_extent;
+
+  VkClearValue clear_values[2];
+  memset(clear_values, 0, sizeof(clear_values));
+
+  //http://ogldev.atspace.co.uk/www/tutorial51/tutorial51.html
+  VkClearColorValue clear_color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+  clear_values[0].color = clear_color;
+
+  VkClearDepthStencilValue depth_color = {1.0f, 0};
+  clear_values[1].depthStencil = depth_color;
+
+  renderPassInfo.clearValueCount = 2;
+  renderPassInfo.pClearValues = clear_values;
+
+  vkCmdBeginRenderPass(vulkan_renderer->command_buffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+  return NO_ERROR;
+}
+
+// TODO: Dump
+int command_buffer_reset(struct VulkanRenderer* vulkan_renderer, size_t i) {
+  VkCommandBufferBeginInfo beginInfo = {0};
+  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+
+  if (vkResetCommandBuffer(vulkan_renderer->command_buffers[i], beginInfo.flags) != VK_SUCCESS)
+    return CREATE_COMMAND_BUFFER_ERROR;
+
+  VkRenderPassBeginInfo renderPassInfo = {0};
+  renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+  renderPassInfo.renderPass = vulkan_renderer->render_pass;
+  renderPassInfo.framebuffer = vulkan_renderer->swap_chain_framebuffers[i];
+  renderPassInfo.renderArea.offset.x = 0;
+  renderPassInfo.renderArea.offset.y = 0;
+  renderPassInfo.renderArea.extent = vulkan_renderer->swap_chain_extent;
+
+  VkClearValue clear_values[2];
+  memset(clear_values, 0, sizeof(clear_values));
+
+  //http://ogldev.atspace.co.uk/www/tutorial51/tutorial51.html
+  VkClearColorValue clear_color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+  clear_values[0].color = clear_color;
+
+  VkClearDepthStencilValue depth_color = {1.0f, 0};
+  clear_values[1].depthStencil = depth_color;
+
+  renderPassInfo.clearValueCount = 2;
+  renderPassInfo.pClearValues = clear_values;
+
+  vkCmdBeginRenderPass(vulkan_renderer->command_buffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+  return NO_ERROR;
+}
+
+int command_buffer_end(struct VulkanRenderer* vulkan_renderer, size_t i) {
+  vkCmdEndRenderPass(vulkan_renderer->command_buffers[i]);
+
+  if (vkEndCommandBuffer(vulkan_renderer->command_buffers[i]) != VK_SUCCESS)
+    return CREATE_COMMAND_BUFFER_ERROR;
 
   return NO_ERROR;
 }
@@ -991,61 +938,6 @@ bool check_validation_layer_support() {
   return layerFound;
 }
 
-int create_vertex_buffer(struct VulkanRenderer* vulkan_renderer) {
-  VkDeviceSize buffer_size = vulkan_renderer->image_mesh->vertices->memory_size * vulkan_renderer->image_mesh->vertices->size;
-  //VkDeviceSize bufferSize = sizeof(vulkan_renderer->imageVertices.items[0]) * vulkan_renderer->imageVertices.total;
-
-  VkBuffer staging_buffer = {0};
-  VkDeviceMemory stagingBufferMemory = {0};
-  graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &staging_buffer, &stagingBufferMemory);
-
-  void* data;
-  vkMapMemory(vulkan_renderer->device, stagingBufferMemory, 0, buffer_size, 0, &data);
-  memcpy(data, vulkan_renderer->image_mesh->vertices->items, buffer_size);
-  vkUnmapMemory(vulkan_renderer->device, stagingBufferMemory);
-
-  graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &vulkan_renderer->vertex_buffer, &vulkan_renderer->vertex_buffer_memory);
-
-  copy_buffer(vulkan_renderer, staging_buffer, vulkan_renderer->vertex_buffer, buffer_size);
-
-  vkDestroyBuffer(vulkan_renderer->device, staging_buffer, NULL);
-  vkFreeMemory(vulkan_renderer->device, stagingBufferMemory, NULL);
-
-  return 0;
-}
-
-int create_index_buffer(struct VulkanRenderer* vulkan_renderer) {
-  VkDeviceSize buffer_size = vulkan_renderer->image_mesh->indices->memory_size * vulkan_renderer->image_mesh->indices->size;
-  //VkDeviceSize bufferSize = sizeof(vulkan_renderer->imageIndices.items[0]) * vulkan_renderer->imageIndices.total;
-
-  VkBuffer staging_buffer = {0};
-  VkDeviceMemory staging_buffer_memory = {0};
-  graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &staging_buffer, &staging_buffer_memory);
-
-  void* data;
-  vkMapMemory(vulkan_renderer->device, staging_buffer_memory, 0, buffer_size, 0, &data);
-  memcpy(data, vulkan_renderer->image_mesh->indices->items, buffer_size);
-  vkUnmapMemory(vulkan_renderer->device, staging_buffer_memory);
-
-  graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &vulkan_renderer->index_buffer, &vulkan_renderer->index_buffer_memory);
-
-  copy_buffer(vulkan_renderer, staging_buffer, vulkan_renderer->index_buffer, buffer_size);
-
-  vkDestroyBuffer(vulkan_renderer->device, staging_buffer, NULL);
-  vkFreeMemory(vulkan_renderer->device, staging_buffer_memory, NULL);
-
-  return 0;
-}
-
-int create_uniform_buffers(struct VulkanRenderer* vulkan_renderer) {
-  VkDeviceSize buffer_size = sizeof(struct UniformBufferObject);
-
-  for (size_t i = 0; i < MAX_SWAP_CHAIN_FRAMES; i++)
-    graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &vulkan_renderer->uniform_buffers[i], &vulkan_renderer->uniform_buffers_memory[i]);
-
-  return 0;
-}
-
 int create_descriptor_pool(struct VulkanRenderer* vulkan_renderer) {
   VkDescriptorPoolSize pool_sizes[2];
   memset(pool_sizes, 0, sizeof(pool_sizes));
@@ -1064,69 +956,6 @@ int create_descriptor_pool(struct VulkanRenderer* vulkan_renderer) {
   if (vkCreateDescriptorPool(vulkan_renderer->device, &poolInfo, NULL, &vulkan_renderer->descriptor_pool) != VK_SUCCESS) {
     fprintf(stderr, "failed to create descriptor pool!\n");
     return -1;
-  }
-
-  return 0;
-}
-
-int create_descriptor_sets(struct VulkanRenderer* vulkan_renderer) {
-  VkDescriptorSetLayout layouts[MAX_SWAP_CHAIN_FRAMES];
-  memset(layouts, 0, sizeof(layouts));
-
-  for (int loopNum = 0; loopNum < MAX_SWAP_CHAIN_FRAMES; loopNum++)
-    layouts[loopNum] = vulkan_renderer->descriptor_set_layout;
-
-  VkDescriptorSetAllocateInfo alloc_info = {0};
-  alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-  alloc_info.descriptorPool = vulkan_renderer->descriptor_pool;
-  alloc_info.descriptorSetCount = MAX_SWAP_CHAIN_FRAMES;
-  alloc_info.pSetLayouts = layouts;
-
-  if (vkAllocateDescriptorSets(vulkan_renderer->device, &alloc_info, vulkan_renderer->descriptor_sets) != VK_SUCCESS) {
-    fprintf(stderr, "failed to allocate descriptor sets!\n");
-    return -1;
-  }
-
-  for (size_t i = 0; i < MAX_SWAP_CHAIN_FRAMES; i++) {
-    VkDescriptorBufferInfo buffer_info = {0};
-    buffer_info.buffer = vulkan_renderer->uniform_buffers[i];
-    buffer_info.offset = 0;
-    buffer_info.range = sizeof(struct UniformBufferObject);
-
-    VkDescriptorImageInfo image_info = {0};
-    image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    image_info.imageView = vulkan_renderer->image_texture->textureImageView;
-    image_info.sampler = vulkan_renderer->image_texture->textureSampler;
-
-    //int descriptorSize = 2;
-    struct Vector descriptor_writes;
-    vector_init(&descriptor_writes, sizeof(VkWriteDescriptorSet));
-    //VkWriteDescriptorSet descriptorWrites[descriptorSize];
-    //memset(descriptorWrites, 0, sizeof(descriptorWrites));
-
-    VkWriteDescriptorSet dcs1 = {0};
-    dcs1.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    dcs1.dstSet = vulkan_renderer->descriptor_sets[i];
-    dcs1.dstBinding = descriptor_writes.size;
-    dcs1.dstArrayElement = 0;
-    dcs1.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    dcs1.descriptorCount = 1;
-    dcs1.pBufferInfo = &buffer_info;
-
-    vector_push_back(&descriptor_writes, &dcs1);
-
-    VkWriteDescriptorSet dcs2 = {0};
-    dcs2.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    dcs2.dstSet = vulkan_renderer->descriptor_sets[i];
-    dcs2.dstBinding = descriptor_writes.size;
-    dcs2.dstArrayElement = 0;
-    dcs2.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    dcs2.descriptorCount = 1;
-    dcs2.pImageInfo = &image_info;
-
-    vector_push_back(&descriptor_writes, &dcs2);
-
-    vkUpdateDescriptorSets(vulkan_renderer->device, descriptor_writes.size, descriptor_writes.items, 0, NULL);
   }
 
   return 0;
