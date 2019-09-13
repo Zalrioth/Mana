@@ -57,7 +57,7 @@ int vulkan_renderer_init(struct VulkanRenderer* vulkan_renderer, int width, int 
     goto vulkan_command_pool_error;
   if ((error_code = create_framebuffers(vulkan_renderer)) != NO_ERROR)
     goto vulkan_command_pool_error;
-  if ((error_code = create_descriptor_pool(vulkan_renderer)) != NO_ERROR)
+  if ((error_code = create_sprite_descriptor_pool(vulkan_renderer)) != NO_ERROR)
     goto vulkan_command_pool_error;
   if ((error_code = create_command_buffers(vulkan_renderer)) != NO_ERROR)
     goto vulkan_command_pool_error;
@@ -804,7 +804,7 @@ int command_buffer_start(struct VulkanRenderer* vulkan_renderer, size_t i) {
   VkClearValue clear_values[2];
   memset(clear_values, 0, sizeof(clear_values));
 
-  //http://ogldev.atspace.co.uk/www/tutorial51/tutorial51.html
+  // http://ogldev.atspace.co.uk/www/tutorial51/tutorial51.html
   VkClearColorValue clear_color = {{0.0f, 0.0f, 0.0f, 1.0f}};
   clear_values[0].color = clear_color;
 
@@ -938,20 +938,26 @@ bool check_validation_layer_support() {
   return layerFound;
 }
 
-int create_descriptor_pool(struct VulkanRenderer* vulkan_renderer) {
+// https://www.reddit.com/r/vulkan/comments/8u9zqr/having_trouble_understanding_descriptor_pool/
+int create_sprite_descriptor_pool(struct VulkanRenderer* vulkan_renderer) {
   VkDescriptorPoolSize pool_sizes[2];
   memset(pool_sizes, 0, sizeof(pool_sizes));
 
-  pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  pool_sizes[0].descriptorCount = MAX_SWAP_CHAIN_FRAMES;
-  pool_sizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  pool_sizes[1].descriptorCount = MAX_SWAP_CHAIN_FRAMES;
+  int sprite_descriptors = 10204;
 
+  pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  pool_sizes[0].descriptorCount = sprite_descriptors;  // Max number of uniform descriptors
+  pool_sizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  pool_sizes[1].descriptorCount = sprite_descriptors;  // Max number of image sampler descriptors
+
+  // "We preallocate pretty much the maximum number of sets on the CPU + space for descriptors on the GPU."
+  // https://www.reddit.com/r/vulkan/comments/839d15/vkdescriptorpool_best_practices/
+  // https://vulkan.lunarg.com/doc/view/1.0.26.0/linux/vkspec.chunked/ch13s02.html
   VkDescriptorPoolCreateInfo poolInfo = {0};
   poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-  poolInfo.poolSizeCount = 2;
+  poolInfo.poolSizeCount = 2;  // Number of things being passed to GPU
   poolInfo.pPoolSizes = pool_sizes;
-  poolInfo.maxSets = MAX_SWAP_CHAIN_FRAMES;
+  poolInfo.maxSets = sprite_descriptors;  // Max number of sets made from this pool
 
   if (vkCreateDescriptorPool(vulkan_renderer->device, &poolInfo, NULL, &vulkan_renderer->descriptor_pool) != VK_SUCCESS) {
     fprintf(stderr, "failed to create descriptor pool!\n");

@@ -110,7 +110,7 @@ int create_depth_resources(struct VulkanRenderer* vulkan_renderer);
 int create_vertex_buffer(struct VulkanRenderer* vulkan_renderer);
 int create_index_buffer(struct VulkanRenderer* vulkan_renderer);
 int create_uniform_buffers(struct VulkanRenderer* vulkan_renderer);
-int create_descriptor_pool(struct VulkanRenderer* vulkan_renderer);
+int create_sprite_descriptor_pool(struct VulkanRenderer* vulkan_renderer);
 int create_command_buffers(struct VulkanRenderer* vulkan_renderer);
 int command_buffer_start(struct VulkanRenderer* vulkan_renderer, size_t i);
 int command_buffer_reset(struct VulkanRenderer* vulkan_renderer, size_t i);

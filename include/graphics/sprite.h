@@ -19,6 +19,7 @@ struct Sprite {
 };
 
 int sprite_init(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer);
+void sprite_delete(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer);
 int sprite_create_vertex_buffer(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer);
 int sprite_create_index_buffer(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer);
 int sprite_create_uniform_buffers(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer);

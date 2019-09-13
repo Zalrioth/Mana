@@ -173,37 +173,26 @@ int create_descriptor_sets(struct Sprite* sprite, struct VulkanRenderer* vulkan_
     image_info.imageView = sprite->image_texture->textureImageView;
     image_info.sampler = sprite->image_texture->textureSampler;
 
-    //int descriptorSize = 2;
-    struct Vector descriptor_writes;
-    vector_init(&descriptor_writes, sizeof(VkWriteDescriptorSet));
-    //VkWriteDescriptorSet descriptorWrites[descriptorSize];
-    //memset(descriptorWrites, 0, sizeof(descriptorWrites));
+    VkWriteDescriptorSet dcs[2];
+    memset(dcs, 0, sizeof(dcs));
 
-    VkWriteDescriptorSet dcs1 = {0};
-    dcs1.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    dcs1.dstSet = sprite->descriptor_sets[i];
-    dcs1.dstBinding = descriptor_writes.size;
-    dcs1.dstArrayElement = 0;
-    dcs1.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    dcs1.descriptorCount = 1;
-    dcs1.pBufferInfo = &buffer_info;
+    dcs[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    dcs[0].dstSet = sprite->descriptor_sets[i];
+    dcs[0].dstBinding = 0;
+    dcs[0].dstArrayElement = 0;
+    dcs[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    dcs[0].descriptorCount = 1;
+    dcs[0].pBufferInfo = &buffer_info;
 
-    vector_push_back(&descriptor_writes, &dcs1);
+    dcs[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    dcs[1].dstSet = sprite->descriptor_sets[i];
+    dcs[1].dstBinding = 1;
+    dcs[1].dstArrayElement = 0;
+    dcs[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    dcs[1].descriptorCount = 1;
+    dcs[1].pImageInfo = &image_info;
 
-    VkWriteDescriptorSet dcs2 = {0};
-    dcs2.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    dcs2.dstSet = sprite->descriptor_sets[i];
-    dcs2.dstBinding = descriptor_writes.size;
-    dcs2.dstArrayElement = 0;
-    dcs2.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    dcs2.descriptorCount = 1;
-    dcs2.pImageInfo = &image_info;
-
-    vector_push_back(&descriptor_writes, &dcs2);
-
-    vkUpdateDescriptorSets(vulkan_renderer->device, descriptor_writes.size, descriptor_writes.items, 0, NULL);
-
-    vector_delete(&descriptor_writes);
+    vkUpdateDescriptorSets(vulkan_renderer->device, 2, dcs, 0, NULL);
   }
 
   return 0;

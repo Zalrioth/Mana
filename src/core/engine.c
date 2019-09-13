@@ -30,15 +30,22 @@ int engine_init(struct Engine* engine) {
   return 0;
 }
 
-void engine_delete(struct Engine* engine) {}
+void engine_delete(struct Engine* engine) {
+  struct VulkanRenderer* vulkan_renderer = &engine->window.renderer.vulkan_renderer;
+  // Wait for command buffers to finish before deleting desciptor sets
+  vkWaitForFences(vulkan_renderer->device, 2, vulkan_renderer->in_flight_fences, VK_TRUE, UINT64_MAX);
+  for (int entity_num = 0; entity_num < array_list_size(&engine->entities); entity_num++) {
+    sprite_delete((struct Sprite*)array_list_get(&engine->entities, entity_num), vulkan_renderer);
+  }
+
+  array_list_delete(&engine->entities);
+}
 
 void render(struct Engine* engine) {
   struct Window* window = &engine->window;
   struct VulkanRenderer* vulkan_renderer = &window->renderer.vulkan_renderer;
-  VkResult result = vkWaitForFences(vulkan_renderer->device, 1, &vulkan_renderer->in_flight_fences[vulkan_renderer->current_frame], VK_TRUE, UINT64_MAX);
-  vkResetCommandPool(vulkan_renderer->device, vulkan_renderer->command_pool, VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT);
-  // vkResetFences(window->device, 1,
-  // &window->inFlightFences[window->currentFrame]);
+  VkResult result = vkWaitForFences(vulkan_renderer->device, 2, vulkan_renderer->in_flight_fences, VK_TRUE, UINT64_MAX);  //vkWaitForFences(vulkan_renderer->device, 1, &vulkan_renderer->in_flight_fences[vulkan_renderer->current_frame], VK_TRUE, UINT64_MAX);
+  //vkResetCommandPool(vulkan_renderer->device, vulkan_renderer->command_pool, VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT);
 
   uint32_t imageIndex;
   result = vkAcquireNextImageKHR(vulkan_renderer->device, vulkan_renderer->swap_chain, UINT64_MAX, vulkan_renderer->image_available_semaphores[vulkan_renderer->current_frame], VK_NULL_HANDLE, &imageIndex);
@@ -67,21 +74,12 @@ void render(struct Engine* engine) {
   submitInfo.signalSemaphoreCount = 1;
   submitInfo.pSignalSemaphores = signalSemaphores;
 
-  // for (int i = window->imageIndices.total - 1; i >= 0; i--)
-  // fprintf(stderr, "print out Num: %d\n",
-  // *(int*)vector_get(&window->imageIndices, i));
-
-  // for (int i = window->imageVertices.total - 1; i >= 0; i--)
-  // fprintf(stderr, "print out Struct: %f\n", ((struct
-  // Vertex*)vector_get(&window->imageVertices, i))->color[0]);
-
   vkResetFences(vulkan_renderer->device, 1, &vulkan_renderer->in_flight_fences[vulkan_renderer->current_frame]);
 
   result = vkQueueSubmit(vulkan_renderer->graphics_queue, 1, &submitInfo, vulkan_renderer->in_flight_fences[vulkan_renderer->current_frame]);
 
   if (result != VK_SUCCESS)
     fprintf(stderr, "Error to submit draw command buffer!\n");
-  // throw std::runtime_error("failed to submit draw command buffer!");
 
   VkPresentInfoKHR presentInfo = {0};
   presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -183,6 +181,7 @@ void update_uniform_buffer(struct Engine* engine, uint32_t currentImage) {
   double time = fmod(get_time(), M_PI * 2);
 
   for (size_t i = 0; i < MAX_SWAP_CHAIN_FRAMES; i++) {
+    //vkResetCommandBuffer(vulkan_renderer->command_buffers[i], VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
     command_buffer_start(&engine->window.renderer.vulkan_renderer, i);
 
     vkCmdBindPipeline(vulkan_renderer->command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, vulkan_renderer->graphics_pipeline);
