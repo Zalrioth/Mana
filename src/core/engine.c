@@ -137,6 +137,11 @@ void engine_update(struct Engine* engine) {
     engine->fps_counter.second_frames = engine->fps_counter.frames;
     engine->fps_counter.second_updates = engine->fps_counter.updates;
 
+    char title_buffer[200];
+    sprintf(title_buffer, "Grindstone %d", (int)engine->fps_counter.second_frames);
+
+    glfwSetWindowTitle(engine->window.renderer.vulkan_renderer.glfw_window, title_buffer);
+
     engine->fps_counter.fps = engine->fps_counter.frames;
 
     float averageCalc = 0;
@@ -210,7 +215,7 @@ void update_uniform_buffer(struct Engine* engine, uint32_t currentImage) {
     ubo.model[2][2] = 1.0f;
     ubo.model[3][3] = 1.0f;
 
-    glm_rotate(ubo.model, time, (vec3){0.0f, 0.0f + entity_num / 2.0, 1.0f});
+    glm_rotate(ubo.model, time, (vec3){0.0f, 0.0f + entity_num / 3.14159265358979, 1.0f});
     glm_lookat((vec3){2.0f, 2.0f, 2.0f}, (vec3){0.0f, 0.0f, 0.0f}, (vec3){0.0f, 0.0f, 1.0f}, ubo.view);
     glm_perspective(glm_rad(45.0f), (float)window->renderer.vulkan_renderer.swap_chain_extent.width / (float)window->renderer.vulkan_renderer.swap_chain_extent.height, 0.1f, 10.0f, ubo.proj);
     ubo.proj[1][1] *= -1;
