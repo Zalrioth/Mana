@@ -31,13 +31,6 @@ int engine_init(struct Engine* engine) {
 }
 
 void engine_delete(struct Engine* engine) {
-  struct VulkanRenderer* vulkan_renderer = &engine->window.renderer.vulkan_renderer;
-  // Wait for command buffers to finish before deleting desciptor sets
-  vkWaitForFences(vulkan_renderer->device, 2, vulkan_renderer->in_flight_fences, VK_TRUE, UINT64_MAX);
-  for (int entity_num = 0; entity_num < array_list_size(&engine->entities); entity_num++) {
-    sprite_delete((struct Sprite*)array_list_get(&engine->entities, entity_num), vulkan_renderer);
-  }
-
   array_list_delete(&engine->entities);
 }
 
