@@ -19,5 +19,6 @@ struct Window {
 
 int window_init(struct Window* window, int width, int height);
 void window_delete(struct Window* game_window);
+bool window_should_close(struct Window* window);
 
 #endif  // WINDOW_H

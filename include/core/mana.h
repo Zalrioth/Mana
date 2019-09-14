@@ -11,8 +11,6 @@ struct Mana {
 
 int mana_init(struct Mana* mana);
 int mana_new_window(struct Mana* mana, int width, int height);
-void mana_update(struct Mana* mana);
-bool mana_should_close(struct Mana* mana);
 void mana_close_window(struct Mana* mana);
 void mana_cleanup(struct Mana* mana);
 void mana_print_fps(struct Mana* mana);

@@ -47,15 +47,11 @@ struct Engine {
   struct Window window;
   struct FPSCounter fps_counter;
   struct Key keys[KEY_LIMIT];
-  struct ArrayList entities;
 };
 
-double get_time();
 int engine_init(struct Engine* engine);
 void engine_delete(struct Engine* engine);
-void engine_update(struct Engine* engine);
-void logic(struct Engine* engine, double delta_time);
-void process_input(struct Engine* engine);
-void update_uniform_buffer(struct Engine* engine, uint32_t current_image);
+void engine_process_input(struct Engine* engine);
+double get_time();
 
 #endif  // ENGINE_H

@@ -23,16 +23,6 @@ int mana_new_window(struct Mana* mana, int width, int height) {
   return NO_ERROR;
 }
 
-void mana_update(struct Mana* mana) {
-  engine_update(&mana->engine);
-}
-
-bool mana_should_close(struct Mana* mana) {
-  if (glfwWindowShouldClose(mana->engine.window.renderer.vulkan_renderer.glfw_window)) return true;
-
-  return false;
-}
-
 void mana_close_window(struct Mana* mana) {
   window_delete(&mana->engine.window);
 }

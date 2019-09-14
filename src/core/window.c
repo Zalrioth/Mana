@@ -59,3 +59,9 @@ int window_init(struct Window *window, int width, int height) {
 void window_delete(struct Window *window) {
   vulkan_renderer_delete(&window->renderer.vulkan_renderer);
 }
+
+bool window_should_close(struct Window *window) {
+  if (glfwWindowShouldClose(window->renderer.vulkan_renderer.glfw_window)) return true;
+
+  return false;
+}
