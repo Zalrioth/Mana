@@ -1,6 +1,6 @@
 #include "graphics/model.h"
 
-void model_init(struct Model* model) {
+/*void model_init(struct Model* model) {
 }
 
 int model_load(struct Model* model, char* directory, bool gamma) {
@@ -66,4 +66,4 @@ struct Mesh* model_process_mesh(struct Model* model, struct aiMesh* mesh, const 
 
 void model_load_material_textures(struct Vector* vector, struct aiMaterial* mat, enum aiTextureType type, char* path) {
   //for (unsigned int texture_num = 0; texture_num < mat->GetTextureCount(type)
-}
+}*/

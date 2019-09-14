@@ -4,15 +4,9 @@
 [submodule "lib/cglm"]
 	path = lib/cglm
 	url = https://github.com/recp/cglm
-[submodule "lib/assimp"]
-	path = lib/assimp
-	url = https://github.com/assimp/assimp
 [submodule "lib/MoltenVK"]
 	path = lib/MoltenVK
 	url = https://github.com/KhronosGroup/MoltenVK
-[submodule "lib/algorithms-in-c"]
-	path = lib/algorithms-in-c
-	url = https://github.com/Zalrioth/algorithms-in-c
 [submodule "lib/data-structures-in-c"]
 	path = lib/data-structures-in-c
 	url = https://github.com/Zalrioth/data-structures-in-c

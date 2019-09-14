@@ -52,11 +52,6 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(lib/glfw buildglfw)
 
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-add_subdirectory(lib/assimp buildassimp)
-
 string(REPLACE " -w" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 string(REPLACE " -w" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 
@@ -67,21 +62,17 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-pragma-pack")
 target_link_libraries(Mana
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/VulkanSDK/1.1.101.0/Lib/vulkan-1.lib
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/openmp/libomp.lib
-        glfw
-        assimp)
+        glfw)
 
 SET(includeList
         ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/lib/algorithms-in-c/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/data-structures-in-c/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/multithreading-in-c/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/noise-in-c-and-glsl/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/lib/transvoxel/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/cglm/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/glfw/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/VulkanSDK/1.1.101.0/Include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/Chaos/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/lib/assimp/include
         ${OpenMP_CXX_LIBRARIES})
 
 target_include_directories(Mana PUBLIC ${includeList})
