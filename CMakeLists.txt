@@ -1,9 +1,7 @@
 cmake_minimum_required(VERSION 3.12)
-project(Mana VERSION 0.1.0)
+project(Mana LANGUAGES C VERSION 0.1.0)
 
 set(CMAKE_C_STANDARD 11)
-set(CMAKE_CXX_STANDARD 14)
-
 set(CMAKE_DEBUG_POSTFIX "d")
 
 # Might be needed for OpenMP on Mac/Liunux
@@ -43,7 +41,6 @@ if(UNIX AND NOT APPLE)
         endif()
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
@@ -52,10 +49,7 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(lib/glfw buildglfw)
 
-string(REPLACE " -w" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 string(REPLACE " -w" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-pragma-pack")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-pragma-pack")
 
 #TODO: Link properly on Apple and Linux
