@@ -7,15 +7,15 @@
 [submodule "lib/MoltenVK"]
 	path = lib/MoltenVK
 	url = https://github.com/KhronosGroup/MoltenVK
-[submodule "lib/data-structures-in-c"]
-	path = lib/data-structures-in-c
-	url = https://github.com/Zalrioth/data-structures-in-c
-[submodule "lib/multithreading-in-c"]
-	path = lib/multithreading-in-c
-	url = https://github.com/Zalrioth/multithreading-in-c
-[submodule "lib/noise-in-c-and-glsl"]
-	path = lib/noise-in-c-and-glsl
-	url = https://github.com/Zalrioth/noise-in-c-and-glsl
+[submodule "lib/cstorage"]
+	path = lib/cstorage
+	url = https://github.com/Zalrioth/cstorage
+[submodule "lib/cthreads"]
+	path = lib/cthreads
+	url = https://github.com/Zalrioth/cthreads
+[submodule "lib/cnoise"]
+	path = lib/cnoise
+	url = https://github.com/Zalrioth/cnoise
 [submodule "lib/chaos"]
 	path = lib/chaos
 	url = https://github.com/Zalrioth/chaos

@@ -61,11 +61,11 @@ target_link_libraries(Mana
         glfw
         Chaos)
 
-SET(includeList
+set(includeList
         ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/lib/data-structures-in-c/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/lib/multithreading-in-c/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/lib/noise-in-c-and-glsl/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/cstorage/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/cthreads/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/cnoise/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/cglm/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/glfw/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/VulkanSDK/1.1.101.0/Include
