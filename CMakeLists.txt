@@ -52,11 +52,14 @@ add_subdirectory(lib/glfw buildglfw)
 string(REPLACE " -w" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-pragma-pack")
 
+add_subdirectory(lib/chaos buildchaos)
+
 #TODO: Link properly on Apple and Linux
 target_link_libraries(Mana
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/VulkanSDK/1.1.101.0/Lib/vulkan-1.lib
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/openmp/libomp.lib
-        glfw)
+        glfw
+        Chaos)
 
 SET(includeList
         ${CMAKE_CURRENT_SOURCE_DIR}/include
