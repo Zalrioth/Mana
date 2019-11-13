@@ -20,21 +20,6 @@ static const char* const device_extensions[] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME}
 #define MAX_FRAMES_IN_FLIGHT 2
 #define MAX_SWAP_CHAIN_FRAMES MAX_FRAMES_IN_FLIGHT + 1
 
-#define CREATE_WINDOW_ERROR 1
-#define CREATE_INSTANCE_ERROR 2
-#define SETUP_DEBUG_MESSENGER_ERROR 3
-#define CREATE_SURFACE_ERROR 4
-#define PICK_PHYSICAL_DEVICE_ERROR 5
-#define CREATE_LOGICAL_DEVICE_ERROR 6
-#define CREATE_SWAP_CHAIN_ERROR 7
-#define CREATE_IMAGE_VIEWS_ERROR 8
-#define CREATE_RENDER_PASS_ERROR 9
-#define CREATE_GRAPHICS_PIPELINE_ERROR 10
-#define CREATE_FRAME_BUFFER_ERROR 11
-#define CREATE_COMMAND_POOL_ERROR 12
-#define CREATE_COMMAND_BUFFER_ERROR 13
-#define CREATE_SYNC_OBJECT_ERROR 14
-
 struct QueueFamilyIndices {
   uint32_t graphics_family;
   uint32_t present_family;
@@ -88,6 +73,23 @@ struct VulkanRenderer {
   size_t current_frame;
   struct QueueFamilyIndices indices;
   bool framebuffer_resized;
+};
+
+enum VULKAN_RENDERER_STATUS { VULKAN_RENDERER_CREATE_WINDOW_ERROR = 0,
+                              VULKAN_RENDERER_SUCCESS = 1,
+                              VULKAN_RENDERER_CREATE_INSTANCE_ERROR = 2,
+                              VULKAN_RENDERER_SETUP_DEBUG_MESSENGER_ERROR = 3,
+                              VULKAN_RENDERER_CREATE_SURFACE_ERROR = 4,
+                              VULKAN_RENDERER_PICK_PHYSICAL_DEVICE_ERROR = 5,
+                              VULKAN_RENDERER_CREATE_LOGICAL_DEVICE_ERROR = 6,
+                              VULKAN_RENDERER_CREATE_SWAP_CHAIN_ERROR = 7,
+                              VULKAN_RENDERER_CREATE_IMAGE_VIEWS_ERROR = 8,
+                              VULKAN_RENDERER_CREATE_RENDER_PASS_ERROR = 9,
+                              VULKAN_RENDERER_CREATE_GRAPHICS_PIPELINE_ERROR = 10,
+                              VULKAN_RENDERER_CREATE_FRAME_BUFFER_ERROR = 11,
+                              VULKAN_RENDERER_CREATE_COMMAND_POOL_ERROR = 12,
+                              VULKAN_RENDERER_CREATE_COMMAND_BUFFER_ERROR = 13,
+                              VULKAN_RENDERER_CREATE_SYNC_OBJECT_ERROR = 14
 };
 
 int vulkan_renderer_init(struct VulkanRenderer* vulkan_renderer, int width, int height);

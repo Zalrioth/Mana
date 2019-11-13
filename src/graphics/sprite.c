@@ -44,7 +44,7 @@ int sprite_init(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer) {
   sprite_create_uniform_buffers(sprite, vulkan_renderer);
   create_descriptor_sets(sprite, vulkan_renderer);
 
-  return NO_ERROR;
+  return SPRITE_SUCCESS;
 
   /*vulkan_index_buffer_error:
   vulkan_index_buffer_cleanup(vulkan_renderer);

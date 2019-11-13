@@ -27,44 +27,44 @@ int vulkan_renderer_init(struct VulkanRenderer* vulkan_renderer, int width, int 
   glfwMakeContextCurrent(vulkan_renderer->glfw_window);
 
   if (!vulkan_renderer->glfw_window)
-    return CREATE_WINDOW_ERROR;
+    return VULKAN_RENDERER_CREATE_WINDOW_ERROR;
 
   int error_code;
 
-  if ((error_code = create_instance(vulkan_renderer)) != NO_ERROR)
+  if ((error_code = create_instance(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
     goto window_error;
-  if ((error_code = setup_debug_messenger(vulkan_renderer)) != NO_ERROR)
+  if ((error_code = setup_debug_messenger(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_debug_error;
-  if ((error_code = create_surface(vulkan_renderer)) != NO_ERROR)
+  if ((error_code = create_surface(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_surface_error;
-  if ((error_code = pick_physical_device(vulkan_renderer)) != NO_ERROR)
+  if ((error_code = pick_physical_device(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_surface_error;
-  if ((error_code = create_logical_device(vulkan_renderer)) != NO_ERROR)
+  if ((error_code = create_logical_device(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_device_error;
-  if ((error_code = create_swap_chain(vulkan_renderer, width, height)) != NO_ERROR)
+  if ((error_code = create_swap_chain(vulkan_renderer, width, height)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_swap_chain_error;
-  if ((error_code = create_image_views(vulkan_renderer)) != NO_ERROR)
+  if ((error_code = create_image_views(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_swap_chain_error;
-  if ((error_code = create_render_pass(vulkan_renderer)) != NO_ERROR)
+  if ((error_code = create_render_pass(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_swap_chain_error;
-  if ((error_code = create_descriptor_set_layout(vulkan_renderer)) != NO_ERROR)
+  if ((error_code = create_descriptor_set_layout(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_swap_chain_error;
-  if ((error_code = create_graphics_pipeline(vulkan_renderer)) != NO_ERROR)
+  if ((error_code = create_graphics_pipeline(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_swap_chain_error;
-  if ((error_code = create_command_pool(vulkan_renderer)) != NO_ERROR)
+  if ((error_code = create_command_pool(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_command_pool_error;
-  if ((error_code = create_depth_resources(vulkan_renderer)) != NO_ERROR)
+  if ((error_code = create_depth_resources(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_command_pool_error;
-  if ((error_code = create_framebuffers(vulkan_renderer)) != NO_ERROR)
+  if ((error_code = create_framebuffers(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_command_pool_error;
-  if ((error_code = create_sprite_descriptor_pool(vulkan_renderer)) != NO_ERROR)
+  if ((error_code = create_sprite_descriptor_pool(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_command_pool_error;
-  if ((error_code = create_command_buffers(vulkan_renderer)) != NO_ERROR)
+  if ((error_code = create_command_buffers(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_command_pool_error;
-  if ((error_code = create_sync_objects(vulkan_renderer)) != NO_ERROR)
+  if ((error_code = create_sync_objects(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_sync_objects_error;
 
-  return NO_ERROR;
+  return VULKAN_RENDERER_SUCCESS;
 
 vulkan_sync_objects_error:
   vulkan_sync_objects_cleanup(vulkan_renderer);
@@ -221,13 +221,13 @@ int create_instance(struct VulkanRenderer* vulkan_renderer) {
     create_info.enabledLayerCount = 0;
 
   if (vkCreateInstance(&create_info, NULL, &vulkan_renderer->instance) != VK_SUCCESS)
-    return CREATE_INSTANCE_ERROR;
+    return VULKAN_RENDERER_CREATE_INSTANCE_ERROR;
 
-  return NO_ERROR;
+  return VULKAN_RENDERER_SUCCESS;
 }
 int setup_debug_messenger(struct VulkanRenderer* vulkan_renderer) {
   if (enable_validation_layers && !check_validation_layer_support())
-    return SETUP_DEBUG_MESSENGER_ERROR;
+    return VULKAN_RENDERER_SETUP_DEBUG_MESSENGER_ERROR;
 
   if (enable_validation_layers) {
     VkDebugUtilsMessengerCreateInfoEXT debugInfo = {0};
@@ -237,23 +237,23 @@ int setup_debug_messenger(struct VulkanRenderer* vulkan_renderer) {
     debugInfo.pfnUserCallback = debug_callback;
 
     if (create_debug_utils_messenger_ext(vulkan_renderer->instance, &debugInfo, NULL, &vulkan_renderer->debug_messenger) != VK_SUCCESS)
-      return SETUP_DEBUG_MESSENGER_ERROR;
+      return VULKAN_RENDERER_SETUP_DEBUG_MESSENGER_ERROR;
   }
 
-  return NO_ERROR;
+  return VULKAN_RENDERER_SUCCESS;
 }
 int create_surface(struct VulkanRenderer* vulkan_renderer) {
   if (glfwCreateWindowSurface(vulkan_renderer->instance, vulkan_renderer->glfw_window, NULL, &vulkan_renderer->surface) != VK_SUCCESS)
-    return CREATE_SURFACE_ERROR;
+    return VULKAN_RENDERER_CREATE_SURFACE_ERROR;
 
-  return NO_ERROR;
+  return VULKAN_RENDERER_SUCCESS;
 }
 int pick_physical_device(struct VulkanRenderer* vulkan_renderer) {
   uint32_t device_count = 0;
   vkEnumeratePhysicalDevices(vulkan_renderer->instance, &device_count, NULL);
 
   if (device_count == 0)
-    return PICK_PHYSICAL_DEVICE_ERROR;
+    return VULKAN_RENDERER_PICK_PHYSICAL_DEVICE_ERROR;
 
   VkPhysicalDevice devices[device_count];
   memset(devices, 0, sizeof(devices));
@@ -268,9 +268,9 @@ int pick_physical_device(struct VulkanRenderer* vulkan_renderer) {
   }
 
   if (vulkan_renderer->physical_device == VK_NULL_HANDLE)
-    return PICK_PHYSICAL_DEVICE_ERROR;
+    return VULKAN_RENDERER_PICK_PHYSICAL_DEVICE_ERROR;
 
-  return NO_ERROR;
+  return VULKAN_RENDERER_SUCCESS;
 }
 int create_logical_device(struct VulkanRenderer* vulkan_renderer) {
   // Create device
@@ -317,12 +317,12 @@ int create_logical_device(struct VulkanRenderer* vulkan_renderer) {
     deviceInfo.enabledLayerCount = 0;
 
   if (vkCreateDevice(vulkan_renderer->physical_device, &deviceInfo, NULL, &vulkan_renderer->device) != VK_SUCCESS)
-    return CREATE_LOGICAL_DEVICE_ERROR;
+    return VULKAN_RENDERER_CREATE_LOGICAL_DEVICE_ERROR;
 
   vkGetDeviceQueue(vulkan_renderer->device, vulkan_renderer->indices.graphics_family, 0, &vulkan_renderer->graphics_queue);
   vkGetDeviceQueue(vulkan_renderer->device, vulkan_renderer->indices.present_family, 0, &vulkan_renderer->present_queue);
 
-  return NO_ERROR;
+  return VULKAN_RENDERER_SUCCESS;
 }
 
 int create_swap_chain(struct VulkanRenderer* vulkan_renderer, int width, int height) {
@@ -421,7 +421,7 @@ int create_swap_chain(struct VulkanRenderer* vulkan_renderer, int width, int hei
   swapchainInfo.clipped = VK_TRUE;
 
   if (vkCreateSwapchainKHR(vulkan_renderer->device, &swapchainInfo, NULL, &vulkan_renderer->swap_chain) != VK_SUCCESS)
-    return CREATE_SWAP_CHAIN_ERROR;
+    return VULKAN_RENDERER_CREATE_SWAP_CHAIN_ERROR;
 
   vkGetSwapchainImagesKHR(vulkan_renderer->device, vulkan_renderer->swap_chain, &imageCount, NULL);
   vkGetSwapchainImagesKHR(vulkan_renderer->device, vulkan_renderer->swap_chain, &imageCount, vulkan_renderer->swap_chain_images);
@@ -432,7 +432,7 @@ int create_swap_chain(struct VulkanRenderer* vulkan_renderer, int width, int hei
   vector_delete(swap_chain_support.formats);
   vector_delete(swap_chain_support.present_modes);
 
-  return NO_ERROR;
+  return VULKAN_RENDERER_SUCCESS;
 }
 
 int create_image_views(struct VulkanRenderer* vulkan_renderer) {
@@ -449,10 +449,10 @@ int create_image_views(struct VulkanRenderer* vulkan_renderer) {
     viewInfo.subresourceRange.layerCount = 1;
 
     if (vkCreateImageView(vulkan_renderer->device, &viewInfo, NULL, &vulkan_renderer->swap_chain_image_views[i]) != VK_SUCCESS)
-      return CREATE_IMAGE_VIEWS_ERROR;
+      return VULKAN_RENDERER_CREATE_IMAGE_VIEWS_ERROR;
   }
 
-  return NO_ERROR;
+  return VULKAN_RENDERER_SUCCESS;
 }
 
 int create_render_pass(struct VulkanRenderer* vulkan_renderer) {
@@ -509,9 +509,9 @@ int create_render_pass(struct VulkanRenderer* vulkan_renderer) {
   render_pass_info.pDependencies = &dependency;
 
   if (vkCreateRenderPass(vulkan_renderer->device, &render_pass_info, NULL, &vulkan_renderer->render_pass) != VK_SUCCESS)
-    return CREATE_RENDER_PASS_ERROR;
+    return VULKAN_RENDERER_CREATE_RENDER_PASS_ERROR;
 
-  return NO_ERROR;
+  return VULKAN_RENDERER_SUCCESS;
 }
 
 int create_descriptor_set_layout(struct VulkanRenderer* vulkan_renderer) {
@@ -538,7 +538,7 @@ int create_descriptor_set_layout(struct VulkanRenderer* vulkan_renderer) {
   if (vkCreateDescriptorSetLayout(vulkan_renderer->device, &layout_info, NULL, &vulkan_renderer->descriptor_set_layout) != VK_SUCCESS)
     return -1;
 
-  return 0;
+  return VULKAN_RENDERER_SUCCESS;
 }
 
 VkShaderModule create_shader_module(struct VulkanRenderer* vulkan_renderer, const char* code, int length) {
@@ -695,7 +695,7 @@ int create_graphics_pipeline(struct VulkanRenderer* vulkan_renderer) {
   pipeline_layout_info.pSetLayouts = &vulkan_renderer->descriptor_set_layout;
 
   if (vkCreatePipelineLayout(vulkan_renderer->device, &pipeline_layout_info, NULL, &vulkan_renderer->pipeline_layout) != VK_SUCCESS)
-    return CREATE_GRAPHICS_PIPELINE_ERROR;
+    return VULKAN_RENDERER_CREATE_GRAPHICS_PIPELINE_ERROR;
 
   VkGraphicsPipelineCreateInfo pipelineInfo = {0};
   pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -714,12 +714,12 @@ int create_graphics_pipeline(struct VulkanRenderer* vulkan_renderer) {
   pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
   if (vkCreateGraphicsPipelines(vulkan_renderer->device, VK_NULL_HANDLE, 1, &pipelineInfo, NULL, &vulkan_renderer->graphics_pipeline) != VK_SUCCESS)
-    return CREATE_GRAPHICS_PIPELINE_ERROR;
+    return VULKAN_RENDERER_CREATE_GRAPHICS_PIPELINE_ERROR;
 
   vkDestroyShaderModule(vulkan_renderer->device, frag_shader_module, NULL);
   vkDestroyShaderModule(vulkan_renderer->device, vert_shader_module, NULL);
 
-  return NO_ERROR;
+  return VULKAN_RENDERER_SUCCESS;
 }
 
 int create_framebuffers(struct VulkanRenderer* vulkan_renderer) {
@@ -736,10 +736,10 @@ int create_framebuffers(struct VulkanRenderer* vulkan_renderer) {
     framebufferInfo.layers = 1;
 
     if (vkCreateFramebuffer(vulkan_renderer->device, &framebufferInfo, NULL, &vulkan_renderer->swap_chain_framebuffers[loopNum]) != VK_SUCCESS)
-      return CREATE_FRAME_BUFFER_ERROR;
+      return VULKAN_RENDERER_CREATE_FRAME_BUFFER_ERROR;
   }
 
-  return NO_ERROR;
+  return VULKAN_RENDERER_SUCCESS;
 }
 
 int create_command_pool(struct VulkanRenderer* vulkan_renderer) {
@@ -751,9 +751,9 @@ int create_command_pool(struct VulkanRenderer* vulkan_renderer) {
   poolInfo.flags = command_pool_flags;
 
   if (vkCreateCommandPool(vulkan_renderer->device, &poolInfo, NULL, &vulkan_renderer->command_pool) != VK_SUCCESS)
-    return CREATE_COMMAND_POOL_ERROR;
+    return VULKAN_RENDERER_CREATE_COMMAND_POOL_ERROR;
 
-  return NO_ERROR;
+  return VULKAN_RENDERER_SUCCESS;
 }
 
 int create_depth_resources(struct VulkanRenderer* vulkan_renderer) {
@@ -764,7 +764,7 @@ int create_depth_resources(struct VulkanRenderer* vulkan_renderer) {
 
   graphics_utils_transition_image_layout(vulkan_renderer->device, vulkan_renderer->graphics_queue, vulkan_renderer->command_pool, &vulkan_renderer->depth_image, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 
-  return 0;
+  return VULKAN_RENDERER_SUCCESS;
 }
 
 int create_command_buffers(struct VulkanRenderer* vulkan_renderer) {
@@ -775,14 +775,14 @@ int create_command_buffers(struct VulkanRenderer* vulkan_renderer) {
   allocInfo.commandBufferCount = (uint32_t)MAX_SWAP_CHAIN_FRAMES;
 
   if (vkAllocateCommandBuffers(vulkan_renderer->device, &allocInfo, vulkan_renderer->command_buffers) != VK_SUCCESS)
-    return CREATE_COMMAND_BUFFER_ERROR;
+    return VULKAN_RENDERER_CREATE_COMMAND_BUFFER_ERROR;
 
   for (size_t i = 0; i < MAX_SWAP_CHAIN_FRAMES; i++) {
     command_buffer_start(vulkan_renderer, i);
     command_buffer_end(vulkan_renderer, i);
   }
 
-  return NO_ERROR;
+  return VULKAN_RENDERER_SUCCESS;
 }
 
 int command_buffer_start(struct VulkanRenderer* vulkan_renderer, size_t i) {
@@ -791,7 +791,7 @@ int command_buffer_start(struct VulkanRenderer* vulkan_renderer, size_t i) {
   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
   if (vkBeginCommandBuffer(vulkan_renderer->command_buffers[i], &beginInfo) != VK_SUCCESS)
-    return CREATE_COMMAND_BUFFER_ERROR;
+    return VULKAN_RENDERER_CREATE_COMMAND_BUFFER_ERROR;
 
   VkRenderPassBeginInfo renderPassInfo = {0};
   renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -816,7 +816,7 @@ int command_buffer_start(struct VulkanRenderer* vulkan_renderer, size_t i) {
 
   vkCmdBeginRenderPass(vulkan_renderer->command_buffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-  return NO_ERROR;
+  return VULKAN_RENDERER_SUCCESS;
 }
 
 // TODO: Dump
@@ -826,7 +826,7 @@ int command_buffer_reset(struct VulkanRenderer* vulkan_renderer, size_t i) {
   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
   if (vkResetCommandBuffer(vulkan_renderer->command_buffers[i], beginInfo.flags) != VK_SUCCESS)
-    return CREATE_COMMAND_BUFFER_ERROR;
+    return VULKAN_RENDERER_CREATE_COMMAND_BUFFER_ERROR;
 
   VkRenderPassBeginInfo renderPassInfo = {0};
   renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -851,16 +851,16 @@ int command_buffer_reset(struct VulkanRenderer* vulkan_renderer, size_t i) {
 
   vkCmdBeginRenderPass(vulkan_renderer->command_buffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-  return NO_ERROR;
+  return VULKAN_RENDERER_SUCCESS;
 }
 
 int command_buffer_end(struct VulkanRenderer* vulkan_renderer, size_t i) {
   vkCmdEndRenderPass(vulkan_renderer->command_buffers[i]);
 
   if (vkEndCommandBuffer(vulkan_renderer->command_buffers[i]) != VK_SUCCESS)
-    return CREATE_COMMAND_BUFFER_ERROR;
+    return VULKAN_RENDERER_CREATE_COMMAND_BUFFER_ERROR;
 
-  return NO_ERROR;
+  return VULKAN_RENDERER_SUCCESS;
 }
 
 int create_sync_objects(struct VulkanRenderer* vulkan_renderer) {
@@ -875,10 +875,10 @@ int create_sync_objects(struct VulkanRenderer* vulkan_renderer) {
 
   for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
     if (vkCreateSemaphore(vulkan_renderer->device, &semaphore_info, NULL, &vulkan_renderer->image_available_semaphores[i]) != VK_SUCCESS || vkCreateSemaphore(vulkan_renderer->device, &semaphore_info, NULL, &vulkan_renderer->render_finished_semaphores[i]) != VK_SUCCESS || vkCreateFence(vulkan_renderer->device, &fence_info, NULL, &vulkan_renderer->in_flight_fences[i]) != VK_SUCCESS)
-      return CREATE_SYNC_OBJECT_ERROR;
+      return VULKAN_RENDERER_CREATE_SYNC_OBJECT_ERROR;
   }
 
-  return NO_ERROR;
+  return VULKAN_RENDERER_SUCCESS;
 }
 
 bool is_device_suitable(struct VulkanRenderer* vulkan_renderer, VkPhysicalDevice device) {
@@ -964,7 +964,7 @@ int create_sprite_descriptor_pool(struct VulkanRenderer* vulkan_renderer) {
     return -1;
   }
 
-  return 0;
+  return VULKAN_RENDERER_SUCCESS;
 }
 
 void recreate_swap_chain(struct VulkanRenderer* vulkan_renderer) {

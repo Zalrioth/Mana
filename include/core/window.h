@@ -17,6 +17,11 @@ struct Window {
   union Renderer renderer;
 };
 
+enum {
+  WINDOW_ERROR = 0,
+  WINDOW_SUCCESS = 1
+};
+
 int window_init(struct Window* window, int width, int height);
 void window_delete(struct Window* game_window);
 bool window_should_close(struct Window* window);

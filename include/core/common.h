@@ -20,9 +20,5 @@
 #include <unistd.h>
 #endif
 
-#define NO_ERROR 0
-#define ENGINE_ERROR 1
-#define WINDOW_ERROR 2
-
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))

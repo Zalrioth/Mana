@@ -6,9 +6,6 @@
 #include "core/window.h"
 #include "graphics/sprite.h"
 
-#define GLFW_ERROR 1
-#define VULKAN_SUPPORT_ERROR 2
-
 #define FPS_COUNT 10
 
 #define KEY_LIMIT 512
@@ -47,6 +44,12 @@ struct Engine {
   struct Window window;
   struct FPSCounter fps_counter;
   struct Key keys[KEY_LIMIT];
+};
+
+enum EngineStatus {
+  ENGINE_GLFW_ERROR = 0,
+  ENGINE_SUCCESS = 1,
+  ENGINE_VULKAN_SUPPORT_ERROR = 2
 };
 
 int engine_init(struct Engine* engine);

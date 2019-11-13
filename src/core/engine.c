@@ -2,10 +2,10 @@
 
 int engine_init(struct Engine* engine) {
   if (!glfwInit())
-    return GLFW_ERROR;
+    return ENGINE_GLFW_ERROR;
 
   if (!glfwVulkanSupported())
-    return VULKAN_SUPPORT_ERROR;
+    return ENGINE_VULKAN_SUPPORT_ERROR;
 
   memset(engine->keys, RELEASED, sizeof(engine->keys));
 
@@ -25,7 +25,7 @@ int engine_init(struct Engine* engine) {
   for (int loopNum = 0; loopNum < FPS_COUNT; loopNum++)
     engine->fps_counter.fps_past[loopNum] = engine->fps_counter.fps;
 
-  return 0;
+  return ENGINE_SUCCESS;
 }
 
 void engine_delete(struct Engine* engine) {

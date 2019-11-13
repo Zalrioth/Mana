@@ -11,9 +11,9 @@ file(GLOB_RECURSE mana_SRC
         include/*.h
         src/*.c)
         
-add_library(Mana STATIC ${mana_SRC})
+add_library(mana STATIC ${mana_SRC})
 
-set_target_properties(Mana
+set_target_properties(mana
         PROPERTIES
         ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build
@@ -51,25 +51,29 @@ add_subdirectory(lib/glfw buildglfw)
 
 string(REPLACE " -w" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-pragma-pack")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-function")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-variable")
 
 add_subdirectory(lib/chaos buildchaos)
+add_subdirectory(lib/tinycthread buildtinycthread)
 
 #TODO: Link properly on Apple and Linux
-target_link_libraries(Mana
+target_link_libraries(mana
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/VulkanSDK/1.1.101.0/Lib/vulkan-1.lib
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/openmp/libomp.lib
         glfw
-        Chaos)
+        chaos
+        tinycthread)
 
 set(includeList
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/cstorage/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/lib/cthreads/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/cnoise/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/cglm/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/tinycthread/source
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/glfw/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/VulkanSDK/1.1.101.0/Include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/Chaos/include
         ${OpenMP_CXX_LIBRARIES})
 
-target_include_directories(Mana PUBLIC ${includeList})
+target_include_directories(mana PUBLIC ${includeList})

@@ -18,6 +18,10 @@ struct Sprite {
   struct VkDescriptorSet_T* descriptor_sets[MAX_SWAP_CHAIN_FRAMES];
 };
 
+enum {
+  SPRITE_SUCCESS = 1
+};
+
 int sprite_init(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer);
 void sprite_delete(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer);
 int sprite_create_vertex_buffer(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer);
