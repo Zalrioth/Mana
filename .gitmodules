@@ -10,12 +10,12 @@
 [submodule "lib/cstorage"]
 	path = lib/cstorage
 	url = https://github.com/Zalrioth/cstorage
-[submodule "lib/cthreads"]
-	path = lib/cthreads
-	url = https://github.com/Zalrioth/cthreads
 [submodule "lib/cnoise"]
 	path = lib/cnoise
 	url = https://github.com/Zalrioth/cnoise
 [submodule "lib/chaos"]
 	path = lib/chaos
 	url = https://github.com/Zalrioth/chaos
+[submodule "lib/tinycthread"]
+	path = lib/tinycthread
+	url = https://github.com/tinycthread/tinycthread
