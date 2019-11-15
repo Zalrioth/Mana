@@ -1,6 +1,6 @@
 #pragma once
-#ifndef MESH_H_
-#define MESH_H_
+#ifndef MESH_H
+#define MESH_H
 
 #include "core/common.h"
 #include "graphics/texture.h"
@@ -25,4 +25,4 @@ void mesh_assign_vertex(struct Vector* vector, float x, float y, float z, float 
 void mesh_assign_vertex_full(struct Vector* vector, float x, float y, float z, float r, float g, float b, float u, float v, float tan_x, float tan_y, float tan_z, float bit_x, float bit_y, float bit_z);
 void mesh_assign_indice(struct Vector* vector, uint32_t indice);
 
-#endif  // MESH_H_
+#endif  // MESH_H
