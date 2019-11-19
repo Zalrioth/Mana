@@ -55,6 +55,8 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-function")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-variable")
 
 add_subdirectory(lib/chaos buildchaos)
+
+set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
 add_subdirectory(lib/tinycthread buildtinycthread)
 
 #TODO: Link properly on Apple and Linux
