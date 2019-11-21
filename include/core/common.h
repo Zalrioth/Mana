@@ -3,7 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <cglm/cglm.h>
 #include <omp.h>
-#include <stdalign.h>
+//#include <stdalign.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
