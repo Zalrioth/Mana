@@ -35,10 +35,10 @@ void render(struct Engine* engine) {
 }
 
 double get_time() {
-  struct timespec currentTime;
-  timespec_get(&currentTime, TIME_UTC);
+  struct timespec current_time;
+  timespec_get(&current_time, TIME_UTC);
 
-  return (double)currentTime.tv_sec + (double)currentTime.tv_nsec / 1000000000;
+  return (double)current_time.tv_sec + (double)current_time.tv_nsec / 1000000000;
 }
 
 void engine_process_input(struct Engine* engine) {
