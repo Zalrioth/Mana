@@ -37,6 +37,3 @@ void mana_print_fps(struct Mana* mana) {
   printf("Draw FPS: %d\n", mana->engine.fps_counter.second_frames);
   printf("Update FPS: %d\n\n", mana->engine.fps_counter.second_updates);
 }
-
-void mana_add_texture(struct Mana* mana) {
-}

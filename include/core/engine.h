@@ -8,31 +8,20 @@
 
 #define FPS_COUNT 10
 
-#define KEY_LIMIT 512
-
-enum KeyState { PRESSED,
-                RELEASED };
-
-struct Key {
-  enum KeyState state;
-  bool held;
-};
-
 struct FPSCounter {
   int fps_past[FPS_COUNT];
   double limit_update_fps;
   // maybe cap fps at 144 for limit? 30, 60, 120, 144
   double limit_draw_fps;
   int input[128];
-  double last_time, timer;
-  double delta_time;
-  int now_time;
+  double now_time, last_time, delta_time, timer;
   int frames;
   double last_render_time;
   int fps;
   double target_fps;
   double average_fps;
   int updates;
+
   // frame safe
   double second_target_fps;
   double second_average_fps;
@@ -43,7 +32,6 @@ struct FPSCounter {
 struct Engine {
   struct Window window;
   struct FPSCounter fps_counter;
-  struct Key keys[KEY_LIMIT];
 };
 
 enum EngineStatus {
@@ -54,7 +42,6 @@ enum EngineStatus {
 
 int engine_init(struct Engine* engine);
 void engine_delete(struct Engine* engine);
-void engine_process_input(struct Engine* engine);
 double get_time();
 
 #endif  // ENGINE_H
