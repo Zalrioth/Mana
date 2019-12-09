@@ -18,6 +18,8 @@ struct Key {
 
 struct InputManager {
   struct Key keys[KEY_LIMIT];
+  double last_mouse_x_pos;
+  double last_mouse_y_pos;
 };
 
 void input_manager_init(struct InputManager* input_manager);

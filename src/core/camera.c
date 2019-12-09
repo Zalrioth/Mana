@@ -4,8 +4,11 @@ void camera_init(struct Camera* camera) {
   memcpy(camera->position, (vec3){0.0f, 0.0f, 0.0f}, sizeof(vec3));
   memcpy(camera->front, (vec3){0.0f, 0.0f, -1.0f}, sizeof(vec3));
   memcpy(camera->up, (vec3){0.0f, 1.0f, 0.0f}, sizeof(vec3));
+  memcpy(camera->world_up, camera->up, sizeof(vec3));
+  memcpy(camera->right, (vec3){1.0f, 0.0f, 0.0f}, sizeof(vec3));
   camera->yaw = YAW;
   camera->pitch = PITCH;
+  camera->zoom = ZOOM;
   camera->z_near = Z_NEAR;
   camera->z_far = Z_FAR;
   camera->sensitivity = SENSITIVITY;
@@ -23,10 +26,9 @@ void camera_get_view_matrix(struct Camera* camera, mat4* dest) {
 }
 
 void camera_update_vectors(struct Camera* camera) {
-  vec3 front;
-  front[0] = cos(glm_rad(camera->yaw)) * cos(glm_rad(camera->pitch));
-  front[1] = sin(glm_rad(camera->pitch));
-  front[2] = sin(glm_rad(camera->yaw)) * cos(glm_rad(camera->pitch));
+  camera->front[0] = cos(glm_rad(camera->yaw)) * cos(glm_rad(camera->pitch));
+  camera->front[1] = sin(glm_rad(camera->pitch));
+  camera->front[2] = sin(glm_rad(camera->yaw)) * cos(glm_rad(camera->pitch));
   glm_normalize(camera->front);
   glm_cross(camera->front, camera->world_up, camera->right);
   glm_normalize(camera->right);
