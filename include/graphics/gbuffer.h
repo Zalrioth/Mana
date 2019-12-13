@@ -1,0 +1,26 @@
+#pragma once
+#ifndef G_BUFFER_H
+#define G_BUFFER_H
+
+#include "core/common.h"
+#include "core/vulkanrenderer.h"
+
+struct VulkanRenderer;
+
+struct GBuffer {
+  struct VkImage_T* swap_chain_images[MAX_SWAP_CHAIN_FRAMES];
+  struct VkImageView_T* swap_chain_image_views[MAX_SWAP_CHAIN_FRAMES];
+  struct VkFramebuffer_T* swap_chain_framebuffers[MAX_SWAP_CHAIN_FRAMES];
+
+  struct VkImage_T* depth_image;
+  struct VkDeviceMemory_T* depth_image_memory;
+  struct VkImageView_T* depth_image_view;
+
+  struct VkImage_T* normal_image;
+  struct VkDeviceMemory_T* normal_image_memory;
+  struct VkImageView_T* normal_image_view;
+};
+
+int gbuffer_init(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer);
+
+#endif  // G_BUFFER_H

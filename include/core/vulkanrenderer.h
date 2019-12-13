@@ -3,6 +3,7 @@
 #define VULKAN_RENDERER_H
 
 #include "core/common.h"
+#include "graphics/gbuffer.h"
 #include "graphics/graphicsutils.h"
 #include "graphics/mesh.h"
 #include "graphics/model.h"
@@ -16,9 +17,6 @@ static const bool enable_validation_layers = true;
 
 static const char* const validation_layers[] = {"VK_LAYER_LUNARG_standard_validation"};
 static const char* const device_extensions[] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
-
-#define MAX_FRAMES_IN_FLIGHT 2
-#define MAX_SWAP_CHAIN_FRAMES MAX_FRAMES_IN_FLIGHT + 1
 
 struct QueueFamilyIndices {
   uint32_t graphics_family;
@@ -48,27 +46,15 @@ struct VulkanRenderer {
   struct VkSurfaceKHR_T* surface;
   struct VkPhysicalDevice_T* physical_device;
   struct VkDevice_T* device;
-
   struct VkQueue_T* graphics_queue;
   struct VkQueue_T* present_queue;
   struct VkSwapchainKHR_T* swap_chain;
   enum VkFormat swap_chain_image_format;
   struct VkExtent2D swap_chain_extent;
   struct VkRenderPass_T* render_pass;
-  struct VkDescriptorSetLayout_T* descriptor_set_layout;
-  struct VkPipelineLayout_T* pipeline_layout;
-  struct VkPipeline_T* graphics_pipeline;
-  struct VkImage_T* swap_chain_images[MAX_SWAP_CHAIN_FRAMES];
-  struct VkImageView_T* swap_chain_image_views[MAX_SWAP_CHAIN_FRAMES];
-  struct VkFramebuffer_T* swap_chain_framebuffers[MAX_SWAP_CHAIN_FRAMES];
   struct VkDebugUtilsMessengerEXT_T* debug_messenger;
   struct VkCommandPool_T* command_pool;
   struct VkDescriptorPool_T* descriptor_pool;
-
-  struct VkImage_T* depth_image;
-  struct VkDeviceMemory_T* depth_image_memory;
-  struct VkImageView_T* depth_image_view;
-
   struct VkCommandBuffer_T* command_buffers[MAX_SWAP_CHAIN_FRAMES];
   struct VkSemaphore_T* image_available_semaphores[MAX_FRAMES_IN_FLIGHT];
   struct VkSemaphore_T* render_finished_semaphores[MAX_FRAMES_IN_FLIGHT];
@@ -76,6 +62,7 @@ struct VulkanRenderer {
   size_t current_frame;
   struct QueueFamilyIndices indices;
   bool framebuffer_resized;
+  struct GBuffer* gbuffer;
 };
 
 enum VULKAN_RENDERER_STATUS { VULKAN_RENDERER_CREATE_WINDOW_ERROR = 0,
@@ -105,13 +92,16 @@ int create_surface(struct VulkanRenderer* vulkan_renderer);
 int pick_physical_device(struct VulkanRenderer* vulkan_renderer);
 int create_logical_device(struct VulkanRenderer* vulkan_renderer);
 int create_swap_chain(struct VulkanRenderer* vulkan_renderer, int width, int height);
-int create_image_views(struct VulkanRenderer* vulkan_renderer);
-int create_render_pass(struct VulkanRenderer* vulkan_renderer);
+//int create_image_views(struct VulkanRenderer* vulkan_renderer);
+//int create_render_pass(struct VulkanRenderer* vulkan_renderer);
 int create_descriptor_set_layout(struct VulkanRenderer* vulkan_renderer);
-int create_graphics_pipeline(struct VulkanRenderer* vulkan_renderer);
+
+void create_color_attachment(struct VulkanRenderer* vulkan_renderer, struct VkAttachmentDescription* color_attachment);
+void create_depth_attachment(struct VulkanRenderer* vulkan_renderer, struct VkAttachmentDescription* depth_attachment);
+int create_depth_resources(struct VulkanRenderer* vulkan_renderer, struct VkImage_T* depth_image, struct VkDeviceMemory_T* depth_image_memory, struct VkImageView_T* depth_image_view);
+
 int create_framebuffers(struct VulkanRenderer* vulkan_renderer);
 int create_command_pool(struct VulkanRenderer* vulkan_renderer);
-int create_depth_resources(struct VulkanRenderer* vulkan_renderer);
 int create_vertex_buffer(struct VulkanRenderer* vulkan_renderer);
 int create_index_buffer(struct VulkanRenderer* vulkan_renderer);
 int create_uniform_buffers(struct VulkanRenderer* vulkan_renderer);

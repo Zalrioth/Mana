@@ -13,10 +13,10 @@ struct Texture {
   unsigned int id;
   char *type;
   char *path;
-  VkImage textureImage;               // Raw image data in ram
-  VkDeviceMemory textureImageMemory;  // Image data in GPU/device ram
-  VkImageView textureImageView;       // Texture format
-  VkSampler textureSampler;           // Image sampling settings
+  VkImage texture_image;                // Raw image data in ram
+  VkDeviceMemory texture_image_memory;  // Image data in GPU/device ram
+  VkImageView texture_image_view;       // Texture format
+  VkSampler texture_sampler;            // Image sampling settings
 };
 
 void texture_init(struct Texture *texture, char *path);

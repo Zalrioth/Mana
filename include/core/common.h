@@ -22,3 +22,6 @@
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
+
+#define MAX_FRAMES_IN_FLIGHT 2
+#define MAX_SWAP_CHAIN_FRAMES MAX_FRAMES_IN_FLIGHT + 1

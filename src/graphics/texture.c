@@ -17,11 +17,11 @@ void texture_init(struct Texture *texture, char *path) {
 }
 
 void texture_delete(struct VulkanRenderer *vulkan_renderer, struct Texture *texture) {
-  vkDestroySampler(vulkan_renderer->device, texture->textureSampler, NULL);
-  vkDestroyImageView(vulkan_renderer->device, texture->textureImageView, NULL);
+  vkDestroySampler(vulkan_renderer->device, texture->texture_sampler, NULL);
+  vkDestroyImageView(vulkan_renderer->device, texture->texture_image_view, NULL);
 
-  vkDestroyImage(vulkan_renderer->device, texture->textureImage, NULL);
-  vkFreeMemory(vulkan_renderer->device, texture->textureImageMemory, NULL);
+  vkDestroyImage(vulkan_renderer->device, texture->texture_image, NULL);
+  vkFreeMemory(vulkan_renderer->device, texture->texture_image_memory, NULL);
 
   free(texture->path);
   free(texture->type);
@@ -46,11 +46,11 @@ int texture_create_image(struct VulkanRenderer *vulkan_renderer, struct Texture 
 
   stbi_image_free(pixels);
 
-  graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, texWidth, texHeight, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &texture->textureImage, &texture->textureImageMemory);
+  graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, texWidth, texHeight, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &texture->texture_image, &texture->texture_image_memory);
 
-  graphics_utils_transition_image_layout(vulkan_renderer->device, vulkan_renderer->graphics_queue, vulkan_renderer->command_pool, &texture->textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-  texture_copy_buffer_to_image(vulkan_renderer, &stagingBuffer, &texture->textureImage, texWidth, texHeight);
-  graphics_utils_transition_image_layout(vulkan_renderer->device, vulkan_renderer->graphics_queue, vulkan_renderer->command_pool, &texture->textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+  graphics_utils_transition_image_layout(vulkan_renderer->device, vulkan_renderer->graphics_queue, vulkan_renderer->command_pool, &texture->texture_image, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+  texture_copy_buffer_to_image(vulkan_renderer, &stagingBuffer, &texture->texture_image, texWidth, texHeight);
+  graphics_utils_transition_image_layout(vulkan_renderer->device, vulkan_renderer->graphics_queue, vulkan_renderer->command_pool, &texture->texture_image, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
   vkDestroyBuffer(vulkan_renderer->device, stagingBuffer, NULL);
   vkFreeMemory(vulkan_renderer->device, stagingBufferMemory, NULL);
@@ -74,7 +74,7 @@ int texture_create_sampler(struct VulkanRenderer *vulkan_renderer, struct Textur
   samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
   samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 
-  if (vkCreateSampler(vulkan_renderer->device, &samplerInfo, NULL, &texture->textureSampler) != VK_SUCCESS) {
+  if (vkCreateSampler(vulkan_renderer->device, &samplerInfo, NULL, &texture->texture_sampler) != VK_SUCCESS) {
     return -1;
     printf("failed to create texture sampler!\n");
   }
@@ -83,30 +83,29 @@ int texture_create_sampler(struct VulkanRenderer *vulkan_renderer, struct Textur
 }
 
 int texture_create_texture_image_view(struct VulkanRenderer *vulkan_renderer, struct Texture *texture) {
-  texture->textureImageView = graphics_utils_create_image_view(vulkan_renderer->device, texture->textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+  texture->texture_image_view = graphics_utils_create_image_view(vulkan_renderer->device, texture->texture_image, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
 
   return 0;
-}
 
-void texture_copy_buffer_to_image(struct VulkanRenderer *vulkan_renderer, VkBuffer *buffer, VkImage *image, uint32_t width, uint32_t height) {
-  VkCommandBuffer command_buffer = graphics_utils_begin_single_time_commands(vulkan_renderer->device, vulkan_renderer->command_pool);
+  void texture_copy_buffer_to_image(struct VulkanRenderer * vulkan_renderer, VkBuffer * buffer, VkImage * image, uint32_t width, uint32_t height) {
+    VkCommandBuffer command_buffer = graphics_utils_begin_single_time_commands(vulkan_renderer->device, vulkan_renderer->command_pool);
 
-  VkBufferImageCopy region = {0};
-  region.bufferOffset = 0;
-  region.bufferRowLength = 0;
-  region.bufferImageHeight = 0;
-  region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-  region.imageSubresource.mipLevel = 0;
-  region.imageSubresource.baseArrayLayer = 0;
-  region.imageSubresource.layerCount = 1;
-  region.imageOffset.x = 0;
-  region.imageOffset.y = 0;
-  region.imageOffset.z = 0;
-  region.imageExtent.width = width;
-  region.imageExtent.height = height;
-  region.imageExtent.depth = 1;
+    VkBufferImageCopy region = {0};
+    region.bufferOffset = 0;
+    region.bufferRowLength = 0;
+    region.bufferImageHeight = 0;
+    region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    region.imageSubresource.mipLevel = 0;
+    region.imageSubresource.baseArrayLayer = 0;
+    region.imageSubresource.layerCount = 1;
+    region.imageOffset.x = 0;
+    region.imageOffset.y = 0;
+    region.imageOffset.z = 0;
+    region.imageExtent.width = width;
+    region.imageExtent.height = height;
+    region.imageExtent.depth = 1;
 
-  vkCmdCopyBufferToImage(command_buffer, *buffer, *image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+    vkCmdCopyBufferToImage(command_buffer, *buffer, *image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
-  graphics_utils_end_single_time_commands(vulkan_renderer->device, vulkan_renderer->graphics_queue, vulkan_renderer->command_pool, command_buffer);
-}
+    graphics_utils_end_single_time_commands(vulkan_renderer->device, vulkan_renderer->graphics_queue, vulkan_renderer->command_pool, command_buffer);
+  }
