@@ -51,10 +51,8 @@ struct VulkanRenderer {
   struct VkSwapchainKHR_T* swap_chain;
   enum VkFormat swap_chain_image_format;
   struct VkExtent2D swap_chain_extent;
-  struct VkRenderPass_T* render_pass;
   struct VkDebugUtilsMessengerEXT_T* debug_messenger;
   struct VkCommandPool_T* command_pool;
-  struct VkDescriptorPool_T* descriptor_pool;
   struct VkCommandBuffer_T* command_buffers[MAX_SWAP_CHAIN_FRAMES];
   struct VkSemaphore_T* image_available_semaphores[MAX_FRAMES_IN_FLIGHT];
   struct VkSemaphore_T* render_finished_semaphores[MAX_FRAMES_IN_FLIGHT];
@@ -98,14 +96,14 @@ int create_descriptor_set_layout(struct VulkanRenderer* vulkan_renderer);
 
 void create_color_attachment(struct VulkanRenderer* vulkan_renderer, struct VkAttachmentDescription* color_attachment);
 void create_depth_attachment(struct VulkanRenderer* vulkan_renderer, struct VkAttachmentDescription* depth_attachment);
-int create_depth_resources(struct VulkanRenderer* vulkan_renderer, struct VkImage_T* depth_image, struct VkDeviceMemory_T* depth_image_memory, struct VkImageView_T* depth_image_view);
+int create_depth_resources(struct VulkanRenderer* vulkan_renderer);
 
 int create_framebuffers(struct VulkanRenderer* vulkan_renderer);
 int create_command_pool(struct VulkanRenderer* vulkan_renderer);
-int create_vertex_buffer(struct VulkanRenderer* vulkan_renderer);
-int create_index_buffer(struct VulkanRenderer* vulkan_renderer);
-int create_uniform_buffers(struct VulkanRenderer* vulkan_renderer);
-int create_sprite_descriptor_pool(struct VulkanRenderer* vulkan_renderer);
+//int create_vertex_buffer(struct VulkanRenderer* vulkan_renderer);
+//int create_index_buffer(struct VulkanRenderer* vulkan_renderer);
+//int create_uniform_buffers(struct VulkanRenderer* vulkan_renderer);
+//int create_sprite_descriptor_pool(struct VulkanRenderer* vulkan_renderer);
 int create_command_buffers(struct VulkanRenderer* vulkan_renderer);
 int command_buffer_start(struct VulkanRenderer* vulkan_renderer, size_t i);
 int command_buffer_reset(struct VulkanRenderer* vulkan_renderer, size_t i);
@@ -114,7 +112,7 @@ int create_sync_objects(struct VulkanRenderer* vulkan_renderer);
 
 void vulkan_sync_objects_cleanup(struct VulkanRenderer* vulkan_renderer);
 void vulkan_command_pool_cleanup(struct VulkanRenderer* vulkan_renderer);
-void vulkan_descriptor_set_layout_cleanup(struct VulkanRenderer* vulkan_renderer);
+//void vulkan_descriptor_set_layout_cleanup(struct VulkanRenderer* vulkan_renderer);
 void vulkan_swap_chain_cleanup(struct VulkanRenderer* vulkan_renderer);
 void vulkan_device_cleanup(struct VulkanRenderer* vulkan_renderer);
 void vulkan_surface_cleanup(struct VulkanRenderer* vulkan_renderer);

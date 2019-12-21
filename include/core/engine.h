@@ -4,7 +4,6 @@
 
 #include "core/common.h"
 #include "core/window.h"
-#include "graphics/sprite.h"
 
 #define FPS_COUNT 10
 

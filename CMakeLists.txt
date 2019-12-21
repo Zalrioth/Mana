@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(Mana LANGUAGES C VERSION 0.1.0)
+project(mana LANGUAGES C VERSION 0.1.0)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_DEBUG_POSTFIX "d")
@@ -10,7 +10,7 @@ set(CMAKE_DEBUG_POSTFIX "d")
 file(GLOB_RECURSE mana_SRC
         include/*.h
         src/*.c)
-        
+
 add_library(mana STATIC ${mana_SRC})
 
 set_target_properties(mana
@@ -59,23 +59,27 @@ add_subdirectory(lib/chaos buildchaos)
 set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
 add_subdirectory(lib/tinycthread buildtinycthread)
 
+add_subdirectory(lib/mimalloc buildmimalloc)
+
 #TODO: Link properly on Apple and Linux
 target_link_libraries(mana
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/VulkanSDK/1.1.101.0/Lib/vulkan-1.lib
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/openmp/libomp.lib
         glfw
         chaos
-        tinycthread)
+        tinycthread
+        mimalloc-static)
 
 set(includeList
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/cstorage/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/cnoise/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/cglm/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/lib/tinycthread/source
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/glfw/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/VulkanSDK/1.1.101.0/Include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/Chaos/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/tinycthread/source
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/mimalloc/include
         ${OpenMP_CXX_LIBRARIES})
 
 target_include_directories(mana PUBLIC ${includeList})

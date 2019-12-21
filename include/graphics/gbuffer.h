@@ -19,8 +19,11 @@ struct GBuffer {
   struct VkImage_T* normal_image;
   struct VkDeviceMemory_T* normal_image_memory;
   struct VkImageView_T* normal_image_view;
+
+  struct VkRenderPass_T* render_pass;
 };
 
 int gbuffer_init(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer);
+void gbuffer_delete(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer);
 
 #endif  // G_BUFFER_H

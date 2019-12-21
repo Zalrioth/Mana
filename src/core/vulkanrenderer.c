@@ -45,23 +45,12 @@ int vulkan_renderer_init(struct VulkanRenderer* vulkan_renderer, int width, int 
   if ((error_code = create_swap_chain(vulkan_renderer, width, height)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_swap_chain_error;
   gbuffer_init(vulkan_renderer->gbuffer, vulkan_renderer);
-  // if ((error_code = create_image_views(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
-  //   goto vulkan_swap_chain_error;
-  // if ((error_code = create_render_pass(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
-  //   goto vulkan_swap_chain_error;
-  //////////////////
-  //if ((error_code = create_descriptor_set_layout(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
-  //  goto vulkan_swap_chain_error;
-  //if ((error_code = create_graphics_pipeline(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
-  //  goto vulkan_swap_chain_error;
-  //////////////////
+  ////////////////////////////
   if ((error_code = create_command_pool(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_command_pool_error;
-  //if ((error_code = create_depth_resources(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
-  //  goto vulkan_command_pool_error;
+  ////////////////////////////
+  create_depth_resources(vulkan_renderer);
   if ((error_code = create_framebuffers(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
-    goto vulkan_command_pool_error;
-  if ((error_code = create_sprite_descriptor_pool(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_command_pool_error;
   if ((error_code = create_command_buffers(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_command_pool_error;
@@ -91,7 +80,7 @@ window_error:
 // TODO: Clean up da poopoo code
 void vulkan_renderer_delete(struct VulkanRenderer* vulkan_renderer) {
   vulkan_swap_chain_cleanup(vulkan_renderer);
-  vulkan_descriptor_set_layout_cleanup(vulkan_renderer);
+  //vulkan_descriptor_set_layout_cleanup(vulkan_renderer);
   vulkan_sync_objects_cleanup(vulkan_renderer);
   vulkan_command_pool_cleanup(vulkan_renderer);
   vulkan_device_cleanup(vulkan_renderer);
@@ -137,11 +126,6 @@ void vulkan_sync_objects_cleanup(struct VulkanRenderer* vulkan_renderer) {
   }
 }
 
-void vulkan_descriptor_set_layout_cleanup(struct VulkanRenderer* vulkan_renderer) {
-  //vkDestroyDescriptorSetLayout(vulkan_renderer->device, vulkan_renderer->descriptor_set_layout, NULL);
-  vkDestroyDescriptorPool(vulkan_renderer->device, vulkan_renderer->descriptor_pool, NULL);
-}
-
 void vulkan_swap_chain_cleanup(struct VulkanRenderer* vulkan_renderer) {
   // Test: Wait for frame to finish rendering before cleaning up
   for (int loop_num = 0; loop_num < MAX_FRAMES_IN_FLIGHT; loop_num++)
@@ -156,7 +140,7 @@ void vulkan_swap_chain_cleanup(struct VulkanRenderer* vulkan_renderer) {
 
   vkFreeCommandBuffers(vulkan_renderer->device, vulkan_renderer->command_pool, 3, vulkan_renderer->command_buffers);
 
-  vkDestroyRenderPass(vulkan_renderer->device, vulkan_renderer->render_pass, NULL);
+  gbuffer_delete(vulkan_renderer->gbuffer, vulkan_renderer);
 
   for (int loopNum = 0; loopNum < MAX_SWAP_CHAIN_FRAMES; loopNum++)
     vkDestroyImageView(vulkan_renderer->device, vulkan_renderer->gbuffer->swap_chain_image_views[loopNum], NULL);
@@ -475,13 +459,13 @@ int create_image_view(struct VulkanRenderer* vulkan_renderer, struct VkImage_T* 
   return VULKAN_RENDERER_SUCCESS;
 }
 
-int create_depth_resources(struct VulkanRenderer* vulkan_renderer, struct VkImage_T* depth_image, struct VkDeviceMemory_T* depth_image_memory, struct VkImageView_T* depth_image_view) {
+int create_depth_resources(struct VulkanRenderer* vulkan_renderer) {
   VkFormat depthFormat = find_depth_format(vulkan_renderer);
 
-  graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, vulkan_renderer->swap_chain_extent.width, vulkan_renderer->swap_chain_extent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &depth_image, &depth_image_memory);
-  depth_image_view = graphics_utils_create_image_view(vulkan_renderer->device, depth_image, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+  graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, vulkan_renderer->swap_chain_extent.width, vulkan_renderer->swap_chain_extent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &vulkan_renderer->gbuffer->depth_image, &vulkan_renderer->gbuffer->depth_image_memory);
+  vulkan_renderer->gbuffer->depth_image_view = graphics_utils_create_image_view(vulkan_renderer->device, vulkan_renderer->gbuffer->depth_image, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 
-  graphics_utils_transition_image_layout(vulkan_renderer->device, vulkan_renderer->graphics_queue, vulkan_renderer->command_pool, &depth_image, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+  graphics_utils_transition_image_layout(vulkan_renderer->device, vulkan_renderer->graphics_queue, vulkan_renderer->command_pool, &vulkan_renderer->gbuffer->depth_image, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 
   return 1;
 }
@@ -510,11 +494,11 @@ void create_depth_attachment(struct VulkanRenderer* vulkan_renderer, struct VkAt
 
 int create_framebuffers(struct VulkanRenderer* vulkan_renderer) {
   for (int loopNum = 0; loopNum < MAX_SWAP_CHAIN_FRAMES; loopNum++) {
-    VkImageView attachments[] = {vulkan_renderer->gbuffer->swap_chain_image_views[loopNum], vulkan_renderer->gbuffer->depth_image_view};
+    VkImageView attachments[] = {vulkan_renderer->gbuffer->swap_chain_image_views[loopNum], vulkan_renderer->gbuffer->depth_image_view, vulkan_renderer->gbuffer->normal_image_view};
 
     VkFramebufferCreateInfo framebufferInfo = {0};
     framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-    framebufferInfo.renderPass = vulkan_renderer->render_pass;
+    framebufferInfo.renderPass = vulkan_renderer->gbuffer->render_pass;
     framebufferInfo.attachmentCount = 2;
     framebufferInfo.pAttachments = attachments;
     framebufferInfo.width = vulkan_renderer->swap_chain_extent.width;
@@ -531,12 +515,12 @@ int create_framebuffers(struct VulkanRenderer* vulkan_renderer) {
 int create_command_pool(struct VulkanRenderer* vulkan_renderer) {
   VkCommandPoolCreateFlags command_pool_flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
-  VkCommandPoolCreateInfo poolInfo = {0};
-  poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-  poolInfo.queueFamilyIndex = vulkan_renderer->indices.graphics_family;
-  poolInfo.flags = command_pool_flags;
+  VkCommandPoolCreateInfo pool_info = {0};
+  pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+  pool_info.queueFamilyIndex = vulkan_renderer->indices.graphics_family;
+  pool_info.flags = command_pool_flags;
 
-  if (vkCreateCommandPool(vulkan_renderer->device, &poolInfo, NULL, &vulkan_renderer->command_pool) != VK_SUCCESS)
+  if (vkCreateCommandPool(vulkan_renderer->device, &pool_info, NULL, &vulkan_renderer->command_pool) != VK_SUCCESS)
     return VULKAN_RENDERER_CREATE_COMMAND_POOL_ERROR;
 
   return VULKAN_RENDERER_SUCCESS;
@@ -561,20 +545,20 @@ int create_command_buffers(struct VulkanRenderer* vulkan_renderer) {
 }
 
 int command_buffer_start(struct VulkanRenderer* vulkan_renderer, size_t i) {
-  VkCommandBufferBeginInfo beginInfo = {0};
-  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-  beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+  VkCommandBufferBeginInfo begin_info = {0};
+  begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  begin_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
-  if (vkBeginCommandBuffer(vulkan_renderer->command_buffers[i], &beginInfo) != VK_SUCCESS)
+  if (vkBeginCommandBuffer(vulkan_renderer->command_buffers[i], &begin_info) != VK_SUCCESS)
     return VULKAN_RENDERER_CREATE_COMMAND_BUFFER_ERROR;
 
-  VkRenderPassBeginInfo renderPassInfo = {0};
-  renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-  renderPassInfo.renderPass = vulkan_renderer->render_pass;
-  renderPassInfo.framebuffer = vulkan_renderer->gbuffer->swap_chain_framebuffers[i];
-  renderPassInfo.renderArea.offset.x = 0;
-  renderPassInfo.renderArea.offset.y = 0;
-  renderPassInfo.renderArea.extent = vulkan_renderer->swap_chain_extent;
+  VkRenderPassBeginInfo render_pass_info = {0};
+  render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+  render_pass_info.renderPass = vulkan_renderer->gbuffer->render_pass;
+  render_pass_info.framebuffer = vulkan_renderer->gbuffer->swap_chain_framebuffers[i];
+  render_pass_info.renderArea.offset.x = 0;
+  render_pass_info.renderArea.offset.y = 0;
+  render_pass_info.renderArea.extent = vulkan_renderer->swap_chain_extent;
 
   VkClearValue clear_values[2];
   memset(clear_values, 0, sizeof(clear_values));
@@ -586,10 +570,10 @@ int command_buffer_start(struct VulkanRenderer* vulkan_renderer, size_t i) {
   VkClearDepthStencilValue depth_color = {1.0f, 0};
   clear_values[1].depthStencil = depth_color;
 
-  renderPassInfo.clearValueCount = 2;
-  renderPassInfo.pClearValues = clear_values;
+  render_pass_info.clearValueCount = 2;
+  render_pass_info.pClearValues = clear_values;
 
-  vkCmdBeginRenderPass(vulkan_renderer->command_buffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+  vkCmdBeginRenderPass(vulkan_renderer->command_buffers[i], &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
   return VULKAN_RENDERER_SUCCESS;
 }
@@ -605,7 +589,7 @@ int command_buffer_reset(struct VulkanRenderer* vulkan_renderer, size_t i) {
 
   VkRenderPassBeginInfo renderPassInfo = {0};
   renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-  renderPassInfo.renderPass = vulkan_renderer->render_pass;
+  renderPassInfo.renderPass = vulkan_renderer->gbuffer->render_pass;
   renderPassInfo.framebuffer = vulkan_renderer->gbuffer->swap_chain_framebuffers[i];
   renderPassInfo.renderArea.offset.x = 0;
   renderPassInfo.renderArea.offset.y = 0;
@@ -711,35 +695,6 @@ bool check_validation_layer_support() {
   }
 
   return layerFound;
-}
-
-// https://www.reddit.com/r/vulkan/comments/8u9zqr/having_trouble_understanding_descriptor_pool/
-int create_sprite_descriptor_pool(struct VulkanRenderer* vulkan_renderer) {
-  VkDescriptorPoolSize pool_sizes[2];
-  memset(pool_sizes, 0, sizeof(pool_sizes));
-
-  int sprite_descriptors = 10204;
-
-  pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  pool_sizes[0].descriptorCount = sprite_descriptors;  // Max number of uniform descriptors
-  pool_sizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  pool_sizes[1].descriptorCount = sprite_descriptors;  // Max number of image sampler descriptors
-
-  // "We preallocate pretty much the maximum number of sets on the CPU + space for descriptors on the GPU."
-  // https://www.reddit.com/r/vulkan/comments/839d15/vkdescriptorpool_best_practices/
-  // https://vulkan.lunarg.com/doc/view/1.0.26.0/linux/vkspec.chunked/ch13s02.html
-  VkDescriptorPoolCreateInfo poolInfo = {0};
-  poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-  poolInfo.poolSizeCount = 2;  // Number of things being passed to GPU
-  poolInfo.pPoolSizes = pool_sizes;
-  poolInfo.maxSets = sprite_descriptors;  // Max number of sets made from this pool
-
-  if (vkCreateDescriptorPool(vulkan_renderer->device, &poolInfo, NULL, &vulkan_renderer->descriptor_pool) != VK_SUCCESS) {
-    fprintf(stderr, "failed to create descriptor pool!\n");
-    return -1;
-  }
-
-  return VULKAN_RENDERER_SUCCESS;
 }
 
 void recreate_swap_chain(struct VulkanRenderer* vulkan_renderer) {

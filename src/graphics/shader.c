@@ -29,7 +29,6 @@ int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, c
   char* buffer;
   buffer = _getcwd(NULL, 0);
   printf("%s \nLength: %llu\n", buffer, strlen(buffer));
-  free(buffer);
 #else
   char cwd[LARGE_BUFFER];
     getcwd(cwd, sizeof(cwd);
@@ -155,7 +154,7 @@ int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, c
   pipelineInfo.pDepthStencilState = &depth_stencil;
   pipelineInfo.pColorBlendState = &color_blending;
   pipelineInfo.layout = shader->pipeline_layout;
-  pipelineInfo.renderPass = vulkan_renderer->render_pass;
+  pipelineInfo.renderPass = vulkan_renderer->gbuffer->render_pass;
   pipelineInfo.subpass = 0;
   pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 

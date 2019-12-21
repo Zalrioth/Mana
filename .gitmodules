@@ -19,3 +19,6 @@
 [submodule "lib/tinycthread"]
 	path = lib/tinycthread
 	url = https://github.com/tinycthread/tinycthread
+[submodule "lib/mimalloc"]
+	path = lib/mimalloc
+	url = https://github.com/microsoft/mimalloc

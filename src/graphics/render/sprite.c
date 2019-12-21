@@ -1,4 +1,4 @@
-#include "graphics/sprite.h"
+#include "graphics/render/sprite.h"
 
 int sprite_init(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer) {
   sprite->image_mesh = calloc(1, sizeof(struct Mesh));
@@ -14,24 +14,12 @@ int sprite_init(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer) {
   mesh_assign_vertex(sprite->image_mesh->vertices, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
   mesh_assign_vertex(sprite->image_mesh->vertices, -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 
-  mesh_assign_vertex(sprite->image_mesh->vertices, -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-  mesh_assign_vertex(sprite->image_mesh->vertices, 0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f);
-  mesh_assign_vertex(sprite->image_mesh->vertices, 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
-  mesh_assign_vertex(sprite->image_mesh->vertices, -0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
-
   mesh_assign_indice(sprite->image_mesh->indices, 0);
   mesh_assign_indice(sprite->image_mesh->indices, 1);
   mesh_assign_indice(sprite->image_mesh->indices, 2);
   mesh_assign_indice(sprite->image_mesh->indices, 2);
   mesh_assign_indice(sprite->image_mesh->indices, 3);
   mesh_assign_indice(sprite->image_mesh->indices, 0);
-
-  mesh_assign_indice(sprite->image_mesh->indices, 4);
-  mesh_assign_indice(sprite->image_mesh->indices, 5);
-  mesh_assign_indice(sprite->image_mesh->indices, 6);
-  mesh_assign_indice(sprite->image_mesh->indices, 6);
-  mesh_assign_indice(sprite->image_mesh->indices, 7);
-  mesh_assign_indice(sprite->image_mesh->indices, 4);
 
   //int error_code;
 
@@ -42,7 +30,7 @@ int sprite_init(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer) {
   sprite_create_vertex_buffer(sprite, vulkan_renderer);
   sprite_create_index_buffer(sprite, vulkan_renderer);
   sprite_create_uniform_buffers(sprite, vulkan_renderer);
-  create_descriptor_sets(sprite, vulkan_renderer);
+  //sprite_create_descriptor_sets(sprite, vulkan_renderer);
 
   return SPRITE_SUCCESS;
 
@@ -129,6 +117,7 @@ int sprite_create_uniform_buffers(struct Sprite* sprite, struct VulkanRenderer* 
   return 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////////
 void vulkan_index_buffer_cleanup(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer) {
   vkDestroyBuffer(vulkan_renderer->device, sprite->index_buffer, NULL);
   vkFreeMemory(vulkan_renderer->device, sprite->index_buffer_memory, NULL);
