@@ -148,5 +148,40 @@ int gbuffer_init(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer
 }
 
 void gbuffer_delete(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer) {
-  vkDestroyRenderPass(vulkan_renderer->device, vulkan_renderer->gbuffer->render_pass, NULL);
+  vkDestroyImageView(vulkan_renderer->device, gbuffer->depth_image_view, NULL);
+  vkDestroyImage(vulkan_renderer->device, gbuffer->depth_image, NULL);
+  vkFreeMemory(vulkan_renderer->device, gbuffer->depth_image_memory, NULL);
+
+  vkDestroyRenderPass(vulkan_renderer->device, gbuffer->render_pass, NULL);
 }
+
+//int create_depth_resources(struct VulkanRenderer* vulkan_renderer) {
+//  VkFormat depthFormat = find_depth_format(vulkan_renderer);
+//
+//  graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, vulkan_renderer->swap_chain_extent.width, vulkan_renderer->swap_chain_extent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &vulkan_renderer->gbuffer->depth_image, &vulkan_renderer->gbuffer->depth_image_memory);
+//  vulkan_renderer->gbuffer->depth_image_view = graphics_utils_create_image_view(vulkan_renderer->device, vulkan_renderer->gbuffer->depth_image, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+//
+//  graphics_utils_transition_image_layout(vulkan_renderer->device, vulkan_renderer->graphics_queue, vulkan_renderer->command_pool, &vulkan_renderer->gbuffer->depth_image, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+//
+//  return 1;
+//}
+
+//int create_framebuffers(struct VulkanRenderer* vulkan_renderer) {
+//  for (int loopNum = 0; loopNum < MAX_SWAP_CHAIN_FRAMES; loopNum++) {
+//    VkImageView attachments[] = {vulkan_renderer->swapchain->swap_chain_image_views[loopNum], vulkan_renderer->gbuffer->depth_image_view, vulkan_renderer->gbuffer->normal_image_view};
+//
+//    VkFramebufferCreateInfo framebufferInfo = {0};
+//    framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+//    framebufferInfo.renderPass = vulkan_renderer->gbuffer->render_pass;
+//    framebufferInfo.attachmentCount = 2;
+//    framebufferInfo.pAttachments = attachments;
+//    framebufferInfo.width = vulkan_renderer->swap_chain_extent.width;
+//    framebufferInfo.height = vulkan_renderer->swap_chain_extent.height;
+//    framebufferInfo.layers = 1;
+//
+//    if (vkCreateFramebuffer(vulkan_renderer->device, &framebufferInfo, NULL, &vulkan_renderer->gbuffer->swap_chain_framebuffers[loopNum]) != VK_SUCCESS)
+//      return VULKAN_RENDERER_CREATE_FRAME_BUFFER_ERROR;
+//  }
+//
+//  return VULKAN_RENDERER_SUCCESS;
+//}

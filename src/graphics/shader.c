@@ -111,13 +111,13 @@ int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, c
   multisampling.sampleShadingEnable = VK_FALSE;
   multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
-  VkPipelineDepthStencilStateCreateInfo depth_stencil = {0};
-  depth_stencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-  depth_stencil.depthTestEnable = VK_TRUE;
-  depth_stencil.depthWriteEnable = VK_TRUE;
-  depth_stencil.depthCompareOp = VK_COMPARE_OP_LESS;
-  depth_stencil.depthBoundsTestEnable = VK_FALSE;
-  depth_stencil.stencilTestEnable = VK_FALSE;
+  //VkPipelineDepthStencilStateCreateInfo depth_stencil = {0};
+  //depth_stencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+  //depth_stencil.depthTestEnable = VK_TRUE;
+  //depth_stencil.depthWriteEnable = VK_TRUE;
+  //depth_stencil.depthCompareOp = VK_COMPARE_OP_LESS;
+  //depth_stencil.depthBoundsTestEnable = VK_FALSE;
+  //depth_stencil.stencilTestEnable = VK_FALSE;
 
   VkPipelineColorBlendAttachmentState color_blend_attachment = {0};
   color_blend_attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
@@ -151,10 +151,10 @@ int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, c
   pipelineInfo.pViewportState = &viewport_state;
   pipelineInfo.pRasterizationState = &rasterizer;
   pipelineInfo.pMultisampleState = &multisampling;
-  pipelineInfo.pDepthStencilState = &depth_stencil;
+  //pipelineInfo.pDepthStencilState = &depth_stencil;
   pipelineInfo.pColorBlendState = &color_blending;
   pipelineInfo.layout = shader->pipeline_layout;
-  pipelineInfo.renderPass = vulkan_renderer->gbuffer->render_pass;
+  pipelineInfo.renderPass = vulkan_renderer->swapchain->render_pass;
   pipelineInfo.subpass = 0;
   pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 

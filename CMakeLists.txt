@@ -50,16 +50,16 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(lib/glfw buildglfw)
 
 string(REPLACE " -w" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-pragma-pack")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-function")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-variable")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-pragma-pack -Wno-unused-function -Wno-unused-variable")
 
 add_subdirectory(lib/chaos buildchaos)
 
 set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
 add_subdirectory(lib/tinycthread buildtinycthread)
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")
 add_subdirectory(lib/mimalloc buildmimalloc)
+string(REPLACE " -w" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 
 #TODO: Link properly on Apple and Linux
 target_link_libraries(mana

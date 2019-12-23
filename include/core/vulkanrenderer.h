@@ -3,10 +3,10 @@
 #define VULKAN_RENDERER_H
 
 #include "core/common.h"
-#include "graphics/gbuffer.h"
 #include "graphics/graphicsutils.h"
 #include "graphics/mesh.h"
 #include "graphics/model.h"
+#include "graphics/swapchain.h"
 #include "graphics/texture.h"
 
 #ifdef NDEBUG
@@ -34,8 +34,8 @@ struct UniformBufferObject {
 
 struct SwapChainSupportDetails {
   struct VkSurfaceCapabilitiesKHR capabilities;
-  struct Vector* formats;
-  struct Vector* present_modes;
+  struct Vector formats;
+  struct Vector present_modes;
   //struct VkSurfaceFormatKHR formats[SMALL_BUFFER];
   //enum VkPresentModeKHR present_modes[SMALL_BUFFER];
 };
@@ -60,7 +60,7 @@ struct VulkanRenderer {
   size_t current_frame;
   struct QueueFamilyIndices indices;
   bool framebuffer_resized;
-  struct GBuffer* gbuffer;
+  struct SwapChain* swapchain;
 };
 
 enum VULKAN_RENDERER_STATUS { VULKAN_RENDERER_CREATE_WINDOW_ERROR = 0,

@@ -5,7 +5,7 @@ int sprite_init(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer) {
   mesh_init(sprite->image_mesh);
 
   sprite->image_texture = calloc(1, sizeof(struct Texture));
-  texture_init(sprite->image_texture, "./Assets/textures/texture.jpg");
+  texture_init(sprite->image_texture, "./Assets/textures/10bit.psd");
 
   mesh_init(sprite->image_mesh);
 

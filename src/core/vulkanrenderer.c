@@ -7,7 +7,7 @@ static void framebuffer_resize_callback(GLFWwindow* window, int width, int heigh
 
 int vulkan_renderer_init(struct VulkanRenderer* vulkan_renderer, int width, int height) {
   memset(vulkan_renderer, 0, sizeof(struct VulkanRenderer));
-  vulkan_renderer->gbuffer = calloc(sizeof(struct GBuffer), 1);
+  vulkan_renderer->swapchain = calloc(sizeof(struct SwapChain), 1);
 
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
@@ -44,12 +44,12 @@ int vulkan_renderer_init(struct VulkanRenderer* vulkan_renderer, int width, int 
     goto vulkan_device_error;
   if ((error_code = create_swap_chain(vulkan_renderer, width, height)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_swap_chain_error;
-  gbuffer_init(vulkan_renderer->gbuffer, vulkan_renderer);
+  swapchain_init(vulkan_renderer->swapchain, vulkan_renderer);
   ////////////////////////////
   if ((error_code = create_command_pool(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_command_pool_error;
   ////////////////////////////
-  create_depth_resources(vulkan_renderer);
+  //create_depth_resources(vulkan_renderer);
   if ((error_code = create_framebuffers(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_command_pool_error;
   if ((error_code = create_command_buffers(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
@@ -127,23 +127,19 @@ void vulkan_sync_objects_cleanup(struct VulkanRenderer* vulkan_renderer) {
 }
 
 void vulkan_swap_chain_cleanup(struct VulkanRenderer* vulkan_renderer) {
-  // Test: Wait for frame to finish rendering before cleaning up
+  // Wait for frame to finish rendering before cleaning up
   for (int loop_num = 0; loop_num < MAX_FRAMES_IN_FLIGHT; loop_num++)
     vkWaitForFences(vulkan_renderer->device, 1, &vulkan_renderer->in_flight_fences[loop_num], VK_TRUE, UINT64_MAX);
 
-  vkDestroyImageView(vulkan_renderer->device, vulkan_renderer->gbuffer->depth_image_view, NULL);
-  vkDestroyImage(vulkan_renderer->device, vulkan_renderer->gbuffer->depth_image, NULL);
-  vkFreeMemory(vulkan_renderer->device, vulkan_renderer->gbuffer->depth_image_memory, NULL);
-
   for (int loopNum = 0; loopNum < MAX_SWAP_CHAIN_FRAMES; loopNum++)
-    vkDestroyFramebuffer(vulkan_renderer->device, vulkan_renderer->gbuffer->swap_chain_framebuffers[loopNum], NULL);
+    vkDestroyFramebuffer(vulkan_renderer->device, vulkan_renderer->swapchain->swap_chain_framebuffers[loopNum], NULL);
 
   vkFreeCommandBuffers(vulkan_renderer->device, vulkan_renderer->command_pool, 3, vulkan_renderer->command_buffers);
 
-  gbuffer_delete(vulkan_renderer->gbuffer, vulkan_renderer);
+  swapchain_delete(vulkan_renderer->swapchain, vulkan_renderer);
 
   for (int loopNum = 0; loopNum < MAX_SWAP_CHAIN_FRAMES; loopNum++)
-    vkDestroyImageView(vulkan_renderer->device, vulkan_renderer->gbuffer->swap_chain_image_views[loopNum], NULL);
+    vkDestroyImageView(vulkan_renderer->device, vulkan_renderer->swapchain->swap_chain_image_views[loopNum], NULL);
 
   vkDestroySwapchainKHR(vulkan_renderer->device, vulkan_renderer->swap_chain, NULL);
 }
@@ -314,60 +310,61 @@ int create_logical_device(struct VulkanRenderer* vulkan_renderer) {
 int create_swap_chain(struct VulkanRenderer* vulkan_renderer, int width, int height) {
   struct SwapChainSupportDetails swap_chain_support = {{0}};
 
-  swap_chain_support.formats = calloc(1, sizeof(struct Vector));
-  swap_chain_support.present_modes = calloc(1, sizeof(struct Vector));
-
-  vector_init(swap_chain_support.formats, sizeof(struct VkSurfaceFormatKHR));
-  vector_init(swap_chain_support.present_modes, sizeof(enum VkPresentModeKHR));
+  vector_init(&swap_chain_support.formats, sizeof(struct VkSurfaceFormatKHR));
+  vector_init(&swap_chain_support.present_modes, sizeof(enum VkPresentModeKHR));
 
   vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vulkan_renderer->physical_device, vulkan_renderer->surface, &swap_chain_support.capabilities);
 
-  uint32_t formatCount;
-  vkGetPhysicalDeviceSurfaceFormatsKHR(vulkan_renderer->physical_device, vulkan_renderer->surface, &formatCount, NULL);
+  uint32_t format_count;
+  vkGetPhysicalDeviceSurfaceFormatsKHR(vulkan_renderer->physical_device, vulkan_renderer->surface, &format_count, NULL);
 
-  if (formatCount != 0) {
-    vector_resize(swap_chain_support.formats, formatCount);
-    vkGetPhysicalDeviceSurfaceFormatsKHR(vulkan_renderer->physical_device, vulkan_renderer->surface, &formatCount, swap_chain_support.formats->items);
-    swap_chain_support.formats->size = formatCount;
+  if (format_count != 0) {
+    vector_resize(&swap_chain_support.formats, format_count);
+    vkGetPhysicalDeviceSurfaceFormatsKHR(vulkan_renderer->physical_device, vulkan_renderer->surface, &format_count, swap_chain_support.formats.items);
+    swap_chain_support.formats.size = format_count;
   }
 
-  uint32_t presentModeCount;
-  vkGetPhysicalDeviceSurfacePresentModesKHR(vulkan_renderer->physical_device, vulkan_renderer->surface, &presentModeCount, NULL);
+  uint32_t present_mode_count;
+  vkGetPhysicalDeviceSurfacePresentModesKHR(vulkan_renderer->physical_device, vulkan_renderer->surface, &present_mode_count, NULL);
 
-  if (presentModeCount != 0) {
-    vector_resize(swap_chain_support.present_modes, presentModeCount);
-    vkGetPhysicalDeviceSurfacePresentModesKHR(vulkan_renderer->physical_device, vulkan_renderer->surface, &presentModeCount, swap_chain_support.present_modes->items);
-    swap_chain_support.present_modes->size = presentModeCount;
+  if (present_mode_count != 0) {
+    vector_resize(&swap_chain_support.present_modes, present_mode_count);
+    vkGetPhysicalDeviceSurfacePresentModesKHR(vulkan_renderer->physical_device, vulkan_renderer->surface, &present_mode_count, swap_chain_support.present_modes.items);
+    swap_chain_support.present_modes.size = present_mode_count;
   }
 
-  VkSurfaceFormatKHR surfaceFormat = {0};
+  VkSurfaceFormatKHR surface_format = {0};
 
-  //if (formatCount == 1 && swap_chain_support.formats[0].format == VK_FORMAT_UNDEFINED) {
-  if (formatCount == 1 && ((struct VkSurfaceFormatKHR*)vector_get(swap_chain_support.formats, 0))->format == VK_FORMAT_UNDEFINED) {
-    surfaceFormat.format = VK_FORMAT_B8G8R8A8_UNORM;
-    surfaceFormat.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+  //if (format_count == 1 && swap_chain_support.formats[0].format == VK_FORMAT_UNDEFINED) {
+  if (format_count == 1 && ((struct VkSurfaceFormatKHR*)vector_get(&swap_chain_support.formats, 0))->format == VK_FORMAT_UNDEFINED) {
+    surface_format.format = VK_FORMAT_B8G8R8A8_UNORM;
+    surface_format.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
   } else {
-    for (int loopNum = 0; loopNum < vector_size(swap_chain_support.formats); loopNum++) {
-      if (((struct VkSurfaceFormatKHR*)vector_get(swap_chain_support.formats, loopNum))->format == VK_FORMAT_B8G8R8A8_UNORM && ((struct VkSurfaceFormatKHR*)vector_get(swap_chain_support.formats, loopNum))->colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
-        surfaceFormat = *(struct VkSurfaceFormatKHR*)vector_get(swap_chain_support.formats, loopNum);
+    for (int loop_num = 0; loop_num < vector_size(&swap_chain_support.formats); loop_num++) {
+      if (((struct VkSurfaceFormatKHR*)vector_get(&swap_chain_support.formats, loop_num))->format == VK_FORMAT_B8G8R8A8_UNORM && ((struct VkSurfaceFormatKHR*)vector_get(&swap_chain_support.formats, loop_num))->colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+        surface_format = *(struct VkSurfaceFormatKHR*)vector_get(&swap_chain_support.formats, loop_num);
         break;
       } else
-        surfaceFormat = *(struct VkSurfaceFormatKHR*)vector_get(swap_chain_support.formats, 0);
+        surface_format = *(struct VkSurfaceFormatKHR*)vector_get(&swap_chain_support.formats, 0);
     }
   }
 
-  VkPresentModeKHR presentMode = {0};
+  // Testing 10 bit swapchain output
+  // Seems to work on Nvidia Studio Driver
+  surface_format.format = VK_FORMAT_A2B10G10R10_UNORM_PACK32;
 
-  for (int loopNum = 0; loopNum < vector_size(swap_chain_support.present_modes); loopNum++) {
-    if ((enum VkPresentModeKHR)vector_get(swap_chain_support.present_modes, loopNum) == VK_PRESENT_MODE_MAILBOX_KHR) {
-      presentMode = (enum VkPresentModeKHR)vector_get(swap_chain_support.present_modes, loopNum);
+  VkPresentModeKHR present_mode = {0};
+
+  for (int loop_num = 0; loop_num < vector_size(&swap_chain_support.present_modes); loop_num++) {
+    if ((enum VkPresentModeKHR)vector_get(&swap_chain_support.present_modes, loop_num) == VK_PRESENT_MODE_MAILBOX_KHR) {
+      present_mode = (enum VkPresentModeKHR)vector_get(&swap_chain_support.present_modes, loop_num);
       break;
-    } else if ((enum VkPresentModeKHR)vector_get(swap_chain_support.present_modes, loopNum) == VK_PRESENT_MODE_IMMEDIATE_KHR)
-      presentMode = (enum VkPresentModeKHR)vector_get(swap_chain_support.present_modes, loopNum);
+    } else if ((enum VkPresentModeKHR)vector_get(&swap_chain_support.present_modes, loop_num) == VK_PRESENT_MODE_IMMEDIATE_KHR)
+      present_mode = (enum VkPresentModeKHR)vector_get(&swap_chain_support.present_modes, loop_num);
   }
 
   // Force Vsync
-  presentMode = VK_PRESENT_MODE_FIFO_KHR;
+  present_mode = VK_PRESENT_MODE_FIFO_KHR;
 
   VkExtent2D extent = {width, height};
   if (swap_chain_support.capabilities.currentExtent.width != UINT32_MAX)
@@ -381,42 +378,42 @@ int create_swap_chain(struct VulkanRenderer* vulkan_renderer, int width, int hei
   if (swap_chain_support.capabilities.maxImageCount > 0 && imageCount > swap_chain_support.capabilities.maxImageCount)
     imageCount = swap_chain_support.capabilities.maxImageCount;
 
-  VkSwapchainCreateInfoKHR swapchainInfo = {0};
-  swapchainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-  swapchainInfo.surface = vulkan_renderer->surface;
+  VkSwapchainCreateInfoKHR swapchain_info = {0};
+  swapchain_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+  swapchain_info.surface = vulkan_renderer->surface;
 
-  swapchainInfo.minImageCount = imageCount;
-  swapchainInfo.imageFormat = surfaceFormat.format;
-  swapchainInfo.imageColorSpace = surfaceFormat.colorSpace;
-  swapchainInfo.imageExtent = extent;
-  swapchainInfo.imageArrayLayers = 1;
-  swapchainInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+  swapchain_info.minImageCount = imageCount;
+  swapchain_info.imageFormat = surface_format.format;
+  swapchain_info.imageColorSpace = surface_format.colorSpace;
+  swapchain_info.imageExtent = extent;
+  swapchain_info.imageArrayLayers = 1;
+  swapchain_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-  uint32_t queueFamilyIndices[] = {(&vulkan_renderer->indices)->graphics_family, (&vulkan_renderer->indices)->present_family};
+  uint32_t queue_family_indices[] = {(&vulkan_renderer->indices)->graphics_family, (&vulkan_renderer->indices)->present_family};
 
   if ((&vulkan_renderer->indices)->graphics_family != (&vulkan_renderer->indices)->present_family) {
-    swapchainInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-    swapchainInfo.queueFamilyIndexCount = 2;
-    swapchainInfo.pQueueFamilyIndices = queueFamilyIndices;
+    swapchain_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+    swapchain_info.queueFamilyIndexCount = 2;
+    swapchain_info.pQueueFamilyIndices = queue_family_indices;
   } else
-    swapchainInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    swapchain_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-  swapchainInfo.preTransform = swap_chain_support.capabilities.currentTransform;
-  swapchainInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-  swapchainInfo.presentMode = presentMode;
-  swapchainInfo.clipped = VK_TRUE;
+  swapchain_info.preTransform = swap_chain_support.capabilities.currentTransform;
+  swapchain_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+  swapchain_info.presentMode = present_mode;
+  swapchain_info.clipped = VK_TRUE;
 
-  if (vkCreateSwapchainKHR(vulkan_renderer->device, &swapchainInfo, NULL, &vulkan_renderer->swap_chain) != VK_SUCCESS)
+  if (vkCreateSwapchainKHR(vulkan_renderer->device, &swapchain_info, NULL, &vulkan_renderer->swap_chain) != VK_SUCCESS)
     return VULKAN_RENDERER_CREATE_SWAP_CHAIN_ERROR;
 
   vkGetSwapchainImagesKHR(vulkan_renderer->device, vulkan_renderer->swap_chain, &imageCount, NULL);
-  vkGetSwapchainImagesKHR(vulkan_renderer->device, vulkan_renderer->swap_chain, &imageCount, vulkan_renderer->gbuffer->swap_chain_images);
+  vkGetSwapchainImagesKHR(vulkan_renderer->device, vulkan_renderer->swap_chain, &imageCount, vulkan_renderer->swapchain->swap_chain_images);
 
-  vulkan_renderer->swap_chain_image_format = surfaceFormat.format;
+  vulkan_renderer->swap_chain_image_format = surface_format.format;
   vulkan_renderer->swap_chain_extent = extent;
 
-  vector_delete(swap_chain_support.formats);
-  vector_delete(swap_chain_support.present_modes);
+  vector_delete(&swap_chain_support.formats);
+  vector_delete(&swap_chain_support.present_modes);
 
   return VULKAN_RENDERER_SUCCESS;
 }
@@ -459,17 +456,6 @@ int create_image_view(struct VulkanRenderer* vulkan_renderer, struct VkImage_T* 
   return VULKAN_RENDERER_SUCCESS;
 }
 
-int create_depth_resources(struct VulkanRenderer* vulkan_renderer) {
-  VkFormat depthFormat = find_depth_format(vulkan_renderer);
-
-  graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, vulkan_renderer->swap_chain_extent.width, vulkan_renderer->swap_chain_extent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &vulkan_renderer->gbuffer->depth_image, &vulkan_renderer->gbuffer->depth_image_memory);
-  vulkan_renderer->gbuffer->depth_image_view = graphics_utils_create_image_view(vulkan_renderer->device, vulkan_renderer->gbuffer->depth_image, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
-
-  graphics_utils_transition_image_layout(vulkan_renderer->device, vulkan_renderer->graphics_queue, vulkan_renderer->command_pool, &vulkan_renderer->gbuffer->depth_image, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
-
-  return 1;
-}
-
 void create_color_attachment(struct VulkanRenderer* vulkan_renderer, struct VkAttachmentDescription* color_attachment) {
   color_attachment->format = vulkan_renderer->swap_chain_image_format;
   color_attachment->samples = VK_SAMPLE_COUNT_1_BIT;
@@ -494,18 +480,16 @@ void create_depth_attachment(struct VulkanRenderer* vulkan_renderer, struct VkAt
 
 int create_framebuffers(struct VulkanRenderer* vulkan_renderer) {
   for (int loopNum = 0; loopNum < MAX_SWAP_CHAIN_FRAMES; loopNum++) {
-    VkImageView attachments[] = {vulkan_renderer->gbuffer->swap_chain_image_views[loopNum], vulkan_renderer->gbuffer->depth_image_view, vulkan_renderer->gbuffer->normal_image_view};
-
     VkFramebufferCreateInfo framebufferInfo = {0};
     framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-    framebufferInfo.renderPass = vulkan_renderer->gbuffer->render_pass;
-    framebufferInfo.attachmentCount = 2;
-    framebufferInfo.pAttachments = attachments;
+    framebufferInfo.renderPass = vulkan_renderer->swapchain->render_pass;
+    framebufferInfo.attachmentCount = 1;
+    framebufferInfo.pAttachments = &vulkan_renderer->swapchain->swap_chain_image_views[loopNum];
     framebufferInfo.width = vulkan_renderer->swap_chain_extent.width;
     framebufferInfo.height = vulkan_renderer->swap_chain_extent.height;
     framebufferInfo.layers = 1;
 
-    if (vkCreateFramebuffer(vulkan_renderer->device, &framebufferInfo, NULL, &vulkan_renderer->gbuffer->swap_chain_framebuffers[loopNum]) != VK_SUCCESS)
+    if (vkCreateFramebuffer(vulkan_renderer->device, &framebufferInfo, NULL, &vulkan_renderer->swapchain->swap_chain_framebuffers[loopNum]) != VK_SUCCESS)
       return VULKAN_RENDERER_CREATE_FRAME_BUFFER_ERROR;
   }
 
@@ -554,8 +538,8 @@ int command_buffer_start(struct VulkanRenderer* vulkan_renderer, size_t i) {
 
   VkRenderPassBeginInfo render_pass_info = {0};
   render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-  render_pass_info.renderPass = vulkan_renderer->gbuffer->render_pass;
-  render_pass_info.framebuffer = vulkan_renderer->gbuffer->swap_chain_framebuffers[i];
+  render_pass_info.renderPass = vulkan_renderer->swapchain->render_pass;
+  render_pass_info.framebuffer = vulkan_renderer->swapchain->swap_chain_framebuffers[i];
   render_pass_info.renderArea.offset.x = 0;
   render_pass_info.renderArea.offset.y = 0;
   render_pass_info.renderArea.extent = vulkan_renderer->swap_chain_extent;
@@ -589,8 +573,8 @@ int command_buffer_reset(struct VulkanRenderer* vulkan_renderer, size_t i) {
 
   VkRenderPassBeginInfo renderPassInfo = {0};
   renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-  renderPassInfo.renderPass = vulkan_renderer->gbuffer->render_pass;
-  renderPassInfo.framebuffer = vulkan_renderer->gbuffer->swap_chain_framebuffers[i];
+  renderPassInfo.renderPass = vulkan_renderer->swapchain->render_pass;
+  renderPassInfo.framebuffer = vulkan_renderer->swapchain->swap_chain_framebuffers[i];
   renderPassInfo.renderArea.offset.x = 0;
   renderPassInfo.renderArea.offset.y = 0;
   renderPassInfo.renderArea.extent = vulkan_renderer->swap_chain_extent;
