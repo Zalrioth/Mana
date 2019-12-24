@@ -8,8 +8,8 @@ set(CMAKE_DEBUG_POSTFIX "d")
 #https://stackoverflow.com/questions/56202041/compiling-and-linking-against-openmp-with-appleclang-on-mac-os-x-mojave
 
 file(GLOB_RECURSE mana_SRC
-        include/*.h
-        src/*.c)
+        include/mana/*.h
+        src/mana/*.c)
 
 add_library(mana STATIC ${mana_SRC})
 
