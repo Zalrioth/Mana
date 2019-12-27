@@ -2,8 +2,9 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
-#include "mana/core/common.h"
+#include <stb_image.h>
 #include "mana/core/vulkanrenderer.h"
+#include "mana/graphics/graphicscommon.h"
 #include "mana/graphics/graphicsutils.h"
 
 struct VulkanRenderer;

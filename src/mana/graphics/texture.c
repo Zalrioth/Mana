@@ -1,6 +1,6 @@
 #include "mana/graphics/texture.h"
 #define STB_IMAGE_IMPLEMENTATION
-#include <mana/graphics/stb_image.h>
+#include <stb_image.h>
 
 void texture_init(struct Texture *texture, char *path) {
   // Note: Extra 0 needed to ensure end of string
@@ -31,7 +31,7 @@ int texture_create_image(struct VulkanRenderer *vulkan_renderer, struct Texture 
   int tex_width, tex_height, tex_channels;
   //stbi_uc *pixels = stbi_load(texture->path, &tex_width, &tex_height, &tex_channels, STBI_rgb_alpha);
   //VkDeviceSize image_size = tex_width * tex_height * 4;
-  stbi_uc *pixels = stbi_load_16(texture->path, &tex_width, &tex_height, &tex_channels, STBI_rgb_alpha);
+  stbi_us *pixels = stbi_load_16(texture->path, &tex_width, &tex_height, &tex_channels, STBI_rgb_alpha);
   VkDeviceSize image_size = tex_width * tex_height * 8;
 
   if (!pixels) {

@@ -2,7 +2,7 @@
 #ifndef SPRITE_H
 #define SPRITE_H
 
-#include "mana/core/common.h"
+#include "mana/graphics/graphicscommon.h"
 #include "mana/graphics/texture.h"
 
 struct Sprite {

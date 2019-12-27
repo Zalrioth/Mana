@@ -2,7 +2,7 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
-#include "mana/core/common.h"
+#include <time.h>
 #include "mana/core/window.h"
 
 #define FPS_COUNT 10

@@ -2,7 +2,10 @@
 #ifndef GRAPHICS_UTILS_H
 #define GRAPHICS_UTILS_H
 
-#include "mana/core/common.h"
+#include <cglm/cglm.h>
+#include <cstorage/cstorage.h>
+#include <vulkan/vulkan.h>
+#include "mana/graphics/graphicscommon.h"
 
 static inline VkImageView graphics_utils_create_image_view(struct VkDevice_T *device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 static inline int graphics_utils_create_image(struct VkDevice_T *device, struct VkPhysicalDevice_T *physical_device, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage *image, VkDeviceMemory *image_memory);

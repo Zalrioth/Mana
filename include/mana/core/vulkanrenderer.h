@@ -2,7 +2,15 @@
 #ifndef VULKAN_RENDERER_H
 #define VULKAN_RENDERER_H
 
-#include "mana/core/common.h"
+#define _CRT_SECURE_NO_DEPRECATE
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+#include <cglm/cglm.h>
+#include <cstorage/cstorage.h>
+#include <stdalign.h>
+#include <vulkan/vulkan.h>
+#include "mana/core/corecommon.h"
+#include "mana/graphics/graphicscommon.h"
 #include "mana/graphics/graphicsutils.h"
 #include "mana/graphics/mesh.h"
 #include "mana/graphics/model.h"
@@ -24,12 +32,9 @@ struct QueueFamilyIndices {
 };
 
 struct UniformBufferObject {
-  mat4 model;
-  mat4 view;
-  mat4 proj;
-  //alignas(16) mat4 model;
-  //alignas(16) mat4 view;
-  //alignas(16) mat4 proj;
+  alignas(16) mat4 model;
+  alignas(16) mat4 view;
+  alignas(16) mat4 proj;
 };
 
 struct SwapChainSupportDetails {

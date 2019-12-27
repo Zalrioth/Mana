@@ -2,7 +2,7 @@
 #ifndef SHADER_H
 #define SHADER_H
 
-#include "mana/core/common.h"
+#include "mana/core/corecommon.h"
 #include "mana/core/vulkanrenderer.h"
 
 struct Shader {

@@ -2,7 +2,7 @@
 #ifndef TEXTURE_CACHE_H
 #define TEXTURE_CACHE_H
 
-#include <cstorage/map.h>
+#include <cstorage/cstorage.h>
 
 struct TextureCache {
   struct Map texture_cache;

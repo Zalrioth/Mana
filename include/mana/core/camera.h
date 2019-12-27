@@ -2,7 +2,7 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#include "mana/core/common.h"
+#include <cglm/cglm.h>
 #include "mana/core/engine.h"
 
 #define YAW -90.0f

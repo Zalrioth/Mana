@@ -2,7 +2,6 @@
 #ifndef MANA_H
 #define MANA_H
 
-#include "mana/core/common.h"
 #include "mana/core/engine.h"
 
 struct Mana {

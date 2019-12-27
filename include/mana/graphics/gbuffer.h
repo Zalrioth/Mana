@@ -2,8 +2,8 @@
 #ifndef G_BUFFER_H
 #define G_BUFFER_H
 
-#include "mana/core/common.h"
 #include "mana/core/vulkanrenderer.h"
+#include "mana/graphics/graphicscommon.h"
 
 struct VulkanRenderer;
 

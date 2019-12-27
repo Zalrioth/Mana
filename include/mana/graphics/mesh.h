@@ -2,7 +2,8 @@
 #ifndef MESH_H
 #define MESH_H
 
-#include "mana/core/common.h"
+#include <cstorage/cstorage.h>
+#include "mana/graphics/graphicscommon.h"
 #include "mana/graphics/texture.h"
 
 struct Vertex {

@@ -2,8 +2,8 @@
 #ifndef SWAPCHAIN_H
 #define SWAPCHAIN_H
 
-#include "mana/core/common.h"
 #include "mana/core/vulkanrenderer.h"
+#include "mana/graphics/graphicscommon.h"
 
 struct VulkanRenderer;
 

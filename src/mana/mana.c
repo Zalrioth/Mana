@@ -1,4 +1,4 @@
-#include "mana/core/mana.h"
+#include "mana/mana.h"
 
 int mana_init(struct Mana* mana) {
   int engine_error = engine_init(&mana->engine);

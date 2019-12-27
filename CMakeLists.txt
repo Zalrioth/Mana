@@ -8,8 +8,8 @@ set(CMAKE_DEBUG_POSTFIX "d")
 #https://stackoverflow.com/questions/56202041/compiling-and-linking-against-openmp-with-appleclang-on-mac-os-x-mojave
 
 file(GLOB_RECURSE mana_SRC
-        include/mana/*.h
-        src/mana/*.c)
+        include/*.h
+        src/*.c)
 
 add_library(mana STATIC ${mana_SRC})
 
@@ -61,13 +61,18 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")
 add_subdirectory(lib/mimalloc buildmimalloc)
 string(REPLACE " -w" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 
-#TODO: Link properly on Apple and Linux
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-deprecated-declarations")
+
+# TODO: Link properly on Apple and Linux
+# On Windows link mimalloc statically for performance and dynamically for stability
+# Unix-like can static override instead
 target_link_libraries(mana
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/VulkanSDK/1.1.101.0/Lib/vulkan-1.lib
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/openmp/libomp.lib
         glfw
         chaos
         tinycthread
+        #mimalloc
         mimalloc-static)
 
 set(includeList
@@ -75,6 +80,7 @@ set(includeList
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/cstorage/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/cnoise/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/cglm/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/stb
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/glfw/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/VulkanSDK/1.1.101.0/Include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/Chaos/include

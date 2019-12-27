@@ -2,7 +2,7 @@
 #ifndef MODEL_H
 #define MODEL_H
 
-#include "mana/core/common.h"
+#include "mana/graphics/graphicscommon.h"
 #include "mana/graphics/mesh.h"
 //#include "graphics/modeldata.h"
 

@@ -3,7 +3,6 @@
 #define INPUT_MANAGER_H
 
 #include <GLFW/glfw3.h>
-#include "mana/core/common.h"
 #include "mana/core/window.h"
 
 enum KeyState { PRESSED,
