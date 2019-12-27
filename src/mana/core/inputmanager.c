@@ -6,10 +6,8 @@ void input_manager_init(struct InputManager* input_manager) {
     input_manager->keys[loop_num].held = false;
   }
 
-  double last_mouse_x_pos = 0.0;
-  double last_mouse_y_pos = 0.0;
-
-  //memset(engine->keys, RELEASED, sizeof(engine->keys));
+  input_manager->last_mouse_x_pos = 0.0;
+  input_manager->last_mouse_y_pos = 0.0;
 }
 
 void input_manager_process_input(struct InputManager* input_manager, struct Window* window) {

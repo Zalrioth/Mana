@@ -4,6 +4,9 @@
 
 #include <GLFW/glfw3.h>
 #include "mana/core/window.h"
+#include "stdbool.h"
+
+struct Window;
 
 enum KeyState { PRESSED,
                 RELEASED };

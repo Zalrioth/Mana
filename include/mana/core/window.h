@@ -2,6 +2,7 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
+#include "mana/core/inputmanager.h"
 #include "mana/core/vulkanrenderer.h"
 
 enum RendererType { VULKAN };
@@ -15,6 +16,8 @@ struct Window {
   int height;
   enum RendererType renderer_type;
   union Renderer renderer;
+  struct InputManager* input_manager;
+  uint32_t image_index;
 };
 
 enum {
@@ -25,5 +28,7 @@ enum {
 int window_init(struct Window* window, int width, int height);
 void window_delete(struct Window* game_window);
 bool window_should_close(struct Window* window);
+void window_prepare_frame(struct Window* window);
+void window_end_frame(struct Window* window);
 
 #endif  // WINDOW_H

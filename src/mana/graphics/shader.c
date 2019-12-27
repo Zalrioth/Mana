@@ -170,6 +170,7 @@ int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, c
 void shader_delete(struct Shader* shader, struct VulkanRenderer* vulkan_renderer) {
   vkDestroyPipeline(vulkan_renderer->device, shader->graphics_pipeline, NULL);
   vkDestroyPipelineLayout(vulkan_renderer->device, shader->pipeline_layout, NULL);
+  vkDestroyDescriptorSetLayout(vulkan_renderer->device, shader->descriptor_set_layout, NULL);
 }
 
 VkShaderModule shader_create_shader_module(struct VulkanRenderer* vulkan_renderer, const char* code, int length) {
