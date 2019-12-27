@@ -4,6 +4,8 @@
 
 #include "mana/graphics/shader.h"
 
+// Effect for blitting images to swapchain
+
 struct BlitEffect {
   struct Shader shader;
 };

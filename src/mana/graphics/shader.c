@@ -23,7 +23,7 @@ char* read_shader_file(const char* filename, int* file_length) {
   return result;
 }
 
-int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, char* vertex_shader, char* fragment_shader, char* geometry_shader) {
+int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, char* vertex_shader, char* fragment_shader, char* geometry_shader, VkPipelineVertexInputStateCreateInfo vertex_input_info, bool depth_test) {
   // Get the current working directory
 #if defined(IS_WINDOWS)
   char* buffer;
@@ -57,19 +57,6 @@ int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, c
   frag_shader_stage_info.pName = "main";
 
   VkPipelineShaderStageCreateInfo shader_stages[] = {vert_shader_stage_info, frag_shader_stage_info};
-
-  VkPipelineVertexInputStateCreateInfo vertex_input_info = {0};
-  vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-
-  VkVertexInputBindingDescription binding_description = get_binding_description();
-  VkVertexInputAttributeDescription attribute_descriptions[5];
-  memset(attribute_descriptions, 0, sizeof(attribute_descriptions));
-  get_attribute_descriptions(attribute_descriptions);
-
-  vertex_input_info.vertexBindingDescriptionCount = 1;
-  vertex_input_info.vertexAttributeDescriptionCount = 5;  // Note: length of attributeDescriptions
-  vertex_input_info.pVertexBindingDescriptions = &binding_description;
-  vertex_input_info.pVertexAttributeDescriptions = attribute_descriptions;
 
   VkPipelineInputAssemblyStateCreateInfo input_assembly = {0};
   input_assembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -111,13 +98,13 @@ int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, c
   multisampling.sampleShadingEnable = VK_FALSE;
   multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
-  //VkPipelineDepthStencilStateCreateInfo depth_stencil = {0};
-  //depth_stencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-  //depth_stencil.depthTestEnable = VK_TRUE;
-  //depth_stencil.depthWriteEnable = VK_TRUE;
-  //depth_stencil.depthCompareOp = VK_COMPARE_OP_LESS;
-  //depth_stencil.depthBoundsTestEnable = VK_FALSE;
-  //depth_stencil.stencilTestEnable = VK_FALSE;
+  VkPipelineDepthStencilStateCreateInfo depth_stencil = {0};
+  depth_stencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+  depth_stencil.depthTestEnable = depth_test;
+  depth_stencil.depthWriteEnable = depth_test;
+  depth_stencil.depthCompareOp = VK_COMPARE_OP_LESS;
+  depth_stencil.depthBoundsTestEnable = VK_FALSE;
+  depth_stencil.stencilTestEnable = VK_FALSE;
 
   VkPipelineColorBlendAttachmentState color_blend_attachment = {0};
   color_blend_attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
@@ -151,7 +138,7 @@ int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, c
   pipelineInfo.pViewportState = &viewport_state;
   pipelineInfo.pRasterizationState = &rasterizer;
   pipelineInfo.pMultisampleState = &multisampling;
-  //pipelineInfo.pDepthStencilState = &depth_stencil;
+  pipelineInfo.pDepthStencilState = &depth_stencil;
   pipelineInfo.pColorBlendState = &color_blending;
   pipelineInfo.layout = shader->pipeline_layout;
   pipelineInfo.renderPass = vulkan_renderer->swapchain->render_pass;
