@@ -141,7 +141,7 @@ int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, c
   pipelineInfo.pDepthStencilState = &depth_stencil;
   pipelineInfo.pColorBlendState = &color_blending;
   pipelineInfo.layout = shader->pipeline_layout;
-  pipelineInfo.renderPass = vulkan_renderer->swapchain->render_pass;
+  pipelineInfo.renderPass = vulkan_renderer->swap_chain->render_pass;
   pipelineInfo.subpass = 0;
   pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 

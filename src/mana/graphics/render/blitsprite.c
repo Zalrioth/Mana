@@ -15,7 +15,7 @@ int blit_sprite_init(struct BlitSprite* blit_sprite, struct VulkanRenderer* vulk
   alloc_info.descriptorSetCount = MAX_SWAP_CHAIN_FRAMES;
   alloc_info.pSetLayouts = layouts;
 
-  if (vkAllocateDescriptorSets(vulkan_renderer->device, &alloc_info, blit_sprite->sprite.descriptor_sets) != VK_SUCCESS) {
+  if (vkAllocateDescriptorSets(vulkan_renderer->device, &alloc_info, &blit_sprite->sprite.descriptor_set) != VK_SUCCESS) {
     fprintf(stderr, "failed to allocate descriptor sets!\n");
     return 0;
   }
@@ -30,7 +30,7 @@ int blit_sprite_init(struct BlitSprite* blit_sprite, struct VulkanRenderer* vulk
     memset(&dc, 0, sizeof(dc));
 
     dc.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    dc.dstSet = blit_sprite->sprite.descriptor_sets[i];
+    dc.dstSet = blit_sprite->sprite.descriptor_set;
     dc.dstBinding = 0;
     dc.dstArrayElement = 0;
     dc.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;

@@ -13,10 +13,9 @@ struct Sprite {
   struct VkDeviceMemory_T* vertex_buffer_memory;
   struct VkBuffer_T* index_buffer;
   struct VkDeviceMemory_T* index_buffer_memory;
-  //////////////////////////////////////////
-  struct VkBuffer_T* uniform_buffers[MAX_SWAP_CHAIN_FRAMES];
-  struct VkDeviceMemory_T* uniform_buffers_memory[MAX_SWAP_CHAIN_FRAMES];
-  struct VkDescriptorSet_T* descriptor_sets[MAX_SWAP_CHAIN_FRAMES];
+  struct VkBuffer_T* uniform_buffer;
+  struct VkDeviceMemory_T* uniform_buffers_memory;
+  struct VkDescriptorSet_T* descriptor_set;
 };
 
 enum {

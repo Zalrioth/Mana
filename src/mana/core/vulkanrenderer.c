@@ -7,7 +7,8 @@ static void framebuffer_resize_callback(GLFWwindow* window, int width, int heigh
 
 int vulkan_renderer_init(struct VulkanRenderer* vulkan_renderer, int width, int height) {
   memset(vulkan_renderer, 0, sizeof(struct VulkanRenderer));
-  vulkan_renderer->swapchain = calloc(sizeof(struct SwapChain), 1);
+  vulkan_renderer->swap_chain = calloc(1, sizeof(struct SwapChain));
+  vulkan_renderer->gbuffer = calloc(1, sizeof(struct GBuffer));
 
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
@@ -44,18 +45,17 @@ int vulkan_renderer_init(struct VulkanRenderer* vulkan_renderer, int width, int 
     goto vulkan_device_error;
   if ((error_code = create_swap_chain(vulkan_renderer, width, height)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_swap_chain_error;
-  swapchain_init(vulkan_renderer->swapchain, vulkan_renderer);
-  ////////////////////////////
+
+  swapchain_init(vulkan_renderer->swap_chain, vulkan_renderer);
+
   if ((error_code = create_command_pool(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
-    goto vulkan_command_pool_error;
-  ////////////////////////////
-  //create_depth_resources(vulkan_renderer);
-  if ((error_code = create_framebuffers(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_command_pool_error;
   if ((error_code = create_command_buffers(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_command_pool_error;
   if ((error_code = create_sync_objects(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_sync_objects_error;
+
+  gbuffer_init(vulkan_renderer->gbuffer, vulkan_renderer);
 
   return VULKAN_RENDERER_SUCCESS;
 
@@ -79,7 +79,10 @@ window_error:
 
 // TODO: Clean up da poopoo code
 void vulkan_renderer_delete(struct VulkanRenderer* vulkan_renderer) {
+  gbuffer_delete(vulkan_renderer->gbuffer, vulkan_renderer);
+  free(vulkan_renderer->gbuffer);
   vulkan_swap_chain_cleanup(vulkan_renderer);
+  free(vulkan_renderer->swap_chain);
   //vulkan_descriptor_set_layout_cleanup(vulkan_renderer);
   vulkan_sync_objects_cleanup(vulkan_renderer);
   vulkan_command_pool_cleanup(vulkan_renderer);
@@ -132,16 +135,16 @@ void vulkan_swap_chain_cleanup(struct VulkanRenderer* vulkan_renderer) {
     vkWaitForFences(vulkan_renderer->device, 1, &vulkan_renderer->in_flight_fences[loop_num], VK_TRUE, UINT64_MAX);
 
   for (int loopNum = 0; loopNum < MAX_SWAP_CHAIN_FRAMES; loopNum++)
-    vkDestroyFramebuffer(vulkan_renderer->device, vulkan_renderer->swapchain->swap_chain_framebuffers[loopNum], NULL);
+    vkDestroyFramebuffer(vulkan_renderer->device, vulkan_renderer->swap_chain->swap_chain_framebuffers[loopNum], NULL);
 
   vkFreeCommandBuffers(vulkan_renderer->device, vulkan_renderer->command_pool, 3, vulkan_renderer->command_buffers);
 
-  swapchain_delete(vulkan_renderer->swapchain, vulkan_renderer);
+  swapchain_delete(vulkan_renderer->swap_chain, vulkan_renderer);
 
   for (int loopNum = 0; loopNum < MAX_SWAP_CHAIN_FRAMES; loopNum++)
-    vkDestroyImageView(vulkan_renderer->device, vulkan_renderer->swapchain->swap_chain_image_views[loopNum], NULL);
+    vkDestroyImageView(vulkan_renderer->device, vulkan_renderer->swap_chain->swap_chain_image_views[loopNum], NULL);
 
-  vkDestroySwapchainKHR(vulkan_renderer->device, vulkan_renderer->swap_chain, NULL);
+  vkDestroySwapchainKHR(vulkan_renderer->device, vulkan_renderer->swap_chain_khr, NULL);
 }
 
 void vulkan_device_cleanup(struct VulkanRenderer* vulkan_renderer) {
@@ -374,15 +377,15 @@ int create_swap_chain(struct VulkanRenderer* vulkan_renderer, int width, int hei
     extent.height = MAX(swap_chain_support.capabilities.minImageExtent.height, MIN(swap_chain_support.capabilities.maxImageExtent.height, extent.height));
   }
 
-  uint32_t imageCount = swap_chain_support.capabilities.minImageCount + 1;
-  if (swap_chain_support.capabilities.maxImageCount > 0 && imageCount > swap_chain_support.capabilities.maxImageCount)
-    imageCount = swap_chain_support.capabilities.maxImageCount;
+  uint32_t image_count = swap_chain_support.capabilities.minImageCount + 1;
+  if (swap_chain_support.capabilities.maxImageCount > 0 && image_count > swap_chain_support.capabilities.maxImageCount)
+    image_count = swap_chain_support.capabilities.maxImageCount;
 
   VkSwapchainCreateInfoKHR swapchain_info = {0};
   swapchain_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
   swapchain_info.surface = vulkan_renderer->surface;
 
-  swapchain_info.minImageCount = imageCount;
+  swapchain_info.minImageCount = image_count;
   swapchain_info.imageFormat = surface_format.format;
   swapchain_info.imageColorSpace = surface_format.colorSpace;
   swapchain_info.imageExtent = extent;
@@ -403,11 +406,11 @@ int create_swap_chain(struct VulkanRenderer* vulkan_renderer, int width, int hei
   swapchain_info.presentMode = present_mode;
   swapchain_info.clipped = VK_TRUE;
 
-  if (vkCreateSwapchainKHR(vulkan_renderer->device, &swapchain_info, NULL, &vulkan_renderer->swap_chain) != VK_SUCCESS)
+  if (vkCreateSwapchainKHR(vulkan_renderer->device, &swapchain_info, NULL, &vulkan_renderer->swap_chain_khr) != VK_SUCCESS)
     return VULKAN_RENDERER_CREATE_SWAP_CHAIN_ERROR;
 
-  vkGetSwapchainImagesKHR(vulkan_renderer->device, vulkan_renderer->swap_chain, &imageCount, NULL);
-  vkGetSwapchainImagesKHR(vulkan_renderer->device, vulkan_renderer->swap_chain, &imageCount, vulkan_renderer->swapchain->swap_chain_images);
+  vkGetSwapchainImagesKHR(vulkan_renderer->device, vulkan_renderer->swap_chain_khr, &image_count, NULL);
+  vkGetSwapchainImagesKHR(vulkan_renderer->device, vulkan_renderer->swap_chain_khr, &image_count, vulkan_renderer->swap_chain->swap_chain_images);
 
   vulkan_renderer->swap_chain_image_format = surface_format.format;
   vulkan_renderer->swap_chain_extent = extent;
@@ -478,24 +481,6 @@ void create_depth_attachment(struct VulkanRenderer* vulkan_renderer, struct VkAt
   depth_attachment->finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 }
 
-int create_framebuffers(struct VulkanRenderer* vulkan_renderer) {
-  for (int loopNum = 0; loopNum < MAX_SWAP_CHAIN_FRAMES; loopNum++) {
-    VkFramebufferCreateInfo framebufferInfo = {0};
-    framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-    framebufferInfo.renderPass = vulkan_renderer->swapchain->render_pass;
-    framebufferInfo.attachmentCount = 1;
-    framebufferInfo.pAttachments = &vulkan_renderer->swapchain->swap_chain_image_views[loopNum];
-    framebufferInfo.width = vulkan_renderer->swap_chain_extent.width;
-    framebufferInfo.height = vulkan_renderer->swap_chain_extent.height;
-    framebufferInfo.layers = 1;
-
-    if (vkCreateFramebuffer(vulkan_renderer->device, &framebufferInfo, NULL, &vulkan_renderer->swapchain->swap_chain_framebuffers[loopNum]) != VK_SUCCESS)
-      return VULKAN_RENDERER_CREATE_FRAME_BUFFER_ERROR;
-  }
-
-  return VULKAN_RENDERER_SUCCESS;
-}
-
 int create_command_pool(struct VulkanRenderer* vulkan_renderer) {
   VkCommandPoolCreateFlags command_pool_flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
@@ -538,8 +523,8 @@ int command_buffer_start(struct VulkanRenderer* vulkan_renderer, size_t i) {
 
   VkRenderPassBeginInfo render_pass_info = {0};
   render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-  render_pass_info.renderPass = vulkan_renderer->swapchain->render_pass;
-  render_pass_info.framebuffer = vulkan_renderer->swapchain->swap_chain_framebuffers[i];
+  render_pass_info.renderPass = vulkan_renderer->swap_chain->render_pass;
+  render_pass_info.framebuffer = vulkan_renderer->swap_chain->swap_chain_framebuffers[i];
   render_pass_info.renderArea.offset.x = 0;
   render_pass_info.renderArea.offset.y = 0;
   render_pass_info.renderArea.extent = vulkan_renderer->swap_chain_extent;
@@ -573,8 +558,8 @@ int command_buffer_reset(struct VulkanRenderer* vulkan_renderer, size_t i) {
 
   VkRenderPassBeginInfo renderPassInfo = {0};
   renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-  renderPassInfo.renderPass = vulkan_renderer->swapchain->render_pass;
-  renderPassInfo.framebuffer = vulkan_renderer->swapchain->swap_chain_framebuffers[i];
+  renderPassInfo.renderPass = vulkan_renderer->swap_chain->render_pass;
+  renderPassInfo.framebuffer = vulkan_renderer->swap_chain->swap_chain_framebuffers[i];
   renderPassInfo.renderArea.offset.x = 0;
   renderPassInfo.renderArea.offset.y = 0;
   renderPassInfo.renderArea.extent = vulkan_renderer->swap_chain_extent;
@@ -697,7 +682,7 @@ void recreate_swap_chain(struct VulkanRenderer* vulkan_renderer) {
   //create_render_pass(vulkan_renderer);
   //create_graphics_pipeline(vulkan_renderer);
   //create_depth_resources(vulkan_renderer);
-  create_framebuffers(vulkan_renderer);
+  //create_framebuffers(vulkan_renderer);
   create_command_buffers(vulkan_renderer);
 }
 

@@ -3,22 +3,23 @@
 #define G_BUFFER_H
 
 #include "mana/core/vulkanrenderer.h"
-#include "mana/graphics/graphicscommon.h"
 
 struct VulkanRenderer;
 
 struct GBuffer {
-  struct VkImage_T* swap_chain_images[MAX_SWAP_CHAIN_FRAMES];
-  struct VkImageView_T* swap_chain_image_views[MAX_SWAP_CHAIN_FRAMES];
-  struct VkFramebuffer_T* swap_chain_framebuffers[MAX_SWAP_CHAIN_FRAMES];
+  struct VkFramebuffer_T* gbuffer_framebuffer;
 
-  struct VkImage_T* depth_image;
-  struct VkDeviceMemory_T* depth_image_memory;
-  struct VkImageView_T* depth_image_view;
+  struct VkImage_T* color_image;
+  struct VkDeviceMemory_T* color_image_memory;
+  struct VkImageView_T* color_image_view;
 
   struct VkImage_T* normal_image;
   struct VkDeviceMemory_T* normal_image_memory;
   struct VkImageView_T* normal_image_view;
+
+  struct VkImage_T* depth_image;
+  struct VkDeviceMemory_T* depth_image_memory;
+  struct VkImageView_T* depth_image_view;
 
   struct VkRenderPass_T* render_pass;
 };

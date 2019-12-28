@@ -78,7 +78,7 @@ void window_prepare_frame(struct Window *window) {
 
   VkResult result = vkWaitForFences(vulkan_renderer->device, 2, vulkan_renderer->in_flight_fences, VK_TRUE, UINT64_MAX);
 
-  result = vkAcquireNextImageKHR(vulkan_renderer->device, vulkan_renderer->swap_chain, UINT64_MAX, vulkan_renderer->image_available_semaphores[vulkan_renderer->current_frame], VK_NULL_HANDLE, &window->image_index);
+  result = vkAcquireNextImageKHR(vulkan_renderer->device, vulkan_renderer->swap_chain_khr, UINT64_MAX, vulkan_renderer->image_available_semaphores[vulkan_renderer->current_frame], VK_NULL_HANDLE, &window->image_index);
 
   if (result == VK_ERROR_OUT_OF_DATE_KHR) {
     recreate_swap_chain(vulkan_renderer);
@@ -118,7 +118,7 @@ void window_end_frame(struct Window *window) {
   presentInfo.waitSemaphoreCount = 1;
   presentInfo.pWaitSemaphores = signalSemaphores;
 
-  VkSwapchainKHR swapChains[] = {vulkan_renderer->swap_chain};
+  VkSwapchainKHR swapChains[] = {vulkan_renderer->swap_chain_khr};
   presentInfo.swapchainCount = 1;
   presentInfo.pSwapchains = swapChains;
 

@@ -53,10 +53,8 @@ vulkan_desriptor_set_layout_error:
 void sprite_delete(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer) {
   vulkan_index_buffer_cleanup(sprite, vulkan_renderer);
   vulkan_vertex_buffer_cleanup(sprite, vulkan_renderer);
-  for (int buffer_num = 0; buffer_num < MAX_SWAP_CHAIN_FRAMES; buffer_num++) {
-    vkDestroyBuffer(vulkan_renderer->device, sprite->uniform_buffers[buffer_num], NULL);
-    vkFreeMemory(vulkan_renderer->device, sprite->uniform_buffers_memory[buffer_num], NULL);
-  }
+  vkDestroyBuffer(vulkan_renderer->device, sprite->uniform_buffer, NULL);
+  vkFreeMemory(vulkan_renderer->device, sprite->uniform_buffers_memory, NULL);
   mesh_delete(sprite->image_mesh);
   free(sprite->image_mesh);
   vulkan_texture_cleanup(sprite, vulkan_renderer);
@@ -111,8 +109,7 @@ int sprite_create_index_buffer(struct Sprite* sprite, struct VulkanRenderer* vul
 int sprite_create_uniform_buffers(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer) {
   VkDeviceSize buffer_size = sizeof(struct UniformBufferObject);
 
-  for (size_t i = 0; i < MAX_SWAP_CHAIN_FRAMES; i++)
-    graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &sprite->uniform_buffers[i], &sprite->uniform_buffers_memory[i]);
+  graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &sprite->uniform_buffer, &sprite->uniform_buffers_memory);
 
   return 0;
 }

@@ -19,8 +19,8 @@ int blit_effect_init(struct BlitEffect* blit_effect, struct VulkanRenderer* vulk
   VkDescriptorPoolSize pool_size;
   memset(&pool_size, 0, sizeof(pool_size));
 
-  // Post process and GUI per swap chain image
-  int sprite_descriptors = 6;
+  // Post process and GUI per swap chain image?
+  int sprite_descriptors = 1;
   pool_size.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
   pool_size.descriptorCount = sprite_descriptors;
 

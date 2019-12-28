@@ -10,10 +10,12 @@
 #include <stdalign.h>
 #include <vulkan/vulkan.h>
 #include "mana/core/corecommon.h"
+#include "mana/graphics/gbuffer.h"
 #include "mana/graphics/graphicscommon.h"
 #include "mana/graphics/graphicsutils.h"
 #include "mana/graphics/mesh.h"
 #include "mana/graphics/model.h"
+#include "mana/graphics/postprocess.h"
 #include "mana/graphics/swapchain.h"
 #include "mana/graphics/texture.h"
 
@@ -53,7 +55,7 @@ struct VulkanRenderer {
   struct VkDevice_T* device;
   struct VkQueue_T* graphics_queue;
   struct VkQueue_T* present_queue;
-  struct VkSwapchainKHR_T* swap_chain;
+  struct VkSwapchainKHR_T* swap_chain_khr;
   enum VkFormat swap_chain_image_format;
   struct VkExtent2D swap_chain_extent;
   struct VkDebugUtilsMessengerEXT_T* debug_messenger;
@@ -65,7 +67,9 @@ struct VulkanRenderer {
   size_t current_frame;
   struct QueueFamilyIndices indices;
   bool framebuffer_resized;
-  struct SwapChain* swapchain;
+  struct SwapChain* swap_chain;
+  struct GBuffer* gbuffer;
+  struct PostProcess* post_process;
 };
 
 enum VULKAN_RENDERER_STATUS { VULKAN_RENDERER_CREATE_WINDOW_ERROR = 0,
@@ -95,20 +99,13 @@ int create_surface(struct VulkanRenderer* vulkan_renderer);
 int pick_physical_device(struct VulkanRenderer* vulkan_renderer);
 int create_logical_device(struct VulkanRenderer* vulkan_renderer);
 int create_swap_chain(struct VulkanRenderer* vulkan_renderer, int width, int height);
-//int create_image_views(struct VulkanRenderer* vulkan_renderer);
-//int create_render_pass(struct VulkanRenderer* vulkan_renderer);
 int create_descriptor_set_layout(struct VulkanRenderer* vulkan_renderer);
 
 void create_color_attachment(struct VulkanRenderer* vulkan_renderer, struct VkAttachmentDescription* color_attachment);
 void create_depth_attachment(struct VulkanRenderer* vulkan_renderer, struct VkAttachmentDescription* depth_attachment);
 int create_depth_resources(struct VulkanRenderer* vulkan_renderer);
 
-int create_framebuffers(struct VulkanRenderer* vulkan_renderer);
 int create_command_pool(struct VulkanRenderer* vulkan_renderer);
-//int create_vertex_buffer(struct VulkanRenderer* vulkan_renderer);
-//int create_index_buffer(struct VulkanRenderer* vulkan_renderer);
-//int create_uniform_buffers(struct VulkanRenderer* vulkan_renderer);
-//int create_sprite_descriptor_pool(struct VulkanRenderer* vulkan_renderer);
 int create_command_buffers(struct VulkanRenderer* vulkan_renderer);
 int command_buffer_start(struct VulkanRenderer* vulkan_renderer, size_t i);
 int command_buffer_reset(struct VulkanRenderer* vulkan_renderer, size_t i);
@@ -117,7 +114,6 @@ int create_sync_objects(struct VulkanRenderer* vulkan_renderer);
 
 void vulkan_sync_objects_cleanup(struct VulkanRenderer* vulkan_renderer);
 void vulkan_command_pool_cleanup(struct VulkanRenderer* vulkan_renderer);
-//void vulkan_descriptor_set_layout_cleanup(struct VulkanRenderer* vulkan_renderer);
 void vulkan_swap_chain_cleanup(struct VulkanRenderer* vulkan_renderer);
 void vulkan_device_cleanup(struct VulkanRenderer* vulkan_renderer);
 void vulkan_surface_cleanup(struct VulkanRenderer* vulkan_renderer);
