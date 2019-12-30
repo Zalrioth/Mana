@@ -43,9 +43,9 @@ int vulkan_renderer_init(struct VulkanRenderer* vulkan_renderer, int width, int 
     goto vulkan_surface_error;
   if ((error_code = create_logical_device(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_device_error;
+
   if ((error_code = create_swap_chain(vulkan_renderer, width, height)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_swap_chain_error;
-
   swapchain_init(vulkan_renderer->swap_chain, vulkan_renderer);
   gbuffer_init(vulkan_renderer->gbuffer, vulkan_renderer);
 
@@ -618,18 +618,22 @@ int command_buffer_start_offscreen(struct VulkanRenderer* vulkan_renderer) {
   render_pass_info.renderArea.offset.y = 0;
   render_pass_info.renderArea.extent = vulkan_renderer->swap_chain_extent;
 
-  VkClearValue clear_values[2];
+  const int total_images = 3;
+  VkClearValue clear_values[total_images];
   memset(clear_values, 0, sizeof(clear_values));
 
   // Should not be clearing color only normals and depth
   // http://ogldev.atspace.co.uk/www/tutorial51/tutorial51.html
-  VkClearColorValue clear_color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+  VkClearColorValue clear_color = {{0.0f, 0.0f, 0.0f, 0.0f}};
   clear_values[0].color = clear_color;
 
-  VkClearDepthStencilValue depth_color = {1.0f, 0};
-  clear_values[1].depthStencil = depth_color;
+  VkClearColorValue clear_normals = {{0.0f, 0.0f, 0.0f, 1.0f}};
+  clear_values[1].color = clear_normals;
 
-  render_pass_info.clearValueCount = 2;
+  VkClearDepthStencilValue clear_depth = {1.0f, 0};
+  clear_values[2].depthStencil = clear_depth;
+
+  render_pass_info.clearValueCount = total_images;
   render_pass_info.pClearValues = clear_values;
 
   vkCmdBeginRenderPass(vulkan_renderer->offscreen_command_buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);

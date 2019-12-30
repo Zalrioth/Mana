@@ -1,6 +1,6 @@
 #include "mana/graphics/entities/sprite.h"
 
-int sprite_init(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer) {
+int sprite_init(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer, struct Shader* shader) {
   sprite->image_mesh = calloc(1, sizeof(struct Mesh));
   mesh_init(sprite->image_mesh);
 
@@ -26,6 +26,51 @@ int sprite_init(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer) {
   sprite_create_uniform_buffers(sprite, vulkan_renderer);
   //sprite_create_descriptor_sets(sprite, vulkan_renderer);
 
+  VkDescriptorSetLayout layout = {0};
+  layout = shader->descriptor_set_layout;
+
+  VkDescriptorSetAllocateInfo alloc_info = {0};
+  alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+  alloc_info.descriptorPool = shader->descriptor_pool;
+  alloc_info.descriptorSetCount = 1;
+  alloc_info.pSetLayouts = &layout;
+
+  if (vkAllocateDescriptorSets(vulkan_renderer->device, &alloc_info, &sprite->descriptor_set) != VK_SUCCESS) {
+    fprintf(stderr, "failed to allocate descriptor sets!\n");
+    return 0;
+  }
+
+  VkDescriptorBufferInfo buffer_info = {0};
+  buffer_info.buffer = sprite->uniform_buffer;
+  buffer_info.offset = 0;
+  buffer_info.range = sizeof(struct UniformBufferObject);
+
+  VkDescriptorImageInfo image_info = {0};
+  image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  image_info.imageView = sprite->image_texture->texture_image_view;
+  image_info.sampler = sprite->image_texture->texture_sampler;
+
+  VkWriteDescriptorSet dcs[2];
+  memset(dcs, 0, sizeof(dcs));
+
+  dcs[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  dcs[0].dstSet = sprite->descriptor_set;
+  dcs[0].dstBinding = 0;
+  dcs[0].dstArrayElement = 0;
+  dcs[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  dcs[0].descriptorCount = 1;
+  dcs[0].pBufferInfo = &buffer_info;
+
+  dcs[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  dcs[1].dstSet = sprite->descriptor_set;
+  dcs[1].dstBinding = 1;
+  dcs[1].dstArrayElement = 0;
+  dcs[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  dcs[1].descriptorCount = 1;
+  dcs[1].pImageInfo = &image_info;
+
+  vkUpdateDescriptorSets(vulkan_renderer->device, 2, dcs, 0, NULL);
+
   return SPRITE_SUCCESS;
 
   /*vulkan_index_buffer_error:
@@ -43,6 +88,62 @@ vulkan_texture_error:
 vulkan_desriptor_set_layout_error:
   vulkan_descriptor_set_layout_cleanup(vulkan_renderer);*/
 }
+
+/*int blit_sprite_init(struct BlitSprite* blit_sprite, struct VulkanRenderer* vulkan_renderer, struct Shader* shader) {
+  sprite_init(&blit_sprite->sprite, vulkan_renderer);
+
+  VkDescriptorSetLayout layouts[MAX_SWAP_CHAIN_FRAMES];
+  memset(layouts, 0, sizeof(layouts));
+
+  for (int loopNum = 0; loopNum < MAX_SWAP_CHAIN_FRAMES; loopNum++)
+    layouts[loopNum] = shader->descriptor_set_layout;
+
+  VkDescriptorSetAllocateInfo alloc_info = {0};
+  alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+  alloc_info.descriptorPool = shader->descriptor_pool;
+  alloc_info.descriptorSetCount = MAX_SWAP_CHAIN_FRAMES;
+  alloc_info.pSetLayouts = layouts;
+
+  if (vkAllocateDescriptorSets(vulkan_renderer->device, &alloc_info, blit_sprite->sprite.descriptor_sets) != VK_SUCCESS) {
+    fprintf(stderr, "failed to allocate descriptor sets!\n");
+    return 0;
+  }
+
+  for (size_t i = 0; i < MAX_SWAP_CHAIN_FRAMES; i++) {
+    VkDescriptorBufferInfo buffer_info = {0};
+    buffer_info.buffer = blit_sprite->sprite.uniform_buffers[i];
+    buffer_info.offset = 0;
+    buffer_info.range = sizeof(struct UniformBufferObject);
+
+    VkDescriptorImageInfo image_info = {0};
+    image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    image_info.imageView = blit_sprite->sprite.image_texture->texture_image_view;
+    image_info.sampler = blit_sprite->sprite.image_texture->texture_sampler;
+
+    VkWriteDescriptorSet dcs[2];
+    memset(dcs, 0, sizeof(dcs));
+
+    dcs[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    dcs[0].dstSet = blit_sprite->sprite.descriptor_sets[i];
+    dcs[0].dstBinding = 0;
+    dcs[0].dstArrayElement = 0;
+    dcs[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    dcs[0].descriptorCount = 1;
+    dcs[0].pBufferInfo = &buffer_info;
+
+    dcs[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    dcs[1].dstSet = blit_sprite->sprite.descriptor_sets[i];
+    dcs[1].dstBinding = 1;
+    dcs[1].dstArrayElement = 0;
+    dcs[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    dcs[1].descriptorCount = 1;
+    dcs[1].pImageInfo = &image_info;
+
+    vkUpdateDescriptorSets(vulkan_renderer->device, 2, dcs, 0, NULL);
+  }
+
+  return 1;
+}*/
 
 void sprite_delete(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer) {
   vulkan_index_buffer_cleanup(sprite, vulkan_renderer);

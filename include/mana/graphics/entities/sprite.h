@@ -3,6 +3,7 @@
 #define SPRITE_H
 
 #include "mana/graphics/graphicscommon.h"
+#include "mana/graphics/shaders/shader.h"
 #include "mana/graphics/utilities/texture.h"
 
 struct Sprite {
@@ -22,7 +23,7 @@ enum {
   SPRITE_SUCCESS = 1
 };
 
-int sprite_init(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer);
+int sprite_init(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer, struct Shader* shader);
 void sprite_delete(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer);
 int sprite_create_vertex_buffer(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer);
 int sprite_create_index_buffer(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer);

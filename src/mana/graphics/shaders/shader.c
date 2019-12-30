@@ -23,7 +23,7 @@ char* read_shader_file(const char* filename, int* file_length) {
   return result;
 }
 
-int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, char* vertex_shader, char* fragment_shader, char* geometry_shader, VkPipelineVertexInputStateCreateInfo vertex_input_info, bool depth_test) {
+int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, char* vertex_shader, char* fragment_shader, char* geometry_shader, VkPipelineVertexInputStateCreateInfo vertex_input_info, VkRenderPass render_pass, VkPipelineColorBlendStateCreateInfo color_blending, bool depth_test) {
   // Get the current working directory
 #if defined(IS_WINDOWS)
   char* buffer;
@@ -57,20 +57,6 @@ int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, c
   frag_shader_stage_info.pName = "main";
 
   VkPipelineShaderStageCreateInfo shader_stages[] = {vert_shader_stage_info, frag_shader_stage_info};
-
-  /*VkPipelineVertexInputStateCreateInfo vertex_input_info = {0};
-  vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-
-  VkVertexInputBindingDescription binding_description = get_binding_description();
-  VkVertexInputAttributeDescription attribute_descriptions[5];
-  memset(attribute_descriptions, 0, sizeof(attribute_descriptions));
-  get_attribute_descriptions(attribute_descriptions);
-
-  vertex_input_info.vertexBindingDescriptionCount = 1;
-  vertex_input_info.vertexAttributeDescriptionCount = 5;  // Note: length of attributeDescriptions
-  vertex_input_info.pVertexBindingDescriptions = &binding_description;
-  vertex_input_info.pVertexAttributeDescriptions = attribute_descriptions;
-  */
 
   VkPipelineInputAssemblyStateCreateInfo input_assembly = {0};
   input_assembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -120,21 +106,6 @@ int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, c
   depth_stencil.depthBoundsTestEnable = VK_FALSE;
   depth_stencil.stencilTestEnable = VK_FALSE;
 
-  VkPipelineColorBlendAttachmentState color_blend_attachment = {0};
-  color_blend_attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-  color_blend_attachment.blendEnable = VK_FALSE;
-
-  VkPipelineColorBlendStateCreateInfo color_blending = {0};
-  color_blending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-  color_blending.logicOpEnable = VK_FALSE;
-  color_blending.logicOp = VK_LOGIC_OP_COPY;
-  color_blending.attachmentCount = 1;
-  color_blending.pAttachments = &color_blend_attachment;
-  color_blending.blendConstants[0] = 0.0f;
-  color_blending.blendConstants[1] = 0.0f;
-  color_blending.blendConstants[2] = 0.0f;
-  color_blending.blendConstants[3] = 0.0f;
-
   VkPipelineLayoutCreateInfo pipeline_layout_info = {0};
   pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
   pipeline_layout_info.setLayoutCount = 1;
@@ -143,23 +114,23 @@ int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, c
   if (vkCreatePipelineLayout(vulkan_renderer->device, &pipeline_layout_info, NULL, &shader->pipeline_layout) != VK_SUCCESS)
     return 0;
 
-  VkGraphicsPipelineCreateInfo pipelineInfo = {0};
-  pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-  pipelineInfo.stageCount = 2;
-  pipelineInfo.pStages = shader_stages;
-  pipelineInfo.pVertexInputState = &vertex_input_info;
-  pipelineInfo.pInputAssemblyState = &input_assembly;
-  pipelineInfo.pViewportState = &viewport_state;
-  pipelineInfo.pRasterizationState = &rasterizer;
-  pipelineInfo.pMultisampleState = &multisampling;
-  pipelineInfo.pDepthStencilState = &depth_stencil;
-  pipelineInfo.pColorBlendState = &color_blending;
-  pipelineInfo.layout = shader->pipeline_layout;
-  pipelineInfo.renderPass = vulkan_renderer->swap_chain->render_pass;
-  pipelineInfo.subpass = 0;
-  pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+  VkGraphicsPipelineCreateInfo pipeline_info = {0};
+  pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+  pipeline_info.stageCount = 2;
+  pipeline_info.pStages = shader_stages;
+  pipeline_info.pVertexInputState = &vertex_input_info;
+  pipeline_info.pInputAssemblyState = &input_assembly;
+  pipeline_info.pViewportState = &viewport_state;
+  pipeline_info.pRasterizationState = &rasterizer;
+  pipeline_info.pMultisampleState = &multisampling;
+  pipeline_info.pDepthStencilState = &depth_stencil;
+  pipeline_info.pColorBlendState = &color_blending;
+  pipeline_info.layout = shader->pipeline_layout;
+  pipeline_info.renderPass = render_pass;
+  pipeline_info.subpass = 0;
+  pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
 
-  if (vkCreateGraphicsPipelines(vulkan_renderer->device, VK_NULL_HANDLE, 1, &pipelineInfo, NULL, &shader->graphics_pipeline) != VK_SUCCESS)
+  if (vkCreateGraphicsPipelines(vulkan_renderer->device, VK_NULL_HANDLE, 1, &pipeline_info, NULL, &shader->graphics_pipeline) != VK_SUCCESS)
     return VULKAN_RENDERER_CREATE_GRAPHICS_PIPELINE_ERROR;
 
   vkDestroyShaderModule(vulkan_renderer->device, frag_shader_module, NULL);

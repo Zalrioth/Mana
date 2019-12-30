@@ -41,6 +41,7 @@ int blit_swapchain_init(struct BlitSwapchain* blit_swapchain, struct VulkanRende
   mesh_assign_vertex(blit_swapchain->image_mesh->vertices, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f);
   mesh_assign_vertex(blit_swapchain->image_mesh->vertices, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
   mesh_assign_vertex(blit_swapchain->image_mesh->vertices, -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+
   mesh_assign_indice(blit_swapchain->image_mesh->indices, 0);
   mesh_assign_indice(blit_swapchain->image_mesh->indices, 1);
   mesh_assign_indice(blit_swapchain->image_mesh->indices, 2);

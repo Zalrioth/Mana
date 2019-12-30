@@ -39,12 +39,27 @@ int blit_effect_init(struct BlitEffect* blit_effect, struct VulkanRenderer* vulk
   vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
   VkVertexInputBindingDescription binding_description = get_binding_description();
-  vertex_input_info.vertexBindingDescriptionCount = 0;
+  vertex_input_info.vertexBindingDescriptionCount = 1;
   vertex_input_info.vertexAttributeDescriptionCount = 0;  // Note: length of attributeDescriptions
   vertex_input_info.pVertexBindingDescriptions = &binding_description;
   vertex_input_info.pVertexAttributeDescriptions = NULL;
 
-  shader_init(&blit_effect->shader, vulkan_renderer, "./assets/shaders/spirv/screenspace.vert.spv", "./assets/shaders/spirv/blit.frag.spv", NULL, vertex_input_info, VK_FALSE);
+  VkPipelineColorBlendAttachmentState color_blend_attachment = {0};
+  color_blend_attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+  color_blend_attachment.blendEnable = VK_FALSE;
+
+  VkPipelineColorBlendStateCreateInfo color_blending = {0};
+  color_blending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+  color_blending.logicOpEnable = VK_FALSE;
+  color_blending.logicOp = VK_LOGIC_OP_COPY;
+  color_blending.attachmentCount = 1;
+  color_blending.pAttachments = &color_blend_attachment;
+  color_blending.blendConstants[0] = 0.0f;
+  color_blending.blendConstants[1] = 0.0f;
+  color_blending.blendConstants[2] = 0.0f;
+  color_blending.blendConstants[3] = 0.0f;
+
+  shader_init(&blit_effect->shader, vulkan_renderer, "./assets/shaders/spirv/screenspace.vert.spv", "./assets/shaders/spirv/blit.frag.spv", NULL, vertex_input_info, vulkan_renderer->swap_chain->render_pass, color_blending, VK_FALSE);
 
   return 1;
 }

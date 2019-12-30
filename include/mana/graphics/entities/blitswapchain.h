@@ -8,6 +8,7 @@ struct BlitSwapchain {
   VkDescriptorSet descriptor_set;
 
   struct Mesh* image_mesh;
+
   VkBuffer vertex_buffer;
   VkDeviceMemory vertex_buffer_memory;
   VkBuffer index_buffer;

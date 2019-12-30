@@ -12,7 +12,7 @@ struct Shader {
   struct VkDescriptorSetLayout_T* descriptor_set_layout;
 };
 
-int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, char* vertex_shader, char* fragment_shader, char* geometry_shader, VkPipelineVertexInputStateCreateInfo vertex_input_info, bool depth_test);
+int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, char* vertex_shader, char* fragment_shader, char* geometry_shader, VkPipelineVertexInputStateCreateInfo vertex_input_info, VkRenderPass render_pass, VkPipelineColorBlendStateCreateInfo color_blending, bool depth_test);
 void shader_delete(struct Shader* shader, struct VulkanRenderer* vulkan_renderer);
 VkShaderModule shader_create_shader_module(struct VulkanRenderer* vulkan_renderer, const char* code, int length);
 int sprite_create_sprite_descriptor_pool(struct Shader* shader, struct VulkanRenderer* vulkan_renderer);

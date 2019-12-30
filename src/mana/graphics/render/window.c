@@ -76,6 +76,7 @@ void window_prepare_frame(struct Window *window) {
   glfwPollEvents();
   input_manager_process_input(window->input_manager, window);
 
+  // Wait for swap chain presentation to finish
   VkResult result = vkWaitForFences(vulkan_renderer->device, 2, vulkan_renderer->in_flight_fences, VK_TRUE, UINT64_MAX);
 
   result = vkAcquireNextImageKHR(vulkan_renderer->device, vulkan_renderer->swap_chain_khr, UINT64_MAX, vulkan_renderer->image_available_semaphores[vulkan_renderer->current_frame], VK_NULL_HANDLE, &window->image_index);
@@ -92,18 +93,21 @@ void window_end_frame(struct Window *window) {
   VkSubmitInfo submitInfo = {0};
   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-  VkSemaphore waitSemaphores[] = {vulkan_renderer->image_available_semaphores[vulkan_renderer->current_frame]};
-  VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-  submitInfo.waitSemaphoreCount = 1;
-  submitInfo.pWaitSemaphores = waitSemaphores;
-  submitInfo.pWaitDstStageMask = waitStages;
+  const int semaphores = 2;
+  VkSemaphore wait_semaphores[semaphores] = {vulkan_renderer->image_available_semaphores[vulkan_renderer->current_frame], vulkan_renderer->gbuffer->gbuffer_semaphore};
+  VkPipelineStageFlags wait_stages[semaphores] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+  //VkSemaphore wait_semaphores[] = {vulkan_renderer->image_available_semaphores[vulkan_renderer->current_frame]};
+  //VkPipelineStageFlags wait_stages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+  submitInfo.waitSemaphoreCount = semaphores;
+  submitInfo.pWaitSemaphores = wait_semaphores;
+  submitInfo.pWaitDstStageMask = wait_stages;
 
   submitInfo.commandBufferCount = 1;
   submitInfo.pCommandBuffers = &vulkan_renderer->command_buffers[window->image_index];
 
-  VkSemaphore signalSemaphores[] = {vulkan_renderer->render_finished_semaphores[vulkan_renderer->current_frame]};
+  VkSemaphore signal_semaphores[] = {vulkan_renderer->render_finished_semaphores[vulkan_renderer->current_frame]};
   submitInfo.signalSemaphoreCount = 1;
-  submitInfo.pSignalSemaphores = signalSemaphores;
+  submitInfo.pSignalSemaphores = signal_semaphores;
 
   vkResetFences(vulkan_renderer->device, 1, &vulkan_renderer->in_flight_fences[vulkan_renderer->current_frame]);
 
@@ -116,7 +120,7 @@ void window_end_frame(struct Window *window) {
   presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
   presentInfo.waitSemaphoreCount = 1;
-  presentInfo.pWaitSemaphores = signalSemaphores;
+  presentInfo.pWaitSemaphores = signal_semaphores;
 
   VkSwapchainKHR swapChains[] = {vulkan_renderer->swap_chain_khr};
   presentInfo.swapchainCount = 1;

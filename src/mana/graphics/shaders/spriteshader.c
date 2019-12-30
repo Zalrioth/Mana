@@ -58,7 +58,26 @@ int sprite_effect_init(struct SpriteEffect* sprite_effect, struct VulkanRenderer
   vertex_input_info.pVertexBindingDescriptions = &binding_description;
   vertex_input_info.pVertexAttributeDescriptions = attribute_descriptions;
 
-  shader_init(&sprite_effect->shader, vulkan_renderer, "./assets/shaders/spirv/sprite.vert.spv", "./assets/shaders/spirv/sprite.frag.spv", NULL, vertex_input_info, VK_TRUE);
+  const int color_attachments = 2;
+  VkPipelineColorBlendAttachmentState color_blend_attachments[color_attachments];
+  memset(color_blend_attachments, 0, sizeof(VkPipelineColorBlendAttachmentState) * color_attachments);
+  color_blend_attachments[0].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+  color_blend_attachments[0].blendEnable = VK_FALSE;
+  color_blend_attachments[1].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+  color_blend_attachments[1].blendEnable = VK_FALSE;
+
+  VkPipelineColorBlendStateCreateInfo color_blending = {0};
+  color_blending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+  color_blending.logicOpEnable = VK_FALSE;
+  color_blending.logicOp = VK_LOGIC_OP_COPY;
+  color_blending.attachmentCount = color_attachments;
+  color_blending.pAttachments = color_blend_attachments;
+  color_blending.blendConstants[0] = 0.0f;
+  color_blending.blendConstants[1] = 0.0f;
+  color_blending.blendConstants[2] = 0.0f;
+  color_blending.blendConstants[3] = 0.0f;
+
+  shader_init(&sprite_effect->shader, vulkan_renderer, "./assets/shaders/spirv/sprite.vert.spv", "./assets/shaders/spirv/sprite.frag.spv", NULL, vertex_input_info, vulkan_renderer->gbuffer->render_pass, color_blending, VK_TRUE);
 
   return 1;
 }

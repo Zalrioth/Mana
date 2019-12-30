@@ -23,6 +23,8 @@ struct GBuffer {
 
   VkRenderPass render_pass;
   VkSampler texture_sampler;
+
+  VkSemaphore gbuffer_semaphore;
 };
 
 int gbuffer_init(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer);
