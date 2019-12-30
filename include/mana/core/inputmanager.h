@@ -3,8 +3,8 @@
 #define INPUT_MANAGER_H
 
 #include <GLFW/glfw3.h>
-#include "mana/core/window.h"
-#include "stdbool.h"
+#include <stdbool.h>
+#include "mana/graphics/render/window.h"
 
 struct Window;
 

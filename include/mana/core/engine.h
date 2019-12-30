@@ -3,7 +3,7 @@
 #define ENGINE_H
 
 #include <time.h>
-#include "mana/core/window.h"
+#include "mana/graphics/render/window.h"
 
 #define FPS_COUNT 10
 

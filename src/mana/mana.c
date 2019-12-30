@@ -30,10 +30,3 @@ void mana_close_window(struct Mana* mana) {
 void mana_cleanup(struct Mana* mana) {
   engine_delete(&mana->engine);
 }
-
-void mana_print_fps(struct Mana* mana) {
-  printf("Target FPS: %lf\n", mana->engine.fps_counter.second_target_fps);
-  printf("Average FPS: %lf\n", mana->engine.fps_counter.second_average_fps);
-  printf("Draw FPS: %d\n", mana->engine.fps_counter.second_frames);
-  printf("Update FPS: %d\n\n", mana->engine.fps_counter.second_updates);
-}
