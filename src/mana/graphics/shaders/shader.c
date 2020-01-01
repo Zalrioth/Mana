@@ -90,7 +90,7 @@ int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, c
   rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
   rasterizer.lineWidth = 1.0f;
   rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-  rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+  rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
   rasterizer.depthBiasEnable = VK_FALSE;
 
   VkPipelineMultisampleStateCreateInfo multisampling = {0};
@@ -102,7 +102,7 @@ int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, c
   depth_stencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
   depth_stencil.depthTestEnable = depth_test;
   depth_stencil.depthWriteEnable = depth_test;
-  depth_stencil.depthCompareOp = VK_COMPARE_OP_LESS;
+  depth_stencil.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
   depth_stencil.depthBoundsTestEnable = VK_FALSE;
   depth_stencil.stencilTestEnable = VK_FALSE;
 

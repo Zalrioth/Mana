@@ -2,13 +2,15 @@
 
 int gbuffer_init(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer) {
   // NOTE: Look into why format is required to match swap chain
+  //VK_FORMAT_A2B10G10R10_UNORM_PACK32
+  enum VkFormat image_format = VK_FORMAT_R16G16B16A16_SFLOAT;
   //VkMemoryPropertyFlags properties =
-  graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, vulkan_renderer->swap_chain_extent.width, vulkan_renderer->swap_chain_extent.height, VK_FORMAT_A2B10G10R10_UNORM_PACK32, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &gbuffer->color_image, &gbuffer->color_image_memory);
-  graphics_utils_create_image_view(vulkan_renderer->device, gbuffer->color_image, VK_FORMAT_A2B10G10R10_UNORM_PACK32, VK_IMAGE_ASPECT_COLOR_BIT, &vulkan_renderer->gbuffer->color_image_view);
+  graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, vulkan_renderer->swap_chain_extent.width, vulkan_renderer->swap_chain_extent.height, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &gbuffer->color_image, &gbuffer->color_image_memory);
+  graphics_utils_create_image_view(vulkan_renderer->device, gbuffer->color_image, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT, &vulkan_renderer->gbuffer->color_image_view);
   //graphics_utils_transition_image_layout(vulkan_renderer->device, vulkan_renderer->graphics_queue, vulkan_renderer->command_pool, &gbuffer->color_image, VK_FORMAT_A2B10G10R10_UNORM_PACK32, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-  graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, vulkan_renderer->swap_chain_extent.width, vulkan_renderer->swap_chain_extent.height, VK_FORMAT_A2B10G10R10_UNORM_PACK32, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &gbuffer->normal_image, &gbuffer->normal_image_memory);
-  graphics_utils_create_image_view(vulkan_renderer->device, gbuffer->normal_image, VK_FORMAT_A2B10G10R10_UNORM_PACK32, VK_IMAGE_ASPECT_COLOR_BIT, &vulkan_renderer->gbuffer->normal_image_view);
+  graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, vulkan_renderer->swap_chain_extent.width, vulkan_renderer->swap_chain_extent.height, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &gbuffer->normal_image, &gbuffer->normal_image_memory);
+  graphics_utils_create_image_view(vulkan_renderer->device, gbuffer->normal_image, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT, &vulkan_renderer->gbuffer->normal_image_view);
   //graphics_utils_transition_image_layout(vulkan_renderer->device, vulkan_renderer->graphics_queue, vulkan_renderer->command_pool, &gbuffer->normal_image, VK_FORMAT_A2B10G10R10_UNORM_PACK32, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
   VkFormat depth_format = find_depth_format(vulkan_renderer);
@@ -18,10 +20,12 @@ int gbuffer_init(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer
 
   struct VkAttachmentDescription color_attachment = {0};
   create_color_attachment(vulkan_renderer, &color_attachment);
+  color_attachment.format = image_format;
   color_attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
   struct VkAttachmentDescription normal_attachment = {0};
   create_color_attachment(vulkan_renderer, &normal_attachment);
+  normal_attachment.format = image_format;
   normal_attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
   struct VkAttachmentDescription depth_attachment = {0};

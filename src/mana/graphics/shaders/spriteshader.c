@@ -7,6 +7,7 @@ int sprite_effect_init(struct SpriteEffect* sprite_effect, struct VulkanRenderer
   ubo_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
   ubo_layout_binding.pImmutableSamplers = NULL;
   ubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+  //ubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
   VkDescriptorSetLayoutBinding sampler_layout_binding = {0};
   sampler_layout_binding.binding = 1;

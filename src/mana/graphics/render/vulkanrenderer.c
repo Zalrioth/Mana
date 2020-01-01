@@ -353,7 +353,7 @@ int create_swap_chain(struct VulkanRenderer* vulkan_renderer, int width, int hei
 
   // Testing 10 bit swapchain output
   // Seems to work on Nvidia Studio Driver
-  surface_format.format = VK_FORMAT_A2B10G10R10_UNORM_PACK32;
+  //surface_format.format = VK_FORMAT_A2B10G10R10_UNORM_PACK32;
 
   VkPresentModeKHR present_mode = {0};
 
