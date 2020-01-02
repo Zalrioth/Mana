@@ -1,15 +1,17 @@
 #include "mana/graphics/entities/sprite.h"
 
-void calc_normal(vec3 p1, vec3 p2, vec3 p3, vec3* dest) {
+void calc_normal(vec3 p1, vec3 p2, vec3 p3, float* dest) {
   vec3 v1;
   glm_vec3_sub(p2, p1, v1);
 
   vec3 v2;
   glm_vec3_sub(p3, p1, v2);
 
-  (*dest)[0] = (v1[1] * v2[2]) - (v1[2] - v2[1]);
-  (*dest)[1] = (v1[2] * v2[0]) - (v1[0] * v2[2]);
-  (*dest)[2] = (v1[0] * v2[1]) - (v1[1] * v2[0]);
+  glm_vec3_crossn(v1, v2, dest);
+
+  //(*dest)[0] = (v1[1] * v2[2]) - (v1[2] - v2[1]);
+  //(*dest)[1] = (v1[2] * v2[0]) - (v1[0] * v2[2]);
+  //(*dest)[2] = (v1[0] * v2[1]) - (v1[1] * v2[0]);
 
   //(*dest)[0] = (v1[1] * v2[2]) - (v1[2] - v2[1]);
   //(*dest)[1] = -((v2[2] * v1[0]) - (v2[0] * v1[2]));
@@ -29,10 +31,10 @@ int sprite_init(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer, s
   vec3 pos4 = {-0.5f, 0.5f, 0.0f};
 
   vec3 norm1;
-  calc_normal(pos1, pos2, pos3, &norm1);
+  calc_normal(pos1, pos2, pos3, norm1);
 
   vec3 norm2;
-  calc_normal(pos2, pos3, pos4, &norm2);
+  calc_normal(pos2, pos3, pos4, norm2);
 
   //	outNormal = mat3(ubo.model) * normalMatrix * inNormal;
   mesh_assign_vertex(sprite->image_mesh->vertices, pos1[0], pos1[1], pos1[2], norm1[0], norm1[1], norm1[2], 1.0f, 0.0f);
