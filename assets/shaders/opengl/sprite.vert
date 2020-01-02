@@ -13,13 +13,14 @@ layout(location = 2) in vec2 inTexCoord;
 layout(location = 3) in vec3 inTangent;
 layout(location = 4) in vec3 inBitTangent;
 
-layout(location = 0) out vec3 mvVertexNormal;
+layout(location = 0) out vec3 outNormal;
 layout(location = 1) out vec2 fragTexCoord;
 
 void main() {
     gl_Position = ubo.proj * ubo.view * ubo.model * vec4(inPosition, 1.0);
     mat3 normalMatrix = transpose(inverse(mat3(ubo.view * ubo.model)));
-	mvVertexNormal = normalMatrix * inNormal;
+	//outNormal = normalMatrix * inNormal;
+    outNormal = normalMatrix * normalize(inNormal);
 
     //mvVertexNormal = (ubo.view * ubo.model * vec4(inNormal, 0.0)).xyz;
     // Normal multiplied by model matrix

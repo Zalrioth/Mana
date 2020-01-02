@@ -8,8 +8,12 @@ void calc_normal(vec3 p1, vec3 p2, vec3 p3, vec3* dest) {
   glm_vec3_sub(p3, p1, v2);
 
   (*dest)[0] = (v1[1] * v2[2]) - (v1[2] - v2[1]);
-  (*dest)[1] = -((v2[2] * v1[0]) - (v2[0] * v1[2]));
+  (*dest)[1] = (v1[2] * v2[0]) - (v1[0] * v2[2]);
   (*dest)[2] = (v1[0] * v2[1]) - (v1[1] * v2[0]);
+
+  //(*dest)[0] = (v1[1] * v2[2]) - (v1[2] - v2[1]);
+  //(*dest)[1] = -((v2[2] * v1[0]) - (v2[0] * v1[2]));
+  //(*dest)[2] = (v1[0] * v2[1]) - (v1[1] * v2[0]);
 }
 
 int sprite_init(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer, struct Shader* shader) {
@@ -30,6 +34,7 @@ int sprite_init(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer, s
   vec3 norm2;
   calc_normal(pos2, pos3, pos4, &norm2);
 
+  //	outNormal = mat3(ubo.model) * normalMatrix * inNormal;
   mesh_assign_vertex(sprite->image_mesh->vertices, pos1[0], pos1[1], pos1[2], norm1[0], norm1[1], norm1[2], 1.0f, 0.0f);
   mesh_assign_vertex(sprite->image_mesh->vertices, pos2[0], pos2[1], pos2[2], norm1[0], norm1[1], norm1[2], 0.0f, 0.0f);
   mesh_assign_vertex(sprite->image_mesh->vertices, pos3[0], pos3[1], pos3[2], norm1[0], norm1[1], norm1[2], 0.0f, 1.0f);
