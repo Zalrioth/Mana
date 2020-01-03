@@ -21,7 +21,15 @@ layout (location = 0) in vec2 inUV;
 
 layout (location = 0) out float outFragColor;
 
-vec3 WorldPosFromDepth(float depth) {
+#define Z_NEAR 10000000.0f
+#define Z_FAR 0.01f
+
+float linearDepth(float depth) {
+	float z = depth * 2.0f - 1.0f; 
+	return (2.0f * Z_NEAR * Z_FAR) / (Z_FAR + Z_NEAR - z * (Z_FAR - Z_NEAR));	
+}
+
+vec3 worldPosFromDepth(float depth) {
     float z = depth * 2.0 - 1.0;
     vec4 clipSpacePosition = vec4(fragTexCoord * 2.0 - 1.0, z, 1.0);
     vec4 viewSpacePosition = inverse(ubo.proj) * clipSpacePosition;

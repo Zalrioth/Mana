@@ -98,11 +98,12 @@ int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, c
   multisampling.sampleShadingEnable = VK_FALSE;
   multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
+  //https://ajweeks.com/blog/2019/04/06/ReverseZ/
   VkPipelineDepthStencilStateCreateInfo depth_stencil = {0};
   depth_stencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
   depth_stencil.depthTestEnable = depth_test;
   depth_stencil.depthWriteEnable = depth_test;
-  depth_stencil.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+  depth_stencil.depthCompareOp = VK_COMPARE_OP_GREATER_OR_EQUAL;
   depth_stencil.depthBoundsTestEnable = VK_FALSE;
   depth_stencil.stencilTestEnable = VK_FALSE;
 

@@ -15,14 +15,22 @@ void camera_init(struct Camera* camera) {
   camera_update_vectors(camera);
 }
 
-void camera_get_projection_matrix(struct Camera* camera, struct Engine* engine, mat4* dest) {
-  glm_perspective(glm_rad(camera->zoom), (float)engine->window.width / (float)engine->window.height, camera->z_near, camera->z_far, *dest);
+void camera_get_projection_matrix(struct Camera* camera, struct Engine* engine, mat4 dest) {
+  // The following will work but below implementation has inf Z far
+  // Use the following if a restricted Z far is needed
+  //glm_perspective(glm_rad(camera->zoom), (float)engine->window.width / (float)engine->window.height, camera->z_near, camera->z_far, dest);
+
+  float f = 1.0f / tan(glm_rad(camera->zoom) / 2.0f);
+  dest[0][0] = f / ((float)engine->window.width / (float)engine->window.height);
+  dest[1][1] = f;
+  dest[2][3] = -1.0f;
+  dest[3][2] = Z_NEAR;
 }
 
-void camera_get_view_matrix(struct Camera* camera, mat4* dest) {
+void camera_get_view_matrix(struct Camera* camera, mat4 dest) {
   vec3 position_front;
   glm_vec3_add(camera->position, camera->front, position_front);
-  glm_lookat(camera->position, position_front, camera->up, *dest);
+  glm_lookat(camera->position, position_front, camera->up, dest);
 }
 
 void camera_update_vectors(struct Camera* camera) {

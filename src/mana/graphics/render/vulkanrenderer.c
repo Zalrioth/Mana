@@ -540,55 +540,14 @@ int command_buffer_start_swapchain(struct VulkanRenderer* vulkan_renderer, size_
   render_pass_info.renderArea.offset.y = 0;
   render_pass_info.renderArea.extent = vulkan_renderer->swap_chain_extent;
 
-  VkClearValue clear_values[2];
-  memset(clear_values, 0, sizeof(clear_values));
-
-  // http://ogldev.atspace.co.uk/www/tutorial51/tutorial51.html
-  VkClearColorValue clear_color = {{0.0f, 0.0f, 0.0f, 1.0f}};
-  clear_values[0].color = clear_color;
-
-  VkClearDepthStencilValue depth_color = {1.0f, 0};
-  clear_values[1].depthStencil = depth_color;
-
-  render_pass_info.clearValueCount = 2;
-  render_pass_info.pClearValues = clear_values;
+  //VkClearValue clear_value = {0};
+  //VkClearColorValue clear_color = {{0.0f, 0.0f, 0.0f, 0.0f}};
+  //clear_value.color = clear_color;
+  //
+  //render_pass_info.clearValueCount = 1;
+  //render_pass_info.pClearValues = &clear_value;
 
   vkCmdBeginRenderPass(vulkan_renderer->command_buffers[i], &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
-
-  return VULKAN_RENDERER_SUCCESS;
-}
-
-// TODO: Dump
-int command_buffer_reset_swapchain(struct VulkanRenderer* vulkan_renderer, size_t i) {
-  VkCommandBufferBeginInfo beginInfo = {0};
-  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-  beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-
-  if (vkResetCommandBuffer(vulkan_renderer->command_buffers[i], beginInfo.flags) != VK_SUCCESS)
-    return VULKAN_RENDERER_CREATE_COMMAND_BUFFER_ERROR;
-
-  VkRenderPassBeginInfo renderPassInfo = {0};
-  renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-  renderPassInfo.renderPass = vulkan_renderer->swap_chain->render_pass;
-  renderPassInfo.framebuffer = vulkan_renderer->swap_chain->swap_chain_framebuffers[i];
-  renderPassInfo.renderArea.offset.x = 0;
-  renderPassInfo.renderArea.offset.y = 0;
-  renderPassInfo.renderArea.extent = vulkan_renderer->swap_chain_extent;
-
-  VkClearValue clear_values[2];
-  memset(clear_values, 0, sizeof(clear_values));
-
-  //http://ogldev.atspace.co.uk/www/tutorial51/tutorial51.html
-  VkClearColorValue clear_color = {{0.0f, 0.0f, 0.0f, 1.0f}};
-  clear_values[0].color = clear_color;
-
-  VkClearDepthStencilValue depth_color = {1.0f, 0};
-  clear_values[1].depthStencil = depth_color;
-
-  renderPassInfo.clearValueCount = 2;
-  renderPassInfo.pClearValues = clear_values;
-
-  vkCmdBeginRenderPass(vulkan_renderer->command_buffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
   return VULKAN_RENDERER_SUCCESS;
 }
@@ -627,10 +586,10 @@ int command_buffer_start_offscreen(struct VulkanRenderer* vulkan_renderer) {
   VkClearColorValue clear_color = {{0.0f, 0.0f, 0.0f, 0.0f}};
   clear_values[0].color = clear_color;
 
-  VkClearColorValue clear_normals = {{0.0f, 0.0f, 0.0f, 1.0f}};
+  VkClearColorValue clear_normals = {{0.0f, 0.0f, 0.0f, 0.0f}};
   clear_values[1].color = clear_normals;
 
-  VkClearDepthStencilValue clear_depth = {1.0f, 0};
+  VkClearDepthStencilValue clear_depth = {0.0f, 0};
   clear_values[2].depthStencil = clear_depth;
 
   render_pass_info.clearValueCount = total_images;

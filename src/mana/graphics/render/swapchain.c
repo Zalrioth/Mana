@@ -20,6 +20,7 @@ int swapchain_init(struct SwapChain* swap_chain, struct VulkanRenderer* vulkan_r
 
   struct VkAttachmentDescription color_attachment = {0};
   create_color_attachment(vulkan_renderer, &color_attachment);
+  color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 
   VkAttachmentReference color_attachment_ref = {0};
   color_attachment_ref.attachment = 0;

@@ -109,7 +109,6 @@ int create_depth_resources(struct VulkanRenderer* vulkan_renderer);
 int create_command_pool(struct VulkanRenderer* vulkan_renderer);
 int create_command_buffers(struct VulkanRenderer* vulkan_renderer);
 int command_buffer_start_swapchain(struct VulkanRenderer* vulkan_renderer, size_t i);
-int command_buffer_reset_swapchain(struct VulkanRenderer* vulkan_renderer, size_t i);
 int command_buffer_end_swapchain(struct VulkanRenderer* vulkan_renderer, size_t i);
 int command_buffer_start_offscreen(struct VulkanRenderer* vulkan_renderer);
 int command_buffer_end_offscreen(struct VulkanRenderer* vulkan_renderer);

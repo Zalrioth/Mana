@@ -4,14 +4,13 @@
 
 #include <cglm/cglm.h>
 #include "mana/core/engine.h"
+#include "mana/graphics/graphicscommon.h"
 
 #define YAW -90.0f
 #define PITCH 0.0f
 #define SPEED 2.5f
 #define SENSITIVITY 0.1f
 #define ZOOM 45.0f
-#define Z_NEAR 0.01f
-#define Z_FAR 1000.0f
 
 enum CameraMovement {
   FORWARD,
@@ -37,8 +36,8 @@ struct Camera {
 };
 
 void camera_init(struct Camera* camera);
-void camera_get_projection_matrix(struct Camera* camera, struct Engine* engine, mat4* dest);
-void camera_get_view_matrix(struct Camera* camera, mat4* dest);
+void camera_get_projection_matrix(struct Camera* camera, struct Engine* engine, mat4 dest);
+void camera_get_view_matrix(struct Camera* camera, mat4 dest);
 void camera_update_vectors(struct Camera* camera);
 
 #endif  // CAMERA_H
