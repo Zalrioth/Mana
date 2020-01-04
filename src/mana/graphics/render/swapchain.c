@@ -72,4 +72,11 @@ int swapchain_init(struct SwapChain* swap_chain, struct VulkanRenderer* vulkan_r
 
 void swapchain_delete(struct SwapChain* swap_chain, struct VulkanRenderer* vulkan_renderer) {
   vkDestroyRenderPass(vulkan_renderer->device, swap_chain->render_pass, NULL);
+
+  for (int loop_num = 0; loop_num < MAX_SWAP_CHAIN_FRAMES; loop_num++) {
+    vkDestroyFramebuffer(vulkan_renderer->device, swap_chain->swap_chain_framebuffers[loop_num], NULL);
+    vkDestroyImageView(vulkan_renderer->device, swap_chain->swap_chain_image_views[loop_num], NULL);
+  }
+
+  vkDestroySwapchainKHR(vulkan_renderer->device, vulkan_renderer->swap_chain_khr, NULL);
 }

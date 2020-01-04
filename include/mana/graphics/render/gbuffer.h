@@ -8,6 +8,9 @@ struct VulkanRenderer;
 
 struct GBuffer {
   VkFramebuffer gbuffer_framebuffer;
+  VkRenderPass render_pass;
+  VkSampler texture_sampler;
+  VkSemaphore gbuffer_semaphore;
 
   VkImage color_image;
   VkDeviceMemory color_image_memory;
@@ -21,10 +24,8 @@ struct GBuffer {
   VkDeviceMemory depth_image_memory;
   VkImageView depth_image_view;
 
-  VkRenderPass render_pass;
-  VkSampler texture_sampler;
-
-  VkSemaphore gbuffer_semaphore;
+  mat4 projection_matrix;
+  mat4 view_matrix;
 };
 
 int gbuffer_init(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer);

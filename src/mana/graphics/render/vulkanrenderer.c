@@ -133,17 +133,9 @@ void vulkan_swap_chain_cleanup(struct VulkanRenderer* vulkan_renderer) {
   for (int loop_num = 0; loop_num < MAX_FRAMES_IN_FLIGHT; loop_num++)
     vkWaitForFences(vulkan_renderer->device, 1, &vulkan_renderer->in_flight_fences[loop_num], VK_TRUE, UINT64_MAX);
 
-  for (int loopNum = 0; loopNum < MAX_SWAP_CHAIN_FRAMES; loopNum++)
-    vkDestroyFramebuffer(vulkan_renderer->device, vulkan_renderer->swap_chain->swap_chain_framebuffers[loopNum], NULL);
-
   vkFreeCommandBuffers(vulkan_renderer->device, vulkan_renderer->command_pool, 3, vulkan_renderer->command_buffers);
 
   swapchain_delete(vulkan_renderer->swap_chain, vulkan_renderer);
-
-  for (int loopNum = 0; loopNum < MAX_SWAP_CHAIN_FRAMES; loopNum++)
-    vkDestroyImageView(vulkan_renderer->device, vulkan_renderer->swap_chain->swap_chain_image_views[loopNum], NULL);
-
-  vkDestroySwapchainKHR(vulkan_renderer->device, vulkan_renderer->swap_chain_khr, NULL);
 }
 
 void vulkan_device_cleanup(struct VulkanRenderer* vulkan_renderer) {

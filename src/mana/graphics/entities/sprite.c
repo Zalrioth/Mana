@@ -173,13 +173,20 @@ vulkan_desriptor_set_layout_error:
 }*/
 
 void sprite_delete(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer) {
-  vulkan_index_buffer_cleanup(sprite, vulkan_renderer);
-  vulkan_vertex_buffer_cleanup(sprite, vulkan_renderer);
+  vkDestroyBuffer(vulkan_renderer->device, sprite->index_buffer, NULL);
+  vkFreeMemory(vulkan_renderer->device, sprite->index_buffer_memory, NULL);
+
+  vkDestroyBuffer(vulkan_renderer->device, sprite->vertex_buffer, NULL);
+  vkFreeMemory(vulkan_renderer->device, sprite->vertex_buffer_memory, NULL);
+
   vkDestroyBuffer(vulkan_renderer->device, sprite->uniform_buffer, NULL);
   vkFreeMemory(vulkan_renderer->device, sprite->uniform_buffers_memory, NULL);
+
   mesh_delete(sprite->image_mesh);
   free(sprite->image_mesh);
-  vulkan_texture_cleanup(sprite, vulkan_renderer);
+
+  texture_delete(vulkan_renderer, sprite->image_texture);
+  free(sprite->image_texture);
 }
 
 int sprite_create_vertex_buffer(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer) {
@@ -234,20 +241,4 @@ int sprite_create_uniform_buffers(struct Sprite* sprite, struct VulkanRenderer* 
   graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &sprite->uniform_buffer, &sprite->uniform_buffers_memory);
 
   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////////
-void vulkan_index_buffer_cleanup(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer) {
-  vkDestroyBuffer(vulkan_renderer->device, sprite->index_buffer, NULL);
-  vkFreeMemory(vulkan_renderer->device, sprite->index_buffer_memory, NULL);
-}
-
-void vulkan_vertex_buffer_cleanup(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer) {
-  vkDestroyBuffer(vulkan_renderer->device, sprite->vertex_buffer, NULL);
-  vkFreeMemory(vulkan_renderer->device, sprite->vertex_buffer_memory, NULL);
-}
-
-void vulkan_texture_cleanup(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer) {
-  texture_delete(vulkan_renderer, sprite->image_texture);
-  free(sprite->image_texture);
 }

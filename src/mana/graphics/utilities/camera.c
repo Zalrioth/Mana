@@ -20,6 +20,8 @@ void camera_get_projection_matrix(struct Camera* camera, struct Engine* engine, 
   // Use the following if a restricted Z far is needed
   //glm_perspective(glm_rad(camera->zoom), (float)engine->window.width / (float)engine->window.height, camera->z_near, camera->z_far, dest);
 
+  glm_mat4_zero(dest);
+
   float f = 1.0f / tan(glm_rad(camera->zoom) / 2.0f);
   dest[0][0] = f / ((float)engine->window.width / (float)engine->window.height);
   dest[1][1] = f;
@@ -28,6 +30,8 @@ void camera_get_projection_matrix(struct Camera* camera, struct Engine* engine, 
 }
 
 void camera_get_view_matrix(struct Camera* camera, mat4 dest) {
+  glm_mat4_zero(dest);
+
   vec3 position_front;
   glm_vec3_add(camera->position, camera->front, position_front);
   glm_lookat(camera->position, position_front, camera->up, dest);

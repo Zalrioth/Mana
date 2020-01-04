@@ -93,8 +93,12 @@ int blit_swapchain_init(struct BlitSwapchain* blit_swapchain, struct VulkanRende
 }
 
 void blit_swapchain_delete(struct BlitSwapchain* blit_swapchain, struct VulkanRenderer* vulkan_renderer) {
-  //vulkan_index_buffer_cleanup(blit_swapchain, vulkan_renderer);
-  //vulkan_vertex_buffer_cleanup(blit_swapchain, vulkan_renderer);
+  vkDestroyBuffer(vulkan_renderer->device, blit_swapchain->index_buffer, NULL);
+  vkFreeMemory(vulkan_renderer->device, blit_swapchain->index_buffer_memory, NULL);
+
+  vkDestroyBuffer(vulkan_renderer->device, blit_swapchain->vertex_buffer, NULL);
+  vkFreeMemory(vulkan_renderer->device, blit_swapchain->vertex_buffer_memory, NULL);
+
   mesh_delete(blit_swapchain->image_mesh);
   free(blit_swapchain->image_mesh);
 }

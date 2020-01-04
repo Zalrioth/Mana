@@ -122,13 +122,15 @@ int gbuffer_init(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer
 
   vkCreateSemaphore(vulkan_renderer->device, &semaphore_info, NULL, &gbuffer->gbuffer_semaphore);
 
+  glm_mat4_zero(gbuffer->projection_matrix);
+  glm_mat4_zero(gbuffer->view_matrix);
+
   return 1;
   //return VULKAN_RENDERER_SUCCESS;
 }
 
 void gbuffer_delete(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer) {
   vkDestroySemaphore(vulkan_renderer->device, gbuffer->gbuffer_semaphore, NULL);
-
   vkDestroySampler(vulkan_renderer->device, gbuffer->texture_sampler, NULL);
   vkDestroyFramebuffer(vulkan_renderer->device, gbuffer->gbuffer_framebuffer, NULL);
   vkDestroyRenderPass(vulkan_renderer->device, gbuffer->render_pass, NULL);
