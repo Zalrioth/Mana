@@ -20,7 +20,7 @@ int post_process_init(struct PostProcess* post_process, struct VulkanRenderer* v
     struct VkAttachmentReference color_attachment_reference = color_attachment_ref;
     VkSubpassDescription subpass = {0};
     subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    subpass.colorAttachmentCount = 2;
+    subpass.colorAttachmentCount = 1;
     subpass.pColorAttachments = &color_attachment_reference;
     subpass.pDepthStencilAttachment = VK_NULL_HANDLE;
 
@@ -92,4 +92,6 @@ int post_process_delete(struct PostProcess* post_process, struct VulkanRenderer*
     vkDestroyImage(vulkan_renderer->device, post_process->color_images[ping_pong_target], NULL);
     vkFreeMemory(vulkan_renderer->device, post_process->color_image_memories[ping_pong_target], NULL);
   }
+
+  return 1;
 }

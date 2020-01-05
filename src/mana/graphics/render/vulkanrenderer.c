@@ -49,7 +49,7 @@ int vulkan_renderer_init(struct VulkanRenderer* vulkan_renderer, int width, int 
     goto vulkan_swap_chain_error;
   swapchain_init(vulkan_renderer->swap_chain, vulkan_renderer);
   gbuffer_init(vulkan_renderer->gbuffer, vulkan_renderer);
-  post_provess_init(vulkan_renderer->post_process, vulkan_renderer);
+  post_process_init(vulkan_renderer->post_process, vulkan_renderer);
 
   if ((error_code = create_command_pool(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_command_pool_error;
@@ -80,6 +80,8 @@ window_error:
 
 // TODO: Clean up da poopoo code
 void vulkan_renderer_delete(struct VulkanRenderer* vulkan_renderer) {
+  post_process_delete(vulkan_renderer->post_process, vulkan_renderer);
+  free(vulkan_renderer->post_process);
   gbuffer_delete(vulkan_renderer->gbuffer, vulkan_renderer);
   free(vulkan_renderer->gbuffer);
   vulkan_swap_chain_cleanup(vulkan_renderer);

@@ -19,5 +19,6 @@ struct PostProcess {
 };
 
 int post_process_init(struct PostProcess* post_process, struct VulkanRenderer* vulkan_renderer);
+int post_process_delete(struct PostProcess* post_process, struct VulkanRenderer* vulkan_renderer);
 
 #endif  // POST_PROCESS_H
