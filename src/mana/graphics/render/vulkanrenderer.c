@@ -9,6 +9,7 @@ int vulkan_renderer_init(struct VulkanRenderer* vulkan_renderer, int width, int 
   memset(vulkan_renderer, 0, sizeof(struct VulkanRenderer));
   vulkan_renderer->swap_chain = calloc(1, sizeof(struct SwapChain));
   vulkan_renderer->gbuffer = calloc(1, sizeof(struct GBuffer));
+  vulkan_renderer->post_process = calloc(1, sizeof(struct PostProcess));
 
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
@@ -48,6 +49,7 @@ int vulkan_renderer_init(struct VulkanRenderer* vulkan_renderer, int width, int 
     goto vulkan_swap_chain_error;
   swapchain_init(vulkan_renderer->swap_chain, vulkan_renderer);
   gbuffer_init(vulkan_renderer->gbuffer, vulkan_renderer);
+  post_provess_init(vulkan_renderer->post_process, vulkan_renderer);
 
   if ((error_code = create_command_pool(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_command_pool_error;

@@ -30,7 +30,7 @@ int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, c
   buffer = _getcwd(NULL, 0);
   printf("%s \nLength: %llu\n", buffer, strlen(buffer));
 #else
-  char cwd[LARGE_BUFFER];
+  char cwd[4096];
     getcwd(cwd, sizeof(cwd);
     printf("Current working dir: %s\n", cwd);
 #endif
@@ -98,7 +98,6 @@ int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, c
   multisampling.sampleShadingEnable = VK_FALSE;
   multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
-  //https://ajweeks.com/blog/2019/04/06/ReverseZ/
   VkPipelineDepthStencilStateCreateInfo depth_stencil = {0};
   depth_stencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
   depth_stencil.depthTestEnable = depth_test;

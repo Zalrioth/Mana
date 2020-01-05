@@ -29,8 +29,9 @@ int sprite_create_vertex_buffer(struct Sprite* sprite, struct VulkanRenderer* vu
 int sprite_create_index_buffer(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer);
 int sprite_create_uniform_buffers(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer);
 
-void vulkan_index_buffer_cleanup(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer);
-void vulkan_vertex_buffer_cleanup(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer);
-void vulkan_texture_cleanup(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer);
+int vulkan_index_buffer_cleanup(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer);
+int vulkan_vertex_buffer_cleanup(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer);
+int vulkan_texture_cleanup(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer);
+int sprite_create_descriptor_sets(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer, struct Shader* shader);
 
 #endif  // SPRITE_H
