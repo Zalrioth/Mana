@@ -7,11 +7,9 @@
 
 struct BlitSwapChain {
   struct BlitShader blit_shader;
-
-  VkDescriptorSet descriptor_set;
-
   struct Mesh* image_mesh;
-
+  // Currently two for each post process ping pong, probably more needed later
+  VkDescriptorSet descriptor_sets[2];
   VkBuffer vertex_buffer;
   VkDeviceMemory vertex_buffer_memory;
   VkBuffer index_buffer;
@@ -20,5 +18,6 @@ struct BlitSwapChain {
 
 int blit_swap_chain_init(struct BlitSwapChain* blit_swapchain, struct VulkanRenderer* vulkan_renderer);
 void blit_swap_chain_delete(struct BlitSwapChain* blit_swapchain, struct VulkanRenderer* vulkan_renderer);
+int blit_swap_chain_render(struct BlitSwapChain* blit_swapchain, struct VulkanRenderer* vulkan_renderer);
 
 #endif  // BLIT_SWAP_CHAIN_H

@@ -1,6 +1,6 @@
 #include "mana/graphics/shaders/blitshader.h"
 
-int blit_shader_init(struct BlitShader* blit_shader, struct VulkanRenderer* vulkan_renderer) {
+int blit_shader_init(struct BlitShader* blit_shader, struct VulkanRenderer* vulkan_renderer, VkRenderPass render_pass, int descriptors) {
   VkDescriptorSetLayoutBinding sampler_layout_binding = {0};
   sampler_layout_binding.binding = 0;
   sampler_layout_binding.descriptorCount = 1;
@@ -19,18 +19,16 @@ int blit_shader_init(struct BlitShader* blit_shader, struct VulkanRenderer* vulk
   VkDescriptorPoolSize pool_size;
   memset(&pool_size, 0, sizeof(pool_size));
 
-  // Post process and GUI per swap chain image?
-  int sprite_descriptors = 1;
   pool_size.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  pool_size.descriptorCount = sprite_descriptors;
+  pool_size.descriptorCount = descriptors;
 
-  VkDescriptorPoolCreateInfo poolInfo = {0};
-  poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-  poolInfo.poolSizeCount = 1;
-  poolInfo.pPoolSizes = &pool_size;
-  poolInfo.maxSets = sprite_descriptors;
+  VkDescriptorPoolCreateInfo pool_info = {0};
+  pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+  pool_info.poolSizeCount = 1;
+  pool_info.pPoolSizes = &pool_size;
+  pool_info.maxSets = descriptors;
 
-  if (vkCreateDescriptorPool(vulkan_renderer->device, &poolInfo, NULL, &blit_shader->shader.descriptor_pool) != VK_SUCCESS) {
+  if (vkCreateDescriptorPool(vulkan_renderer->device, &pool_info, NULL, &blit_shader->shader.descriptor_pool) != VK_SUCCESS) {
     fprintf(stderr, "failed to create descriptor pool!\n");
     return 0;
   }
@@ -59,7 +57,7 @@ int blit_shader_init(struct BlitShader* blit_shader, struct VulkanRenderer* vulk
   color_blending.blendConstants[2] = 0.0f;
   color_blending.blendConstants[3] = 0.0f;
 
-  shader_init(&blit_shader->shader, vulkan_renderer, "./assets/shaders/spirv/screenspace.vert.spv", "./assets/shaders/spirv/blit.frag.spv", NULL, vertex_input_info, vulkan_renderer->swap_chain->render_pass, color_blending, VK_FALSE);
+  shader_init(&blit_shader->shader, vulkan_renderer, "./assets/shaders/spirv/screenspace.vert.spv", "./assets/shaders/spirv/blit.frag.spv", NULL, vertex_input_info, render_pass, color_blending, VK_FALSE);
 
   return 1;
 }

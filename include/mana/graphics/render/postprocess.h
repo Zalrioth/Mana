@@ -8,7 +8,7 @@
 struct PostProcess {
   VkCommandBuffer post_process_command_buffers[2];
   struct VkFramebuffer_T* post_process_framebuffers[2];
-  VkRenderPass render_passes[2];
+  VkRenderPass render_pass;
   VkSemaphore post_process_semaphores[2];
   VkSampler texture_sampler;
 

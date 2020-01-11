@@ -14,14 +14,13 @@ struct SwapChain {
   VkSwapchainKHR swap_chain_khr;
   VkFormat swap_chain_image_format;
   VkExtent2D swap_chain_extent;
+  VkRenderPass render_pass;
   size_t current_frame;
 
   VkCommandBuffer swap_chain_command_buffers[MAX_SWAP_CHAIN_FRAMES];
-  struct VkImage_T* swap_chain_images[MAX_SWAP_CHAIN_FRAMES];
-  struct VkImageView_T* swap_chain_image_views[MAX_SWAP_CHAIN_FRAMES];
-  struct VkFramebuffer_T* swap_chain_framebuffers[MAX_SWAP_CHAIN_FRAMES];
-
-  struct VkRenderPass_T* render_pass;
+  VkImage swap_chain_images[MAX_SWAP_CHAIN_FRAMES];
+  VkImageView swap_chain_image_views[MAX_SWAP_CHAIN_FRAMES];
+  VkFramebuffer swap_chain_framebuffers[MAX_SWAP_CHAIN_FRAMES];
 };
 
 int swap_chain_init(struct SwapChain* swap_chain, struct VulkanRenderer* vulkan_renderer, int width, int height);

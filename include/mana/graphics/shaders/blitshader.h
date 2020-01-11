@@ -10,7 +10,7 @@ struct BlitShader {
   struct Shader shader;
 };
 
-int blit_shader_init(struct BlitShader* blit_effect, struct VulkanRenderer* vulkan_renderer);
+int blit_shader_init(struct BlitShader* blit_effect, struct VulkanRenderer* vulkan_renderer, VkRenderPass render_pass, int descriptors);
 void blit_shader_delete(struct BlitShader* blit_effect, struct VulkanRenderer* vulkan_renderer);
 
 #endif  // BLIT_EFFECT_H

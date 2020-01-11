@@ -5,7 +5,7 @@
 #include <mana/graphics/shaders/blitshader.h>
 #include "mana/graphics/shaders/shader.h"
 
-struct BlitSwapChain {
+struct BlitPostProcess {
   struct BlitShader blit_shader;
 
   VkDescriptorSet descriptor_set;
@@ -18,7 +18,8 @@ struct BlitSwapChain {
   VkDeviceMemory index_buffer_memory;
 };
 
-int blit_swapchain_init(struct BlitSwapChain* blit_swapchain, struct VulkanRenderer* vulkan_renderer);
-void blit_swapchain_delete(struct BlitSwapChain* blit_swapchain, struct VulkanRenderer* vulkan_renderer);
+int blit_post_process_init(struct BlitPostProcess* blit_post_, struct VulkanRenderer* vulkan_renderer);
+void blit_post_process_delete(struct BlitPostProcess* blit_post_process, struct VulkanRenderer* vulkan_renderer);
+int blit_post_process_render(struct BlitPostProcess* blit_post_, struct VulkanRenderer* vulkan_renderer);
 
-#endif  // BLIT_SWAPCHAIN_H
+#endif  // BLIT_POST_PROCESS_H

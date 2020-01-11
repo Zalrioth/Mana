@@ -90,28 +90,28 @@ void window_prepare_frame(struct Window *window) {
 
 void window_end_frame(struct Window *window) {
   struct VulkanRenderer *vulkan_renderer = &window->renderer.vulkan_renderer;
-  VkSubmitInfo submitInfo = {0};
-  submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  VkSubmitInfo swap_chain_submit_info = {0};
+  swap_chain_submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
   const int semaphores = 2;
-  VkSemaphore wait_semaphores[semaphores] = {vulkan_renderer->swap_chain->image_available_semaphores[vulkan_renderer->swap_chain->current_frame], vulkan_renderer->gbuffer->gbuffer_semaphore};
+  VkSemaphore wait_semaphores[semaphores] = {vulkan_renderer->swap_chain->image_available_semaphores[vulkan_renderer->swap_chain->current_frame], vulkan_renderer->post_process->post_process_semaphores[vulkan_renderer->post_process->ping_pong ^ true]};
   VkPipelineStageFlags wait_stages[semaphores] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
   //VkSemaphore wait_semaphores[] = {vulkan_renderer->image_available_semaphores[vulkan_renderer->current_frame]};
   //VkPipelineStageFlags wait_stages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-  submitInfo.waitSemaphoreCount = semaphores;
-  submitInfo.pWaitSemaphores = wait_semaphores;
-  submitInfo.pWaitDstStageMask = wait_stages;
+  swap_chain_submit_info.waitSemaphoreCount = semaphores;
+  swap_chain_submit_info.pWaitSemaphores = wait_semaphores;
+  swap_chain_submit_info.pWaitDstStageMask = wait_stages;
 
-  submitInfo.commandBufferCount = 1;
-  submitInfo.pCommandBuffers = &vulkan_renderer->swap_chain->swap_chain_command_buffers[window->image_index];
+  swap_chain_submit_info.commandBufferCount = 1;
+  swap_chain_submit_info.pCommandBuffers = &vulkan_renderer->swap_chain->swap_chain_command_buffers[window->image_index];
 
   VkSemaphore signal_semaphores[] = {vulkan_renderer->swap_chain->render_finished_semaphores[vulkan_renderer->swap_chain->current_frame]};
-  submitInfo.signalSemaphoreCount = 1;
-  submitInfo.pSignalSemaphores = signal_semaphores;
+  swap_chain_submit_info.signalSemaphoreCount = 1;
+  swap_chain_submit_info.pSignalSemaphores = signal_semaphores;
 
   vkResetFences(vulkan_renderer->device, 1, &vulkan_renderer->swap_chain->in_flight_fences[vulkan_renderer->swap_chain->current_frame]);
 
-  VkResult result = vkQueueSubmit(vulkan_renderer->graphics_queue, 1, &submitInfo, vulkan_renderer->swap_chain->in_flight_fences[vulkan_renderer->swap_chain->current_frame]);
+  VkResult result = vkQueueSubmit(vulkan_renderer->graphics_queue, 1, &swap_chain_submit_info, vulkan_renderer->swap_chain->in_flight_fences[vulkan_renderer->swap_chain->current_frame]);
 
   if (result != VK_SUCCESS)
     fprintf(stderr, "Error to submit draw command buffer!\n");

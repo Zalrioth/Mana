@@ -54,13 +54,13 @@ int post_process_init(struct PostProcess* post_process, struct VulkanRenderer* v
     render_pass_info.dependencyCount = total_dependencies;
     render_pass_info.pDependencies = dependencies;
 
-    if (vkCreateRenderPass(vulkan_renderer->device, &render_pass_info, NULL, &post_process->render_passes[ping_pong_target]) != VK_SUCCESS)
+    if (vkCreateRenderPass(vulkan_renderer->device, &render_pass_info, NULL, &post_process->render_pass) != VK_SUCCESS)
       return 0;
 
     VkImageView attachments_framebuffer = post_process->color_image_views[ping_pong_target];
     VkFramebufferCreateInfo framebuffer_info = {0};
     framebuffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-    framebuffer_info.renderPass = post_process->render_passes[ping_pong_target];
+    framebuffer_info.renderPass = post_process->render_pass;
     framebuffer_info.attachmentCount = 1;
     framebuffer_info.pAttachments = &attachments_framebuffer;
     framebuffer_info.width = vulkan_renderer->swap_chain->swap_chain_extent.width;
@@ -94,10 +94,11 @@ int post_process_init(struct PostProcess* post_process, struct VulkanRenderer* v
 int post_process_delete(struct PostProcess* post_process, struct VulkanRenderer* vulkan_renderer) {
   vkDestroySampler(vulkan_renderer->device, post_process->texture_sampler, NULL);
 
+  vkDestroyRenderPass(vulkan_renderer->device, post_process->render_pass, NULL);
+
   for (int ping_pong_target = 0; ping_pong_target <= 1; ping_pong_target++) {
     vkDestroySemaphore(vulkan_renderer->device, post_process->post_process_semaphores[ping_pong_target], NULL);
     vkDestroyFramebuffer(vulkan_renderer->device, post_process->post_process_framebuffers[ping_pong_target], NULL);
-    vkDestroyRenderPass(vulkan_renderer->device, post_process->render_passes[ping_pong_target], NULL);
 
     vkDestroyImageView(vulkan_renderer->device, post_process->color_image_views[ping_pong_target], NULL);
     vkDestroyImage(vulkan_renderer->device, post_process->color_images[ping_pong_target], NULL);
@@ -117,7 +118,7 @@ int post_process_start(struct PostProcess* post_process, struct VulkanRenderer* 
 
   VkRenderPassBeginInfo render_pass_info = {0};
   render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-  render_pass_info.renderPass = post_process->render_passes[post_process->ping_pong];
+  render_pass_info.renderPass = post_process->render_pass;
   render_pass_info.framebuffer = post_process->post_process_framebuffers[post_process->ping_pong];
   render_pass_info.renderArea.offset.x = 0;
   render_pass_info.renderArea.offset.y = 0;
@@ -144,6 +145,12 @@ int post_process_stop(struct PostProcess* post_process, struct VulkanRenderer* v
   // Send to GPU for offscreen rendering then wait until finished
   VkSubmitInfo post_process_submit_info = {0};
   post_process_submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  VkSemaphore wait_semaphore = vulkan_renderer->post_process->post_process_semaphores[vulkan_renderer->post_process->ping_pong ^ true];
+  VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+  post_process_submit_info.waitSemaphoreCount = 1;
+  post_process_submit_info.pWaitSemaphores = &wait_semaphore;
+  post_process_submit_info.pWaitDstStageMask = &wait_stage;
+
   post_process_submit_info.commandBufferCount = 1;
   post_process_submit_info.pCommandBuffers = &post_process->post_process_command_buffers[post_process->ping_pong];
   VkSemaphore post_process_signal_semaphore = post_process->post_process_semaphores[post_process->ping_pong];
