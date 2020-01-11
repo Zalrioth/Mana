@@ -4,13 +4,13 @@
 
 #include "mana/graphics/shaders/shader.h"
 
-// Effect for blitting images to swapchain
+// Effect for blitting images
 
-struct BlitEffect {
+struct BlitShader {
   struct Shader shader;
 };
 
-int blit_effect_init(struct BlitEffect* blit_effect, struct VulkanRenderer* vulkan_renderer);
-void blit_effect_delete(struct BlitEffect* blit_effect, struct VulkanRenderer* vulkan_renderer);
+int blit_shader_init(struct BlitShader* blit_effect, struct VulkanRenderer* vulkan_renderer);
+void blit_shader_delete(struct BlitShader* blit_effect, struct VulkanRenderer* vulkan_renderer);
 
 #endif  // BLIT_EFFECT_H

@@ -66,15 +66,15 @@ int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, c
   VkViewport viewport = {0};
   viewport.x = 0.0f;
   viewport.y = 0.0f;
-  viewport.width = (float)vulkan_renderer->swap_chain_extent.width;
-  viewport.height = (float)vulkan_renderer->swap_chain_extent.height;
+  viewport.width = (float)vulkan_renderer->swap_chain->swap_chain_extent.width;
+  viewport.height = (float)vulkan_renderer->swap_chain->swap_chain_extent.height;
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
 
   VkRect2D scissor = {0};
   scissor.offset.x = 0;
   scissor.offset.y = 0;
-  scissor.extent = vulkan_renderer->swap_chain_extent;
+  scissor.extent = vulkan_renderer->swap_chain->swap_chain_extent;
 
   VkPipelineViewportStateCreateInfo viewport_state = {0};
   viewport_state.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;

@@ -43,8 +43,6 @@ struct SwapChainSupportDetails {
   struct VkSurfaceCapabilitiesKHR capabilities;
   struct Vector formats;
   struct Vector present_modes;
-  //struct VkSurfaceFormatKHR formats[SMALL_BUFFER];
-  //enum VkPresentModeKHR present_modes[SMALL_BUFFER];
 };
 
 struct VulkanRenderer {
@@ -55,17 +53,8 @@ struct VulkanRenderer {
   VkDevice device;
   VkQueue graphics_queue;
   VkQueue present_queue;
-  VkSwapchainKHR swap_chain_khr;
-  VkFormat swap_chain_image_format;
-  VkExtent2D swap_chain_extent;
   VkDebugUtilsMessengerEXT debug_messenger;
   VkCommandPool command_pool;
-  VkCommandBuffer command_buffers[MAX_SWAP_CHAIN_FRAMES];
-  VkSemaphore image_available_semaphores[MAX_FRAMES_IN_FLIGHT];
-  VkSemaphore render_finished_semaphores[MAX_FRAMES_IN_FLIGHT];
-  VkFence in_flight_fences[MAX_FRAMES_IN_FLIGHT];
-  VkCommandBuffer offscreen_command_buffer;
-  size_t current_frame;
   struct QueueFamilyIndices indices;
   bool framebuffer_resized;
   struct SwapChain* swap_chain;
@@ -99,7 +88,6 @@ int setup_debug_messenger(struct VulkanRenderer* vulkan_renderer);
 int create_surface(struct VulkanRenderer* vulkan_renderer);
 int pick_physical_device(struct VulkanRenderer* vulkan_renderer);
 int create_logical_device(struct VulkanRenderer* vulkan_renderer);
-int create_swap_chain(struct VulkanRenderer* vulkan_renderer, int width, int height);
 int create_descriptor_set_layout(struct VulkanRenderer* vulkan_renderer);
 
 void create_color_attachment(struct VulkanRenderer* vulkan_renderer, struct VkAttachmentDescription* color_attachment);
@@ -108,14 +96,7 @@ int create_depth_resources(struct VulkanRenderer* vulkan_renderer);
 
 int create_command_pool(struct VulkanRenderer* vulkan_renderer);
 int create_command_buffers(struct VulkanRenderer* vulkan_renderer);
-int command_buffer_start_swapchain(struct VulkanRenderer* vulkan_renderer, size_t i);
-int command_buffer_end_swapchain(struct VulkanRenderer* vulkan_renderer, size_t i);
-int command_buffer_start_offscreen(struct VulkanRenderer* vulkan_renderer);
-int command_buffer_end_offscreen(struct VulkanRenderer* vulkan_renderer);
-int create_sync_objects(struct VulkanRenderer* vulkan_renderer);
-void vulkan_sync_objects_cleanup(struct VulkanRenderer* vulkan_renderer);
 void vulkan_command_pool_cleanup(struct VulkanRenderer* vulkan_renderer);
-void vulkan_swap_chain_cleanup(struct VulkanRenderer* vulkan_renderer);
 void vulkan_device_cleanup(struct VulkanRenderer* vulkan_renderer);
 void vulkan_surface_cleanup(struct VulkanRenderer* vulkan_renderer);
 void vulkan_debug_cleanup(struct VulkanRenderer* vulkan_renderer);

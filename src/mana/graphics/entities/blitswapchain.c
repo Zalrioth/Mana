@@ -1,6 +1,10 @@
 #include "mana/graphics/entities/blitswapchain.h"
 
-int blit_swapchain_init(struct BlitSwapchain* blit_swapchain, struct VulkanRenderer* vulkan_renderer, struct Shader* shader) {
+int blit_swap_chain_init(struct BlitSwapChain* blit_swapchain, struct VulkanRenderer* vulkan_renderer) {
+  blit_shader_init(&blit_swapchain->blit_shader, vulkan_renderer);
+
+  struct Shader* shader = &blit_swapchain->blit_shader.shader;
+
   VkDescriptorSetLayout layout = {0};
   layout = shader->descriptor_set_layout;
 
@@ -92,7 +96,7 @@ int blit_swapchain_init(struct BlitSwapchain* blit_swapchain, struct VulkanRende
   return 1;
 }
 
-void blit_swapchain_delete(struct BlitSwapchain* blit_swapchain, struct VulkanRenderer* vulkan_renderer) {
+void blit_swap_chain_delete(struct BlitSwapChain* blit_swapchain, struct VulkanRenderer* vulkan_renderer) {
   vkDestroyBuffer(vulkan_renderer->device, blit_swapchain->index_buffer, NULL);
   vkFreeMemory(vulkan_renderer->device, blit_swapchain->index_buffer_memory, NULL);
 
@@ -101,4 +105,6 @@ void blit_swapchain_delete(struct BlitSwapchain* blit_swapchain, struct VulkanRe
 
   mesh_delete(blit_swapchain->image_mesh);
   free(blit_swapchain->image_mesh);
+
+  blit_shader_delete(&blit_swapchain->blit_shader, vulkan_renderer);
 }

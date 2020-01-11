@@ -6,6 +6,7 @@
 #include "mana/graphics/render/vulkanrenderer.h"
 
 struct PostProcess {
+  VkCommandBuffer post_process_command_buffers[2];
   struct VkFramebuffer_T* post_process_framebuffers[2];
   VkRenderPass render_passes[2];
   VkSemaphore post_process_semaphores[2];
@@ -20,5 +21,7 @@ struct PostProcess {
 
 int post_process_init(struct PostProcess* post_process, struct VulkanRenderer* vulkan_renderer);
 int post_process_delete(struct PostProcess* post_process, struct VulkanRenderer* vulkan_renderer);
+int post_process_start(struct PostProcess* post_process, struct VulkanRenderer* vulkan_renderer);
+int post_process_stop(struct PostProcess* post_process, struct VulkanRenderer* vulkan_renderer);
 
 #endif  // POST_PROCESS_H

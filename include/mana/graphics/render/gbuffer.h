@@ -7,6 +7,7 @@
 struct VulkanRenderer;
 
 struct GBuffer {
+  VkCommandBuffer gbuffer_command_buffer;
   VkFramebuffer gbuffer_framebuffer;
   VkRenderPass render_pass;
   VkSampler texture_sampler;
@@ -30,5 +31,7 @@ struct GBuffer {
 
 int gbuffer_init(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer);
 void gbuffer_delete(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer);
+int gbuffer_start(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer);
+int gbuffer_stop(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer);
 
 #endif  // G_BUFFER_H
