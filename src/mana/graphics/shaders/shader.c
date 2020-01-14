@@ -28,11 +28,11 @@ int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, c
 #if defined(IS_WINDOWS)
   char* buffer;
   buffer = _getcwd(NULL, 0);
-  printf("%s \nLength: %llu\n", buffer, strlen(buffer));
+  //printf("%s \nLength: %llu\n", buffer, strlen(buffer));
 #else
   char cwd[4096];
     getcwd(cwd, sizeof(cwd);
-    printf("Current working dir: %s\n", cwd);
+    //printf("Current working dir: %s\n", cwd);
 #endif
 
   int vertex_length = 0;

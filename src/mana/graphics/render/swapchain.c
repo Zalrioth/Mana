@@ -199,11 +199,16 @@ int swap_chain_init(struct SwapChain* swap_chain, struct VulkanRenderer* vulkan_
       return VULKAN_RENDERER_CREATE_SYNC_OBJECT_ERROR;
   }
 
+  swap_chain->blit_swap_chain = calloc(1, sizeof(struct BlitSwapChain));
+
   return 1;
   //return VULKAN_RENDERER_SUCCESS;
 }
 
 void swap_chain_delete(struct SwapChain* swap_chain, struct VulkanRenderer* vulkan_renderer) {
+  blit_swap_chain_delete(swap_chain->blit_swap_chain, vulkan_renderer);
+  free(swap_chain->blit_swap_chain);
+
   for (int loop_num = 0; loop_num < MAX_FRAMES_IN_FLIGHT; loop_num++)
     vkWaitForFences(vulkan_renderer->device, 1, &vulkan_renderer->swap_chain->in_flight_fences[loop_num], VK_TRUE, UINT64_MAX);
 
@@ -259,4 +264,77 @@ int swap_chain_stop(struct SwapChain* swap_chain, struct VulkanRenderer* vulkan_
     return VULKAN_RENDERER_CREATE_COMMAND_BUFFER_ERROR;
 
   return VULKAN_RENDERER_SUCCESS;
+}
+
+/////////////////////////////////////////////////
+
+int blit_swap_chain_init(struct BlitSwapChain* blit_swap_chain, struct VulkanRenderer* vulkan_renderer) {
+  blit_swap_chain->blit_shader = calloc(1, sizeof(struct BlitShader));
+  blit_shader_init(blit_swap_chain->blit_shader, vulkan_renderer, vulkan_renderer->swap_chain->render_pass, 2);
+
+  struct Shader* shader = blit_swap_chain->blit_shader->shader;
+
+  VkDescriptorSetLayout layout = {0};
+  layout = shader->descriptor_set_layout;
+
+  VkDescriptorSetAllocateInfo alloc_info = {0};
+  alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+  alloc_info.descriptorPool = shader->descriptor_pool;
+  alloc_info.descriptorSetCount = 1;
+  alloc_info.pSetLayouts = &layout;
+
+  memset(blit_swap_chain->descriptor_sets, 0, sizeof(blit_swap_chain->descriptor_sets));
+
+  for (int ping_pong_target = 0; ping_pong_target <= 1; ping_pong_target++) {
+    if (vkAllocateDescriptorSets(vulkan_renderer->device, &alloc_info, &blit_swap_chain->descriptor_sets[ping_pong_target]) != VK_SUCCESS) {
+      fprintf(stderr, "failed to allocate descriptor sets!\n");
+      return 0;
+    }
+
+    VkDescriptorImageInfo image_info = {0};
+    image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    image_info.imageView = vulkan_renderer->post_process->color_image_views[ping_pong_target];
+    image_info.sampler = vulkan_renderer->post_process->texture_sampler;
+
+    VkWriteDescriptorSet dc;
+    memset(&dc, 0, sizeof(dc));
+
+    dc.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    dc.dstSet = blit_swap_chain->descriptor_sets[ping_pong_target];
+    dc.dstBinding = 0;
+    dc.dstArrayElement = 0;
+    dc.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    dc.descriptorCount = 1;
+    dc.pImageInfo = &image_info;
+
+    vkUpdateDescriptorSets(vulkan_renderer->device, 1, &dc, 0, NULL);
+  }
+
+  blit_swap_chain->fullscreen_quad = calloc(1, sizeof(struct FullscreenQuad));
+  fullscreen_quad_init(blit_swap_chain->fullscreen_quad, vulkan_renderer);
+
+  return 1;
+}
+
+void blit_swap_chain_delete(struct BlitSwapChain* blit_swap_chain, struct VulkanRenderer* vulkan_renderer) {
+  fullscreen_quad_delete(blit_swap_chain->fullscreen_quad, vulkan_renderer);
+  free(blit_swap_chain->fullscreen_quad);
+  blit_shader_delete(blit_swap_chain->blit_shader, vulkan_renderer);
+  free(blit_swap_chain->blit_shader);
+}
+
+void blit_swap_chain_render(struct BlitSwapChain* blit_swap_chain, struct VulkanRenderer* vulkan_renderer) {
+  for (size_t swapchain_num = 0; swapchain_num < MAX_SWAP_CHAIN_FRAMES; swapchain_num++) {
+    swap_chain_start(vulkan_renderer->swap_chain, vulkan_renderer, swapchain_num);
+
+    vkCmdBindPipeline(vulkan_renderer->swap_chain->swap_chain_command_buffers[swapchain_num], VK_PIPELINE_BIND_POINT_GRAPHICS, blit_swap_chain->blit_shader->shader->graphics_pipeline);
+    VkBuffer vertex_buffers[] = {blit_swap_chain->fullscreen_quad->vertex_buffer};
+    VkDeviceSize offsets[] = {0};
+    vkCmdBindVertexBuffers(vulkan_renderer->swap_chain->swap_chain_command_buffers[swapchain_num], 0, 1, vertex_buffers, offsets);
+    vkCmdBindIndexBuffer(vulkan_renderer->swap_chain->swap_chain_command_buffers[swapchain_num], blit_swap_chain->fullscreen_quad->index_buffer, 0, VK_INDEX_TYPE_UINT32);
+    vkCmdBindDescriptorSets(vulkan_renderer->swap_chain->swap_chain_command_buffers[swapchain_num], VK_PIPELINE_BIND_POINT_GRAPHICS, blit_swap_chain->blit_shader->shader->pipeline_layout, 0, 1, &blit_swap_chain->descriptor_sets[vulkan_renderer->post_process->ping_pong ^ true], 0, NULL);
+    vkCmdDrawIndexed(vulkan_renderer->swap_chain->swap_chain_command_buffers[swapchain_num], blit_swap_chain->fullscreen_quad->mesh->indices->size, 1, 0, 0, 0);
+
+    swap_chain_stop(vulkan_renderer->swap_chain, vulkan_renderer, swapchain_num);
+  }
 }

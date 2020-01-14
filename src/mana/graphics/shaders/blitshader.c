@@ -1,6 +1,8 @@
 #include "mana/graphics/shaders/blitshader.h"
 
 int blit_shader_init(struct BlitShader* blit_shader, struct VulkanRenderer* vulkan_renderer, VkRenderPass render_pass, int descriptors) {
+  blit_shader->shader = calloc(1, sizeof(struct Shader));
+
   VkDescriptorSetLayoutBinding sampler_layout_binding = {0};
   sampler_layout_binding.binding = 0;
   sampler_layout_binding.descriptorCount = 1;
@@ -13,7 +15,7 @@ int blit_shader_init(struct BlitShader* blit_shader, struct VulkanRenderer* vulk
   layout_info.bindingCount = 1;
   layout_info.pBindings = &sampler_layout_binding;
 
-  if (vkCreateDescriptorSetLayout(vulkan_renderer->device, &layout_info, NULL, &blit_shader->shader.descriptor_set_layout) != VK_SUCCESS)
+  if (vkCreateDescriptorSetLayout(vulkan_renderer->device, &layout_info, NULL, &blit_shader->shader->descriptor_set_layout) != VK_SUCCESS)
     return 0;
 
   VkDescriptorPoolSize pool_size;
@@ -28,7 +30,7 @@ int blit_shader_init(struct BlitShader* blit_shader, struct VulkanRenderer* vulk
   pool_info.pPoolSizes = &pool_size;
   pool_info.maxSets = descriptors;
 
-  if (vkCreateDescriptorPool(vulkan_renderer->device, &pool_info, NULL, &blit_shader->shader.descriptor_pool) != VK_SUCCESS) {
+  if (vkCreateDescriptorPool(vulkan_renderer->device, &pool_info, NULL, &blit_shader->shader->descriptor_pool) != VK_SUCCESS) {
     fprintf(stderr, "failed to create descriptor pool!\n");
     return 0;
   }
@@ -57,13 +59,13 @@ int blit_shader_init(struct BlitShader* blit_shader, struct VulkanRenderer* vulk
   color_blending.blendConstants[2] = 0.0f;
   color_blending.blendConstants[3] = 0.0f;
 
-  shader_init(&blit_shader->shader, vulkan_renderer, "./assets/shaders/spirv/screenspace.vert.spv", "./assets/shaders/spirv/blit.frag.spv", NULL, vertex_input_info, render_pass, color_blending, VK_FALSE);
+  shader_init(blit_shader->shader, vulkan_renderer, "./assets/shaders/spirv/screenspace.vert.spv", "./assets/shaders/spirv/blit.frag.spv", NULL, vertex_input_info, render_pass, color_blending, VK_FALSE);
 
   return 1;
 }
 
 void blit_shader_delete(struct BlitShader* blit_shader, struct VulkanRenderer* vulkan_renderer) {
-  shader_delete(&blit_shader->shader, vulkan_renderer);
-
-  vkDestroyDescriptorPool(vulkan_renderer->device, blit_shader->shader.descriptor_pool, NULL);
+  vkDestroyDescriptorPool(vulkan_renderer->device, blit_shader->shader->descriptor_pool, NULL);
+  shader_delete(blit_shader->shader, vulkan_renderer);
+  free(blit_shader->shader);
 }

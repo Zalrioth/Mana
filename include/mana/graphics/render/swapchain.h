@@ -4,8 +4,18 @@
 
 #include "mana/graphics/graphicscommon.h"
 #include "mana/graphics/render/vulkanrenderer.h"
+#include "mana/graphics/shaders/blitshader.h"
+#include "mana/graphics/shaders/shader.h"
+#include "mana/graphics/utilities/fullscreenquad.h"
 
 struct VulkanRenderer;
+
+struct BlitSwapChain {
+  struct BlitShader* blit_shader;
+  // Currently two for each post process ping pong, probably more needed later
+  VkDescriptorSet descriptor_sets[2];
+  struct FullscreenQuad* fullscreen_quad;
+};
 
 struct SwapChain {
   VkSemaphore image_available_semaphores[MAX_FRAMES_IN_FLIGHT];
@@ -21,11 +31,17 @@ struct SwapChain {
   VkImage swap_chain_images[MAX_SWAP_CHAIN_FRAMES];
   VkImageView swap_chain_image_views[MAX_SWAP_CHAIN_FRAMES];
   VkFramebuffer swap_chain_framebuffers[MAX_SWAP_CHAIN_FRAMES];
+
+  struct BlitSwapChain* blit_swap_chain;
 };
 
 int swap_chain_init(struct SwapChain* swap_chain, struct VulkanRenderer* vulkan_renderer, int width, int height);
 void swap_chain_delete(struct SwapChain* swap_chain, struct VulkanRenderer* vulkan_renderer);
 int swap_chain_start(struct SwapChain* swap_chain, struct VulkanRenderer* vulkan_renderer, int swap_chain_num);
 int swap_chain_stop(struct SwapChain* swap_chain, struct VulkanRenderer* vulkan_renderer, int swap_chain_num);
+
+int blit_swap_chain_init(struct BlitSwapChain* blit_swap_chain, struct VulkanRenderer* vulkan_renderer);
+void blit_swap_chain_delete(struct BlitSwapChain* blit_swap_chain, struct VulkanRenderer* vulkan_renderer);
+void blit_swap_chain_render(struct BlitSwapChain* blit_swap_chain, struct VulkanRenderer* vulkan_renderer);
 
 #endif  // SWAP_CHAIN_H

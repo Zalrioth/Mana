@@ -25,8 +25,11 @@ static const bool enable_validation_layers = false;
 static const bool enable_validation_layers = true;
 #endif
 
-static const char* const validation_layers[] = {"VK_LAYER_LUNARG_standard_validation"};
-static const char* const device_extensions[] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+#define VALIDATION_LAYER_COUNT 1
+static const char* const validation_layers[VALIDATION_LAYER_COUNT] = {"VK_LAYER_LUNARG_standard_validation"};
+
+#define DEVICE_EXTENSION_COUNT 1
+static const char* const device_extensions[DEVICE_EXTENSION_COUNT] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
 struct QueueFamilyIndices {
   uint32_t graphics_family;

@@ -4,6 +4,15 @@
 
 #include <stdbool.h>
 #include "mana/graphics/render/vulkanrenderer.h"
+#include "mana/graphics/shaders/blitshader.h"
+#include "mana/graphics/shaders/shader.h"
+#include "mana/graphics/utilities/fullscreenquad.h"
+
+struct BlitPostProcess {
+  struct BlitShader* blit_shader;
+  VkDescriptorSet descriptor_set;
+  struct FullscreenQuad* fullscreen_quad;
+};
 
 struct PostProcess {
   VkCommandBuffer post_process_command_buffers[2];
@@ -17,11 +26,17 @@ struct PostProcess {
   struct VkImageView_T* color_image_views[2];
 
   bool ping_pong;
+
+  struct BlitPostProcess* blit_post_process;
 };
 
 int post_process_init(struct PostProcess* post_process, struct VulkanRenderer* vulkan_renderer);
 int post_process_delete(struct PostProcess* post_process, struct VulkanRenderer* vulkan_renderer);
 int post_process_start(struct PostProcess* post_process, struct VulkanRenderer* vulkan_renderer);
 int post_process_stop(struct PostProcess* post_process, struct VulkanRenderer* vulkan_renderer);
+
+int blit_post_process_init(struct BlitPostProcess* blit_post_, struct VulkanRenderer* vulkan_renderer);
+void blit_post_process_delete(struct BlitPostProcess* blit_post_process, struct VulkanRenderer* vulkan_renderer);
+int blit_post_process_render(struct BlitPostProcess* blit_post_, struct VulkanRenderer* vulkan_renderer);
 
 #endif  // POST_PROCESS_H

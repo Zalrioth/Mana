@@ -7,7 +7,7 @@
 // Effect for blitting images
 
 struct BlitShader {
-  struct Shader shader;
+  struct Shader* shader;
 };
 
 int blit_shader_init(struct BlitShader* blit_effect, struct VulkanRenderer* vulkan_renderer, VkRenderPass render_pass, int descriptors);
