@@ -155,19 +155,19 @@ int create_instance(struct VulkanRenderer* vulkan_renderer) {
   const char** glfw_extensions;
   glfw_extensions = glfwGetRequiredInstanceExtensions(&glfw_extension_count);
 
-  const char* convertedExtensions[3];
-  memset(convertedExtensions, 0, sizeof(convertedExtensions));
+  const char* converted_extensions[32];
+  memset(converted_extensions, 0, sizeof(converted_extensions));
 
-  for (int loopNum = 0; loopNum < glfw_extension_count; loopNum++)
-    convertedExtensions[loopNum] = glfw_extensions[loopNum];
+  for (int loop_num = 0; loop_num < glfw_extension_count; loop_num++)
+    converted_extensions[loop_num] = glfw_extensions[loop_num];
 
   if (enable_validation_layers) {
-    convertedExtensions[glfw_extension_count] = VK_EXT_DEBUG_UTILS_EXTENSION_NAME;  //"VK_EXT_DEBUG_UTILS_EXTENSION_NAME\0";
+    converted_extensions[glfw_extension_count] = VK_EXT_DEBUG_UTILS_EXTENSION_NAME;  //"VK_EXT_DEBUG_UTILS_EXTENSION_NAME\0";
     glfw_extension_count++;
   }
 
   create_info.enabledExtensionCount = glfw_extension_count;
-  create_info.ppEnabledExtensionNames = convertedExtensions;
+  create_info.ppEnabledExtensionNames = converted_extensions;
 
   if (enable_validation_layers) {
     create_info.enabledLayerCount = (uint32_t)1;
@@ -221,17 +221,92 @@ int pick_physical_device(struct VulkanRenderer* vulkan_renderer) {
   vkEnumeratePhysicalDevices(vulkan_renderer->instance, &device_count, devices.items);
   devices.size = device_count;
 
+  VkPhysicalDeviceProperties current_device_properties = {0};
+  uint32_t current_largest_heap = 0;
+  bool discrete_selected = false;
+
   for (int loop_num = 0; loop_num < device_count; loop_num++) {
-    if (is_device_suitable(vulkan_renderer, *((VkPhysicalDevice*)vector_get(&devices, loop_num)))) {
-      vulkan_renderer->physical_device = *((VkPhysicalDevice*)vector_get(&devices, loop_num));
-      break;
+    VkPhysicalDevice device = *((VkPhysicalDevice*)vector_get(&devices, loop_num));
+    VkPhysicalDeviceProperties device_properties;
+    vkGetPhysicalDeviceProperties(device, &device_properties);
+
+    if (is_device_suitable(vulkan_renderer, device)) {
+      if (device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+        VkPhysicalDeviceMemoryProperties device_memory_properties = {0};
+        vkGetPhysicalDeviceMemoryProperties(device, &device_memory_properties);
+        for (int heap_num = 0; heap_num < device_memory_properties.memoryHeapCount; heap_num++) {
+          VkMemoryHeap device_heap = device_memory_properties.memoryHeaps[heap_num];
+          if (device_heap.flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT && device_heap.size > current_largest_heap) {
+            discrete_selected = true;
+            current_largest_heap = device_heap.size;
+            current_device_properties = device_properties;
+            vulkan_renderer->physical_device = device;
+          }
+        }
+      } else if (current_device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU) {
+        if (discrete_selected == false) {
+          current_device_properties = device_properties;
+          vulkan_renderer->physical_device = device;
+        }
+      } else
+        printf("Unknown device: %s\n", device_properties.deviceName);
     }
   }
+
+  printf("Selected device: %s\n", current_device_properties.deviceName);
 
   if (vulkan_renderer->physical_device == VK_NULL_HANDLE)
     return VULKAN_RENDERER_PICK_PHYSICAL_DEVICE_ERROR;
 
+  vector_delete(&devices);
+
   return VULKAN_RENDERER_SUCCESS;
+}
+
+// TODO: Double check this
+// Graphics: Can render something
+// Present: Can draw to a screen
+bool is_device_suitable(struct VulkanRenderer* vulkan_renderer, VkPhysicalDevice device) {
+  uint32_t queue_family_count = 0;
+  vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, NULL);
+
+  struct Vector queue_families;
+  memset(&queue_families, 0, sizeof(queue_families));
+  vector_init(&queue_families, sizeof(VkQueueFamilyProperties));
+  vector_resize(&queue_families, queue_family_count);
+  vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families.items);
+  queue_families.size = queue_family_count;
+
+  bool graphics_family_found = false;
+  bool present_family_found = false;
+
+  //printf("%d", (*(VkQueueFamilyProperties*)vector_get(&queue_families, 0)).queueCount);
+
+  int index_num = 0;
+  for (int loop_num = 0; loop_num < queue_family_count; loop_num++) {
+    if (((VkQueueFamilyProperties*)vector_get(&queue_families, loop_num))->queueCount > 0 && ((VkQueueFamilyProperties*)vector_get(&queue_families, loop_num))->queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+      (&vulkan_renderer->indices)->graphics_family = index_num;
+      graphics_family_found = true;
+    }
+    VkBool32 present_support = false;
+    vkGetPhysicalDeviceSurfaceSupportKHR(device, index_num, vulkan_renderer->surface, &present_support);
+
+    if (((VkQueueFamilyProperties*)vector_get(&queue_families, loop_num))->queueCount > 0 && present_support) {
+      (&vulkan_renderer->indices)->present_family = index_num;
+      present_family_found = true;
+    }
+
+    if (graphics_family_found && present_family_found)
+      break;
+
+    index_num++;
+  }
+
+  if (!graphics_family_found || !present_family_found)
+    return false;
+
+  return true;
+  // TODO: Should check for extension support
 }
 
 int create_logical_device(struct VulkanRenderer* vulkan_renderer) {
@@ -350,67 +425,27 @@ int create_command_pool(struct VulkanRenderer* vulkan_renderer) {
   return VULKAN_RENDERER_SUCCESS;
 }
 
-// TODO: Double check this
-// Graphics: Can render something
-// Present: Can draw to a screen
-bool is_device_suitable(struct VulkanRenderer* vulkan_renderer, VkPhysicalDevice device) {
-  uint32_t queue_family_count = 0;
-  vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, NULL);
-
-  struct Vector queue_families;
-  memset(&queue_families, 0, sizeof(queue_families));
-  vector_init(&queue_families, sizeof(VkQueueFamilyProperties));
-  vector_resize(&queue_families, queue_family_count);
-  vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families.items);
-  queue_families.size = queue_family_count;
-
-  bool graphics_family_found = false;
-  bool present_family_found = false;
-
-  //printf("%d", (*(VkQueueFamilyProperties*)vector_get(&queue_families, 0)).queueCount);
-
-  int index_num = 0;
-  for (int loop_num = 0; loop_num < queue_family_count; loop_num++) {
-    if (((VkQueueFamilyProperties*)vector_get(&queue_families, loop_num))->queueCount > 0 && ((VkQueueFamilyProperties*)vector_get(&queue_families, loop_num))->queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-      (&vulkan_renderer->indices)->graphics_family = index_num;
-      graphics_family_found = true;
-    }
-    VkBool32 present_support = false;
-    vkGetPhysicalDeviceSurfaceSupportKHR(device, index_num, vulkan_renderer->surface, &present_support);
-
-    if (((VkQueueFamilyProperties*)vector_get(&queue_families, loop_num))->queueCount > 0 && present_support) {
-      (&vulkan_renderer->indices)->present_family = index_num;
-      present_family_found = true;
-    }
-
-    if (graphics_family_found && present_family_found)
-      break;
-
-    index_num++;
-  }
-
-  if (!graphics_family_found || !present_family_found)
-    return false;
-
-  return true;
-  // TODO: Should check for extension support
-}
-
 bool check_validation_layer_support() {
   uint32_t layer_count;
   vkEnumerateInstanceLayerProperties(&layer_count, NULL);
 
-  VkLayerProperties available_layers[layer_count];
-  vkEnumerateInstanceLayerProperties(&layer_count, available_layers);
+  struct Vector available_layers;
+  memset(&available_layers, 0, sizeof(available_layers));
+  vector_init(&available_layers, sizeof(VkLayerProperties));
+  vector_resize(&available_layers, layer_count);
+  vkEnumerateInstanceLayerProperties(&layer_count, available_layers.items);
+  available_layers.size = layer_count;
 
   bool layer_found = false;
 
   for (int loop_num = 0; loop_num < layer_count; loop_num++) {
-    if (strcmp(validation_layers[0], available_layers[loop_num].layerName) == 0) {
+    if (strcmp(validation_layers[0], ((VkLayerProperties*)vector_get(&available_layers, loop_num))->layerName) == 0) {
       layer_found = true;
       break;
     }
   }
+
+  vector_delete(&available_layers);
 
   return layer_found;
 }
