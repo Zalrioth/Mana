@@ -8,6 +8,8 @@
 #include "mana/graphics/shaders/shader.h"
 #include "mana/graphics/utilities/fullscreenquad.h"
 
+#define TOTOAL_POST_PROCESS_DEPENDENCIES 2
+
 struct BlitPostProcess {
   struct BlitShader* blit_shader;
   VkDescriptorSet descriptor_set;

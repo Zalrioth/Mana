@@ -12,7 +12,6 @@ struct VulkanRenderer;
 
 struct BlitSwapChain {
   struct BlitShader* blit_shader;
-  // Currently two for each post process ping pong, probably more needed later
   VkDescriptorSet descriptor_sets[2];
   struct FullscreenQuad* fullscreen_quad;
 };

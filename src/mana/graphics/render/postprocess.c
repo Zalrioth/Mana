@@ -21,9 +21,7 @@ int post_process_init(struct PostProcess* post_process, struct VulkanRenderer* v
   subpass.pColorAttachments = &color_attachment_reference;
   subpass.pDepthStencilAttachment = VK_NULL_HANDLE;
 
-  const int total_dependencies = 2;
-  VkSubpassDependency dependencies[total_dependencies];
-
+  VkSubpassDependency dependencies[TOTOAL_POST_PROCESS_DEPENDENCIES];
   dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
   dependencies[0].dstSubpass = 0;
   dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
@@ -47,7 +45,7 @@ int post_process_init(struct PostProcess* post_process, struct VulkanRenderer* v
   render_pass_info.attachmentCount = 1;
   render_pass_info.subpassCount = 1;
   render_pass_info.pSubpasses = &subpass;
-  render_pass_info.dependencyCount = total_dependencies;
+  render_pass_info.dependencyCount = TOTOAL_POST_PROCESS_DEPENDENCIES;
   render_pass_info.pDependencies = dependencies;
 
   if (vkCreateRenderPass(vulkan_renderer->device, &render_pass_info, NULL, &post_process->render_pass) != VK_SUCCESS)
@@ -259,8 +257,8 @@ int blit_post_process_render(struct BlitPostProcess* blit_post_process, struct V
   vkCmdBindVertexBuffers(vulkan_renderer->post_process->post_process_command_buffers[post_process->ping_pong], 0, 1, vertex_buffers, offsets);
   vkCmdBindIndexBuffer(vulkan_renderer->post_process->post_process_command_buffers[post_process->ping_pong], blit_post_process->fullscreen_quad->index_buffer, 0, VK_INDEX_TYPE_UINT32);
   vkCmdBindDescriptorSets(vulkan_renderer->post_process->post_process_command_buffers[post_process->ping_pong], VK_PIPELINE_BIND_POINT_GRAPHICS, blit_post_process->blit_shader->shader->pipeline_layout, 0, 1, &blit_post_process->descriptor_set, 0, NULL);
-  // End of the magic
   vkCmdDrawIndexed(vulkan_renderer->post_process->post_process_command_buffers[post_process->ping_pong], blit_post_process->fullscreen_quad->mesh->indices->size, 1, 0, 0, 0);
+  // End of the magic
 
   vkCmdEndRenderPass(post_process->post_process_command_buffers[post_process->ping_pong]);
 

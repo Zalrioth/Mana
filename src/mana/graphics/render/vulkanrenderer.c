@@ -206,7 +206,6 @@ int create_surface(struct VulkanRenderer* vulkan_renderer) {
   return VULKAN_RENDERER_SUCCESS;
 }
 
-// Found GPU to use
 int pick_physical_device(struct VulkanRenderer* vulkan_renderer) {
   uint32_t device_count = 0;
   vkEnumeratePhysicalDevices(vulkan_renderer->instance, &device_count, NULL);

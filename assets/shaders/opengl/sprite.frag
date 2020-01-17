@@ -22,7 +22,7 @@ float linearDepth(float depth) {
 }
 
 void main() {
-    //outColor = texture(texSampler, fragTexCoord);
+    outColor = texture(texSampler, fragTexCoord);
     // NOTE: Final channel will probably be used for something
     //outColor = vec4(normalize(inNormal) * 0.5 + 0.5, 1.0) * 0.5 + texture(texSampler, fragTexCoord) * 0.5;
     //outColor = vec4(normalize(inNormal), 1.0);
@@ -30,7 +30,7 @@ void main() {
     //float depth = linearDepth(gl_FragCoord.z);
     //float depth = gl_FragCoord.z;
     //outColor = vec4(vec3(depth), 1.0) + texture(texSampler, fragTexCoord) * 0.5;
-    outColor = vec4(vec3(1.0), 1.0);
+    //outColor = vec4(vec3(1.0), 1.0);
     //outColor = vec4(normalize(outNormal), 1.0) * 0.5 + texture(texSampler, fragTexCoord) * 0.5;
     //normalColor = vec4(normalize(outNormal), 1.0);
     normalColor = vec4(normalize(inNormal), 1.0);

@@ -13,6 +13,7 @@ enum KeyState { PRESSED,
 
 struct Key {
   enum KeyState state;
+  bool pushed;
   bool held;
 };
 

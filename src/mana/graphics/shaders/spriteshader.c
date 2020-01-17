@@ -1,6 +1,6 @@
 #include "mana/graphics/shaders/spriteshader.h"
 
-int sprite_effect_init(struct SpriteEffect* sprite_effect, struct VulkanRenderer* vulkan_renderer) {
+int sprite_shader_init(struct SpriteShader* sprite_shader, struct VulkanRenderer* vulkan_renderer) {
   VkDescriptorSetLayoutBinding ubo_layout_binding = {0};
   ubo_layout_binding.binding = 0;
   ubo_layout_binding.descriptorCount = 1;
@@ -22,7 +22,7 @@ int sprite_effect_init(struct SpriteEffect* sprite_effect, struct VulkanRenderer
   layout_info.bindingCount = 2;
   layout_info.pBindings = bindings;
 
-  if (vkCreateDescriptorSetLayout(vulkan_renderer->device, &layout_info, NULL, &sprite_effect->shader.descriptor_set_layout) != VK_SUCCESS)
+  if (vkCreateDescriptorSetLayout(vulkan_renderer->device, &layout_info, NULL, &sprite_shader->shader.descriptor_set_layout) != VK_SUCCESS)
     return 0;
 
   VkDescriptorPoolSize pool_sizes[2];
@@ -41,7 +41,7 @@ int sprite_effect_init(struct SpriteEffect* sprite_effect, struct VulkanRenderer
   poolInfo.pPoolSizes = pool_sizes;
   poolInfo.maxSets = sprite_descriptors;  // Max number of sets made from this pool
 
-  if (vkCreateDescriptorPool(vulkan_renderer->device, &poolInfo, NULL, &sprite_effect->shader.descriptor_pool) != VK_SUCCESS) {
+  if (vkCreateDescriptorPool(vulkan_renderer->device, &poolInfo, NULL, &sprite_shader->shader.descriptor_pool) != VK_SUCCESS) {
     fprintf(stderr, "failed to create descriptor pool!\n");
     return 0;
   }
@@ -59,9 +59,8 @@ int sprite_effect_init(struct SpriteEffect* sprite_effect, struct VulkanRenderer
   vertex_input_info.pVertexBindingDescriptions = &binding_description;
   vertex_input_info.pVertexAttributeDescriptions = attribute_descriptions;
 
-  const int color_attachments = 2;
-  VkPipelineColorBlendAttachmentState color_blend_attachments[color_attachments];
-  memset(color_blend_attachments, 0, sizeof(VkPipelineColorBlendAttachmentState) * color_attachments);
+  VkPipelineColorBlendAttachmentState color_blend_attachments[SPRITE_SHADER_COLOR_ATTACHEMENTS];
+  memset(color_blend_attachments, 0, sizeof(VkPipelineColorBlendAttachmentState) * SPRITE_SHADER_COLOR_ATTACHEMENTS);
   color_blend_attachments[0].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
   color_blend_attachments[0].blendEnable = VK_FALSE;
   color_blend_attachments[1].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
@@ -71,20 +70,20 @@ int sprite_effect_init(struct SpriteEffect* sprite_effect, struct VulkanRenderer
   color_blending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
   color_blending.logicOpEnable = VK_FALSE;
   color_blending.logicOp = VK_LOGIC_OP_COPY;
-  color_blending.attachmentCount = color_attachments;
+  color_blending.attachmentCount = SPRITE_SHADER_COLOR_ATTACHEMENTS;
   color_blending.pAttachments = color_blend_attachments;
   color_blending.blendConstants[0] = 0.0f;
   color_blending.blendConstants[1] = 0.0f;
   color_blending.blendConstants[2] = 0.0f;
   color_blending.blendConstants[3] = 0.0f;
 
-  shader_init(&sprite_effect->shader, vulkan_renderer, "./assets/shaders/spirv/sprite.vert.spv", "./assets/shaders/spirv/sprite.frag.spv", NULL, vertex_input_info, vulkan_renderer->gbuffer->render_pass, color_blending, VK_TRUE);
+  shader_init(&sprite_shader->shader, vulkan_renderer, "./assets/shaders/spirv/sprite.vert.spv", "./assets/shaders/spirv/sprite.frag.spv", NULL, vertex_input_info, vulkan_renderer->gbuffer->render_pass, color_blending, VK_TRUE);
 
   return 1;
 }
 
-void sprite_effect_delete(struct SpriteEffect* sprite_effect, struct VulkanRenderer* vulkan_renderer) {
-  shader_delete(&sprite_effect->shader, vulkan_renderer);
+void sprite_shader_delete(struct SpriteShader* sprite_shader, struct VulkanRenderer* vulkan_renderer) {
+  shader_delete(&sprite_shader->shader, vulkan_renderer);
 
-  vkDestroyDescriptorPool(vulkan_renderer->device, sprite_effect->shader.descriptor_pool, NULL);
+  vkDestroyDescriptorPool(vulkan_renderer->device, sprite_shader->shader.descriptor_pool, NULL);
 }
