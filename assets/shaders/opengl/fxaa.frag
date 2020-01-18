@@ -7,7 +7,7 @@ layout(location = 0) in vec2 inTexCoord;
 
 layout(location = 0) out vec4 outFragColor;
 
-#define SHOW_EDGES 1
+#define SHOW_EDGES 0
 #define LUMA_THRESHOLD 0.5
 #define MUL_REDUCE 8.0
 #define MIN_REDUCE 128.0

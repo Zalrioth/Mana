@@ -2,9 +2,9 @@
 #extension GL_ARB_separate_shader_objects : enable
 
 layout(binding = 0) uniform UniformBufferObject {
-    mat4 model;
-    mat4 view;
-    mat4 proj;
+  mat4 model;
+  mat4 view;
+  mat4 proj;
 } ubo;
 layout(binding = 1) uniform sampler2D texSampler;
 
@@ -22,16 +22,19 @@ float linearDepth(float depth) {
 }
 
 void main() {
-    outColor = texture(texSampler, fragTexCoord);
-    // NOTE: Final channel will probably be used for something
-    //outColor = vec4(normalize(inNormal) * 0.5 + 0.5, 1.0) * 0.5 + texture(texSampler, fragTexCoord) * 0.5;
-    //outColor = vec4(normalize(inNormal), 1.0);
-    //outColor = vec4(WorldPosFromDepth(gl_FragCoord.z), 1.0);
-    //float depth = linearDepth(gl_FragCoord.z);
-    //float depth = gl_FragCoord.z;
-    //outColor = vec4(vec3(depth), 1.0) + texture(texSampler, fragTexCoord) * 0.5;
-    //outColor = vec4(vec3(1.0), 1.0);
-    //outColor = vec4(normalize(outNormal), 1.0) * 0.5 + texture(texSampler, fragTexCoord) * 0.5;
-    //normalColor = vec4(normalize(outNormal), 1.0);
-    normalColor = vec4(normalize(inNormal), 1.0);
+  outColor = texture(texSampler, fragTexCoord);
+  //outColor = vec4(texture(texSampler, fragTexCoord).rgb, 1.0);
+  //vec4 color = texture(texSampler, fragTexCoord);
+  //outColor = vec4(color.rgb * color.a, 1.0);
+  // NOTE: Final channel will probably be used for something
+  //outColor = vec4(normalize(inNormal) * 0.5 + 0.5, 1.0) * 0.5 + texture(texSampler, fragTexCoord) * 0.5;
+  //outColor = vec4(normalize(inNormal), 1.0);
+  //outColor = vec4(WorldPosFromDepth(gl_FragCoord.z), 1.0);
+  //float depth = linearDepth(gl_FragCoord.z);
+  //float depth = gl_FragCoord.z;
+  //outColor = vec4(vec3(depth), 1.0) + texture(texSampler, fragTexCoord) * 0.5;
+  //outColor = vec4(vec3(1.0), 1.0);
+  //outColor = vec4(normalize(outNormal), 1.0) * 0.5 + texture(texSampler, fragTexCoord) * 0.5;
+  //normalColor = vec4(normalize(outNormal), 1.0);
+  normalColor = vec4(normalize(inNormal), 1.0);
 }

@@ -15,7 +15,7 @@ int sprite_init(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer, s
   mesh_init(sprite->image_mesh);
 
   sprite->image_texture = calloc(1, sizeof(struct Texture));
-  texture_init(sprite->image_texture, vulkan_renderer, "./Assets/textures/10bit.psd");
+  texture_init(sprite->image_texture, vulkan_renderer, "./assets/textures/alpha.png");
 
   vec3 pos1 = {-0.5f, -0.5f, 0.0f};
   vec3 pos2 = {0.5f, -0.5f, 0.0f};
