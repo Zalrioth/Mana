@@ -17,15 +17,8 @@ layout(location = 0) out vec3 outNormal;
 layout(location = 1) out vec2 fragTexCoord;
 
 void main() {
-    gl_Position = ubo.proj * ubo.view * ubo.model * vec4(inPosition, 1.0);
-    mat3 normalMatrix = transpose(inverse(mat3(ubo.view * ubo.model)));
-	//outNormal = normalMatrix * inNormal;
-    outNormal = normalMatrix * normalize(inNormal);
-
-    //mvVertexNormal = (ubo.view * ubo.model * vec4(inNormal, 0.0)).xyz;
-    // Normal multiplied by model matrix
-    // https://github.com/SaschaWillems/Vulkan/blob/master/data/shaders/mesh/mesh.vert
-    //outNormal = mat3(ubo.model) * inNormal;
-    //outNormal = mat3(transpose(inverse(ubo.view))) * inNormal;
-    fragTexCoord = inTexCoord;
+  gl_Position = ubo.proj * ubo.view * ubo.model * vec4(inPosition, 1.0);
+  mat3 normalMatrix = transpose(inverse(mat3(ubo.view * ubo.model)));
+  outNormal = normalMatrix * normalize(inNormal); 
+  fragTexCoord = inTexCoord;
 }

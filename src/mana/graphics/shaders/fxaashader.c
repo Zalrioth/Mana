@@ -61,7 +61,7 @@ int fxaa_shader_init(struct FXAAShader* fxaa_shader, struct VulkanRenderer* vulk
   color_blending.blendConstants[2] = 0.0f;
   color_blending.blendConstants[3] = 0.0f;
 
-  shader_init(fxaa_shader->shader, vulkan_renderer, "./assets/shaders/spirv/screenspace.vert.spv", "./assets/shaders/spirv/fxaa.frag.spv", NULL, vertex_input_info, vulkan_renderer->post_process->render_pass, color_blending, VK_FALSE);
+  shader_init(fxaa_shader->shader, vulkan_renderer, "./assets/shaders/spirv/screenspace.vert.spv", "./assets/shaders/spirv/fxaa.frag.spv", NULL, vertex_input_info, vulkan_renderer->post_process->render_pass, color_blending, VK_FALSE, VK_SAMPLE_COUNT_1_BIT);
 
   //////////////////////////////////////////////////////////////////////
 

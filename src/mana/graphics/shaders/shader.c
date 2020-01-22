@@ -23,7 +23,7 @@ char* read_shader_file(const char* filename, int* file_length) {
   return result;
 }
 
-int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, char* vertex_shader, char* fragment_shader, char* geometry_shader, VkPipelineVertexInputStateCreateInfo vertex_input_info, VkRenderPass render_pass, VkPipelineColorBlendStateCreateInfo color_blending, bool depth_test) {
+int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, char* vertex_shader, char* fragment_shader, char* geometry_shader, VkPipelineVertexInputStateCreateInfo vertex_input_info, VkRenderPass render_pass, VkPipelineColorBlendStateCreateInfo color_blending, bool depth_test, VkSampleCountFlagBits num_samples) {
   // Get the current working directory
 #if defined(IS_WINDOWS)
   char* buffer;
@@ -96,7 +96,7 @@ int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, c
   VkPipelineMultisampleStateCreateInfo multisampling = {0};
   multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
   multisampling.sampleShadingEnable = VK_FALSE;
-  multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+  multisampling.rasterizationSamples = num_samples;
 
   VkPipelineDepthStencilStateCreateInfo depth_stencil = {0};
   depth_stencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;

@@ -3,12 +3,13 @@
 #define POST_PROCESS_H
 
 #include <stdbool.h>
+
 #include "mana/graphics/render/vulkanrenderer.h"
 #include "mana/graphics/shaders/blitshader.h"
 #include "mana/graphics/shaders/shader.h"
 #include "mana/graphics/utilities/fullscreenquad.h"
 
-#define TOTOAL_POST_PROCESS_DEPENDENCIES 2
+#define POST_PROCESS_TOTAL_DEPENDENCIES 2
 
 struct BlitPostProcess {
   struct BlitShader* blit_shader;

@@ -21,7 +21,7 @@ int post_process_init(struct PostProcess* post_process, struct VulkanRenderer* v
   subpass.pColorAttachments = &color_attachment_reference;
   subpass.pDepthStencilAttachment = VK_NULL_HANDLE;
 
-  VkSubpassDependency dependencies[TOTOAL_POST_PROCESS_DEPENDENCIES];
+  VkSubpassDependency dependencies[POST_PROCESS_TOTAL_DEPENDENCIES];
   dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
   dependencies[0].dstSubpass = 0;
   dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
@@ -45,14 +45,14 @@ int post_process_init(struct PostProcess* post_process, struct VulkanRenderer* v
   render_pass_info.attachmentCount = 1;
   render_pass_info.subpassCount = 1;
   render_pass_info.pSubpasses = &subpass;
-  render_pass_info.dependencyCount = TOTOAL_POST_PROCESS_DEPENDENCIES;
+  render_pass_info.dependencyCount = POST_PROCESS_TOTAL_DEPENDENCIES;
   render_pass_info.pDependencies = dependencies;
 
   if (vkCreateRenderPass(vulkan_renderer->device, &render_pass_info, NULL, &post_process->render_pass) != VK_SUCCESS)
     return 0;
 
   for (int ping_pong_target = 0; ping_pong_target <= 1; ping_pong_target++) {
-    graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, vulkan_renderer->swap_chain->swap_chain_extent.width, vulkan_renderer->swap_chain->swap_chain_extent.height, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &post_process->color_images[ping_pong_target], &post_process->color_image_memories[ping_pong_target]);
+    graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, vulkan_renderer->swap_chain->swap_chain_extent.width, vulkan_renderer->swap_chain->swap_chain_extent.height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &post_process->color_images[ping_pong_target], &post_process->color_image_memories[ping_pong_target]);
     graphics_utils_create_image_view(vulkan_renderer->device, post_process->color_images[ping_pong_target], VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT, &post_process->color_image_views[ping_pong_target]);
 
     VkImageView attachments_framebuffer = post_process->color_image_views[ping_pong_target];

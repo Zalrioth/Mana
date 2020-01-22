@@ -9,6 +9,7 @@
 #include <cstorage/cstorage.h>
 #include <stdalign.h>
 #include <vulkan/vulkan.h>
+
 #include "mana/core/corecommon.h"
 #include "mana/graphics/entities/model.h"
 #include "mana/graphics/graphicscommon.h"
@@ -58,6 +59,7 @@ struct VulkanRenderer {
   VkQueue present_queue;
   VkDebugUtilsMessengerEXT debug_messenger;
   VkCommandPool command_pool;
+  VkSampleCountFlagBits msaa_samples;
   struct QueueFamilyIndices indices;
   bool framebuffer_resized;
   struct SwapChain* swap_chain;
@@ -91,14 +93,13 @@ int setup_debug_messenger(struct VulkanRenderer* vulkan_renderer);
 int create_surface(struct VulkanRenderer* vulkan_renderer);
 int pick_physical_device(struct VulkanRenderer* vulkan_renderer);
 int create_logical_device(struct VulkanRenderer* vulkan_renderer);
-int create_descriptor_set_layout(struct VulkanRenderer* vulkan_renderer);
+VkSampleCountFlagBits get_max_usable_sample_count(struct VulkanRenderer* vulkan_renderer);
 
 void create_color_attachment(struct VulkanRenderer* vulkan_renderer, struct VkAttachmentDescription* color_attachment);
 void create_depth_attachment(struct VulkanRenderer* vulkan_renderer, struct VkAttachmentDescription* depth_attachment);
 int create_depth_resources(struct VulkanRenderer* vulkan_renderer);
 
 int create_command_pool(struct VulkanRenderer* vulkan_renderer);
-int create_command_buffers(struct VulkanRenderer* vulkan_renderer);
 void vulkan_command_pool_cleanup(struct VulkanRenderer* vulkan_renderer);
 void vulkan_device_cleanup(struct VulkanRenderer* vulkan_renderer);
 void vulkan_surface_cleanup(struct VulkanRenderer* vulkan_renderer);

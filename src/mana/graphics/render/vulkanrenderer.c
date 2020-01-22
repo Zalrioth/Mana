@@ -48,6 +48,8 @@ int vulkan_renderer_init(struct VulkanRenderer* vulkan_renderer, int width, int 
   if ((error_code = create_command_pool(vulkan_renderer)) != VULKAN_RENDERER_SUCCESS)
     goto vulkan_command_pool_error;
 
+  vulkan_renderer->msaa_samples = get_max_usable_sample_count(vulkan_renderer);
+
   swap_chain_init(vulkan_renderer->swap_chain, vulkan_renderer, width, height);
   post_process_init(vulkan_renderer->post_process, vulkan_renderer);
   gbuffer_init(vulkan_renderer->gbuffer, vulkan_renderer);
@@ -368,6 +370,27 @@ int create_logical_device(struct VulkanRenderer* vulkan_renderer) {
   vector_delete(&queue_create_infos);
 
   return VULKAN_RENDERER_SUCCESS;
+}
+
+VkSampleCountFlagBits get_max_usable_sample_count(struct VulkanRenderer* vulkan_renderer) {
+  VkPhysicalDeviceProperties physical_device_properties;
+  vkGetPhysicalDeviceProperties(vulkan_renderer->physical_device, &physical_device_properties);
+
+  VkSampleCountFlags counts = physical_device_properties.limits.framebufferColorSampleCounts & physical_device_properties.limits.framebufferDepthSampleCounts;
+  if (counts & VK_SAMPLE_COUNT_64_BIT)
+    return VK_SAMPLE_COUNT_64_BIT;
+  if (counts & VK_SAMPLE_COUNT_32_BIT)
+    return VK_SAMPLE_COUNT_32_BIT;
+  if (counts & VK_SAMPLE_COUNT_16_BIT)
+    return VK_SAMPLE_COUNT_16_BIT;
+  if (counts & VK_SAMPLE_COUNT_8_BIT)
+    return VK_SAMPLE_COUNT_8_BIT;
+  if (counts & VK_SAMPLE_COUNT_4_BIT)
+    return VK_SAMPLE_COUNT_4_BIT;
+  if (counts & VK_SAMPLE_COUNT_2_BIT)
+    return VK_SAMPLE_COUNT_2_BIT;
+
+  return VK_SAMPLE_COUNT_1_BIT;
 }
 
 int create_image_view(struct VulkanRenderer* vulkan_renderer, struct VkImage_T* image, struct VkImageView_T* image_view) {

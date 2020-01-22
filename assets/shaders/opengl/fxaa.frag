@@ -18,11 +18,11 @@ void main(void)
 	vec2 textureDimensions = textureSize(texSampler, 0).xy;
 	vec2 texelStep = vec2(1.0 / textureDimensions.x, 1.0 / textureDimensions.y);
 
-  vec3 rgbM = texture(texSampler, inTexCoord).rgb;
+	vec3 rgbM = texture(texSampler, inTexCoord).rgb;
 	vec3 rgbNW = textureOffset(texSampler, inTexCoord, ivec2(-1, 1)).rgb;
-  vec3 rgbNE = textureOffset(texSampler, inTexCoord, ivec2(1, 1)).rgb;
-  vec3 rgbSW = textureOffset(texSampler, inTexCoord, ivec2(-1, -1)).rgb;
-  vec3 rgbSE = textureOffset(texSampler, inTexCoord, ivec2(1, -1)).rgb;
+	vec3 rgbNE = textureOffset(texSampler, inTexCoord, ivec2(1, 1)).rgb;
+	vec3 rgbSW = textureOffset(texSampler, inTexCoord, ivec2(-1, -1)).rgb;
+	vec3 rgbSE = textureOffset(texSampler, inTexCoord, ivec2(1, -1)).rgb;
 
 	const vec3 toLuma = vec3(0.299, 0.587, 0.114);
 
@@ -42,12 +42,12 @@ void main(void)
 
 	vec2 samplingDirection;
 	samplingDirection.x = -((lumaNW + lumaNE) - (lumaSW + lumaSE));
-  samplingDirection.y =  ((lumaNW + lumaSW) - (lumaNE + lumaSE));
+	samplingDirection.y =  ((lumaNW + lumaSW) - (lumaNE + lumaSE));
 
-  float samplingDirectionReduce = max((lumaNW + lumaNE + lumaSW + lumaSE) * 0.25 * MUL_REDUCE, MIN_REDUCE);
+	float samplingDirectionReduce = max((lumaNW + lumaNE + lumaSW + lumaSE) * 0.25 * MUL_REDUCE, MIN_REDUCE);
 	float minSamplingDirectionFactor = 1.0 / (min(abs(samplingDirection.x), abs(samplingDirection.y)) + samplingDirectionReduce);
 
-  samplingDirection = clamp(samplingDirection * minSamplingDirectionFactor, vec2(-MAX_SPAN, -MAX_SPAN), vec2(MAX_SPAN, MAX_SPAN)) * texelStep;
+	samplingDirection = clamp(samplingDirection * minSamplingDirectionFactor, vec2(-MAX_SPAN, -MAX_SPAN), vec2(MAX_SPAN, MAX_SPAN)) * texelStep;
 
 	vec3 rgbSampleNeg = texture(texSampler, inTexCoord + samplingDirection * (1.0/3.0 - 0.5)).rgb;
 	vec3 rgbSamplePos = texture(texSampler, inTexCoord + samplingDirection * (2.0/3.0 - 0.5)).rgb;

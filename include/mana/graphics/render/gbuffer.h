@@ -4,6 +4,9 @@
 
 #include "mana/graphics/render/vulkanrenderer.h"
 
+#define GBUFFER_TOTAL_DEPENDENCIES 2
+#define GBUFFER_TOTAL_ATTACHMENTS 3
+
 struct VulkanRenderer;
 
 struct GBuffer {
