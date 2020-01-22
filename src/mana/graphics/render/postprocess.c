@@ -53,7 +53,7 @@ int post_process_init(struct PostProcess* post_process, struct VulkanRenderer* v
 
   for (int ping_pong_target = 0; ping_pong_target <= 1; ping_pong_target++) {
     graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, vulkan_renderer->swap_chain->swap_chain_extent.width, vulkan_renderer->swap_chain->swap_chain_extent.height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &post_process->color_images[ping_pong_target], &post_process->color_image_memories[ping_pong_target]);
-    graphics_utils_create_image_view(vulkan_renderer->device, post_process->color_images[ping_pong_target], VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT, &post_process->color_image_views[ping_pong_target]);
+    graphics_utils_create_image_view(vulkan_renderer->device, post_process->color_images[ping_pong_target], VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT, 1, &post_process->color_image_views[ping_pong_target]);
 
     VkImageView attachments_framebuffer = post_process->color_image_views[ping_pong_target];
     VkFramebufferCreateInfo framebuffer_info = {0};
@@ -74,7 +74,7 @@ int post_process_init(struct PostProcess* post_process, struct VulkanRenderer* v
     vkCreateSemaphore(vulkan_renderer->device, &semaphore_info, NULL, &post_process->post_process_semaphores[ping_pong_target]);
   }
 
-  graphics_utils_create_sampler(vulkan_renderer->device, &post_process->texture_sampler);
+  graphics_utils_create_sampler(vulkan_renderer->device, &post_process->texture_sampler, 0);
 
   // Post process command buffer
   VkCommandBufferAllocateInfo alloc_info_post_process = {0};

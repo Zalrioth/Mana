@@ -3,6 +3,7 @@
 #define TEXTURE_H
 
 #include <stb_image.h>
+
 #include "mana/graphics/graphicscommon.h"
 #include "mana/graphics/render/vulkanrenderer.h"
 #include "mana/graphics/utilities/graphicsutils.h"
@@ -20,11 +21,8 @@ struct Texture {
   VkSampler texture_sampler;            // Image sampling settings
 };
 
-void texture_init(struct Texture *texture, struct VulkanRenderer *vulkan_renderer, char *path);
+int texture_init(struct Texture *texture, struct VulkanRenderer *vulkan_renderer, char *path);
 void texture_delete(struct VulkanRenderer *vulkan_renderer, struct Texture *texture);
-int texture_create_image(struct VulkanRenderer *vulkan_renderer, struct Texture *texture);
-int texture_transition_image_layout(struct VulkanRenderer *vulkan_renderer, VkImage *image, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout);
 void texture_copy_buffer_to_image(struct VulkanRenderer *vulkan_renderer, VkBuffer *buffer, VkImage *image, uint32_t width, uint32_t height);
-uint32_t texture_find_memory_type(struct VulkanRenderer *vulkan_renderer, uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
 #endif  // TEXTURE_H

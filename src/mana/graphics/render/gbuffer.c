@@ -7,13 +7,13 @@ int gbuffer_init(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer
 
   // Multisample
   graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, vulkan_renderer->swap_chain->swap_chain_extent.width, vulkan_renderer->swap_chain->swap_chain_extent.height, 1, vulkan_renderer->msaa_samples, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &gbuffer->multisample_color_image, &gbuffer->multisample_color_image_memory);
-  graphics_utils_create_image_view(vulkan_renderer->device, gbuffer->multisample_color_image, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT, &vulkan_renderer->gbuffer->multisample_color_image_view);
+  graphics_utils_create_image_view(vulkan_renderer->device, gbuffer->multisample_color_image, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT, 1, &vulkan_renderer->gbuffer->multisample_color_image_view);
 
   graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, vulkan_renderer->swap_chain->swap_chain_extent.width, vulkan_renderer->swap_chain->swap_chain_extent.height, 1, vulkan_renderer->msaa_samples, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &gbuffer->multisample_normal_image, &gbuffer->multisample_normal_image_memory);
-  graphics_utils_create_image_view(vulkan_renderer->device, gbuffer->multisample_normal_image, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT, &vulkan_renderer->gbuffer->multisample_normal_image_view);
+  graphics_utils_create_image_view(vulkan_renderer->device, gbuffer->multisample_normal_image, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT, 1, &vulkan_renderer->gbuffer->multisample_normal_image_view);
 
   graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, vulkan_renderer->swap_chain->swap_chain_extent.width, vulkan_renderer->swap_chain->swap_chain_extent.height, 1, vulkan_renderer->msaa_samples, depth_format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &gbuffer->multisample_depth_image, &gbuffer->multisample_depth_image_memory);
-  graphics_utils_create_image_view(vulkan_renderer->device, gbuffer->multisample_depth_image, depth_format, VK_IMAGE_ASPECT_DEPTH_BIT, &gbuffer->multisample_depth_image_view);
+  graphics_utils_create_image_view(vulkan_renderer->device, gbuffer->multisample_depth_image, depth_format, VK_IMAGE_ASPECT_DEPTH_BIT, 1, &gbuffer->multisample_depth_image_view);
 
   struct VkAttachmentDescription multisample_color_attachment = {0};
   create_color_attachment(vulkan_renderer, &multisample_color_attachment);
@@ -46,10 +46,10 @@ int gbuffer_init(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer
 
   // Resolve
   graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, vulkan_renderer->swap_chain->swap_chain_extent.width, vulkan_renderer->swap_chain->swap_chain_extent.height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &gbuffer->color_image, &gbuffer->color_image_memory);
-  graphics_utils_create_image_view(vulkan_renderer->device, gbuffer->color_image, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT, &vulkan_renderer->gbuffer->color_image_view);
+  graphics_utils_create_image_view(vulkan_renderer->device, gbuffer->color_image, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT, 1, &vulkan_renderer->gbuffer->color_image_view);
 
   graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, vulkan_renderer->swap_chain->swap_chain_extent.width, vulkan_renderer->swap_chain->swap_chain_extent.height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &gbuffer->normal_image, &gbuffer->normal_image_memory);
-  graphics_utils_create_image_view(vulkan_renderer->device, gbuffer->normal_image, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT, &vulkan_renderer->gbuffer->normal_image_view);
+  graphics_utils_create_image_view(vulkan_renderer->device, gbuffer->normal_image, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT, 1, &vulkan_renderer->gbuffer->normal_image_view);
 
   struct VkAttachmentDescription color_attachment = {0};
   create_color_attachment(vulkan_renderer, &color_attachment);
@@ -136,7 +136,7 @@ int gbuffer_init(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer
 
   vkCreateSemaphore(vulkan_renderer->device, &semaphore_info, NULL, &gbuffer->gbuffer_semaphore);
 
-  graphics_utils_create_sampler(vulkan_renderer->device, &gbuffer->texture_sampler);
+  graphics_utils_create_sampler(vulkan_renderer->device, &gbuffer->texture_sampler, 0);
 
   glm_mat4_zero(gbuffer->projection_matrix);
   glm_mat4_zero(gbuffer->view_matrix);
