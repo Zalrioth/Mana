@@ -3,6 +3,7 @@
 #define MESH_H
 
 #include <cstorage/cstorage.h>
+
 #include "mana/graphics/graphicscommon.h"
 #include "mana/graphics/utilities/texture.h"
 
@@ -25,5 +26,7 @@ void mesh_delete(struct Mesh* mesh);
 void mesh_assign_vertex(struct Vector* vector, float x, float y, float z, float r, float g, float b, float u, float v);
 void mesh_assign_vertex_full(struct Vector* vector, float x, float y, float z, float r, float g, float b, float u, float v, float tan_x, float tan_y, float tan_z, float bit_x, float bit_y, float bit_z);
 void mesh_assign_indice(struct Vector* vector, uint32_t indice);
+VkVertexInputBindingDescription mesh_get_binding_description();
+void mesh_get_attribute_descriptions(VkVertexInputAttributeDescription* attribute_descriptions);
 
 #endif  // MESH_H

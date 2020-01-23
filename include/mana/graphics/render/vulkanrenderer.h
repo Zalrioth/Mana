@@ -94,11 +94,9 @@ int create_surface(struct VulkanRenderer* vulkan_renderer);
 int pick_physical_device(struct VulkanRenderer* vulkan_renderer);
 int create_logical_device(struct VulkanRenderer* vulkan_renderer);
 VkSampleCountFlagBits get_max_usable_sample_count(struct VulkanRenderer* vulkan_renderer);
-
 void create_color_attachment(struct VulkanRenderer* vulkan_renderer, struct VkAttachmentDescription* color_attachment);
 void create_depth_attachment(struct VulkanRenderer* vulkan_renderer, struct VkAttachmentDescription* depth_attachment);
 int create_depth_resources(struct VulkanRenderer* vulkan_renderer);
-
 int create_command_pool(struct VulkanRenderer* vulkan_renderer);
 void vulkan_command_pool_cleanup(struct VulkanRenderer* vulkan_renderer);
 void vulkan_device_cleanup(struct VulkanRenderer* vulkan_renderer);
@@ -108,10 +106,6 @@ void window_cleanup(struct VulkanRenderer* vulkan_renderer);
 
 bool is_device_suitable(struct VulkanRenderer* vulkan_renderer, VkPhysicalDevice device);
 void copy_buffer(struct VulkanRenderer* vulkan_renderer, VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size);
-
-void cleanup_swap_chain(struct VulkanRenderer* vulkan_renderer);
-VkVertexInputBindingDescription get_binding_description();
-void get_attribute_descriptions(VkVertexInputAttributeDescription* attribute_descriptions);
 VkFormat find_depth_format(struct VulkanRenderer* vulkan_renderer);
 
 #endif  // VULKAN_RENDERER_H

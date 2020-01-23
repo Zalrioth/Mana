@@ -2,39 +2,47 @@
 
 int gbuffer_init(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer) {
   //VK_FORMAT_A2B10G10R10_UNORM_PACK32
-  enum VkFormat image_format = VK_FORMAT_R16G16B16A16_SFLOAT;
+  VkFormat image_format = VK_FORMAT_R16G16B16A16_SFLOAT;
+  VkImageUsageFlags image_usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
   VkFormat depth_format = find_depth_format(vulkan_renderer);
 
+  uint32_t gbuffer_width = vulkan_renderer->swap_chain->swap_chain_extent.width * vulkan_renderer->swap_chain->supersample_scale;
+  uint32_t gbuffer_height = vulkan_renderer->swap_chain->swap_chain_extent.height * vulkan_renderer->swap_chain->supersample_scale;
+
+  // TODO: If no antialiasing, no need to use resolve
+  // "validation layer: vkCreateRenderPass():  Subpass 0 requests multisample resolve from attachment 0 which has VK_SAMPLE_COUNT_1_BIT. The Vulkan spec states: If pResolveAttachments is not NULL,
+  // for each resolve attachment that is not VK_ATTACHMENT_UNUSED, the corresponding color attachment must not have a sample count of VK_SAMPLE_COUNT_1_BIT (https://www.khronos.org/registry/vulkan/specs/1.1-extensions/html/vkspec.html#VUID-VkSubpassDescription-pResolveAttachments-00848)"
+
   // Multisample
-  graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, vulkan_renderer->swap_chain->swap_chain_extent.width, vulkan_renderer->swap_chain->swap_chain_extent.height, 1, vulkan_renderer->msaa_samples, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &gbuffer->multisample_color_image, &gbuffer->multisample_color_image_memory);
-  graphics_utils_create_image_view(vulkan_renderer->device, gbuffer->multisample_color_image, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT, 1, &vulkan_renderer->gbuffer->multisample_color_image_view);
+  graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, gbuffer_width, gbuffer_height, 1, vulkan_renderer->msaa_samples, image_format, VK_IMAGE_TILING_OPTIMAL, image_usage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &gbuffer->multisample_color_image, &gbuffer->multisample_color_image_memory);
+  graphics_utils_create_image_view(vulkan_renderer->device, gbuffer->multisample_color_image, image_format, VK_IMAGE_ASPECT_COLOR_BIT, 1, &vulkan_renderer->gbuffer->multisample_color_image_view);
 
-  graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, vulkan_renderer->swap_chain->swap_chain_extent.width, vulkan_renderer->swap_chain->swap_chain_extent.height, 1, vulkan_renderer->msaa_samples, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &gbuffer->multisample_normal_image, &gbuffer->multisample_normal_image_memory);
-  graphics_utils_create_image_view(vulkan_renderer->device, gbuffer->multisample_normal_image, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT, 1, &vulkan_renderer->gbuffer->multisample_normal_image_view);
+  graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, gbuffer_width, gbuffer_height, 1, vulkan_renderer->msaa_samples, image_format, VK_IMAGE_TILING_OPTIMAL, image_usage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &gbuffer->multisample_normal_image, &gbuffer->multisample_normal_image_memory);
+  graphics_utils_create_image_view(vulkan_renderer->device, gbuffer->multisample_normal_image, image_format, VK_IMAGE_ASPECT_COLOR_BIT, 1, &vulkan_renderer->gbuffer->multisample_normal_image_view);
 
-  graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, vulkan_renderer->swap_chain->swap_chain_extent.width, vulkan_renderer->swap_chain->swap_chain_extent.height, 1, vulkan_renderer->msaa_samples, depth_format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &gbuffer->multisample_depth_image, &gbuffer->multisample_depth_image_memory);
+  graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, gbuffer_width, gbuffer_height, 1, vulkan_renderer->msaa_samples, depth_format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &gbuffer->multisample_depth_image, &gbuffer->multisample_depth_image_memory);
   graphics_utils_create_image_view(vulkan_renderer->device, gbuffer->multisample_depth_image, depth_format, VK_IMAGE_ASPECT_DEPTH_BIT, 1, &gbuffer->multisample_depth_image_view);
 
-  struct VkAttachmentDescription multisample_color_attachment = {0};
+  VkAttachmentDescription multisample_color_attachment = {0};
   create_color_attachment(vulkan_renderer, &multisample_color_attachment);
   multisample_color_attachment.format = image_format;
   multisample_color_attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   multisample_color_attachment.samples = vulkan_renderer->msaa_samples;
+  //multisample_color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 
-  struct VkAttachmentDescription multisample_normal_attachment = {0};
+  VkAttachmentDescription multisample_normal_attachment = {0};
   create_color_attachment(vulkan_renderer, &multisample_normal_attachment);
   multisample_normal_attachment.format = image_format;
   multisample_normal_attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   multisample_normal_attachment.samples = vulkan_renderer->msaa_samples;
 
-  struct VkAttachmentDescription multisample_depth_attachment = {0};
+  VkAttachmentDescription multisample_depth_attachment = {0};
   create_depth_attachment(vulkan_renderer, &multisample_depth_attachment);
   multisample_depth_attachment.samples = vulkan_renderer->msaa_samples;
 
   VkAttachmentReference multisample_color_attachment_ref = {0};
   multisample_color_attachment_ref.attachment = 0;
   multisample_color_attachment_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-  //multisample_color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 
   VkAttachmentReference multisample_normal_attachment_ref = {0};
   multisample_normal_attachment_ref.attachment = 1;
@@ -45,42 +53,35 @@ int gbuffer_init(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer
   multisample_depth_attachment_ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
   // Resolve
-  graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, vulkan_renderer->swap_chain->swap_chain_extent.width, vulkan_renderer->swap_chain->swap_chain_extent.height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &gbuffer->color_image, &gbuffer->color_image_memory);
-  graphics_utils_create_image_view(vulkan_renderer->device, gbuffer->color_image, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT, 1, &vulkan_renderer->gbuffer->color_image_view);
+  graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, gbuffer_width, gbuffer_height, 1, VK_SAMPLE_COUNT_1_BIT, image_format, VK_IMAGE_TILING_OPTIMAL, image_usage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &gbuffer->color_image, &gbuffer->color_image_memory);
+  graphics_utils_create_image_view(vulkan_renderer->device, gbuffer->color_image, image_format, VK_IMAGE_ASPECT_COLOR_BIT, 1, &vulkan_renderer->gbuffer->color_image_view);
 
-  graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, vulkan_renderer->swap_chain->swap_chain_extent.width, vulkan_renderer->swap_chain->swap_chain_extent.height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &gbuffer->normal_image, &gbuffer->normal_image_memory);
-  graphics_utils_create_image_view(vulkan_renderer->device, gbuffer->normal_image, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT, 1, &vulkan_renderer->gbuffer->normal_image_view);
+  graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, gbuffer_width, gbuffer_height, 1, VK_SAMPLE_COUNT_1_BIT, image_format, VK_IMAGE_TILING_OPTIMAL, image_usage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &gbuffer->normal_image, &gbuffer->normal_image_memory);
+  graphics_utils_create_image_view(vulkan_renderer->device, gbuffer->normal_image, image_format, VK_IMAGE_ASPECT_COLOR_BIT, 1, &vulkan_renderer->gbuffer->normal_image_view);
 
-  struct VkAttachmentDescription color_attachment = {0};
+  VkAttachmentDescription color_attachment = {0};
   create_color_attachment(vulkan_renderer, &color_attachment);
   color_attachment.format = image_format;
   color_attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  //color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 
-  struct VkAttachmentDescription normal_attachment = {0};
+  VkAttachmentDescription normal_attachment = {0};
   create_color_attachment(vulkan_renderer, &normal_attachment);
   normal_attachment.format = image_format;
   normal_attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-  struct VkAttachmentDescription depth_attachment = {0};
-  create_depth_attachment(vulkan_renderer, &depth_attachment);
-
   VkAttachmentReference color_attachment_ref = {0};
   color_attachment_ref.attachment = 3;
   color_attachment_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-  //color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 
   VkAttachmentReference normal_attachment_ref = {0};
   normal_attachment_ref.attachment = 4;
   normal_attachment_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-  VkAttachmentReference depth_attachment_ref = {0};
-  depth_attachment_ref.attachment = 5;
-  depth_attachment_ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
   ////////////////////////////////////////////////////////////////////////////////////
 
-  struct VkAttachmentReference multisample_attachment_references[GBUFFER_COLOR_ATTACHMENTS] = {multisample_color_attachment_ref, multisample_normal_attachment_ref};
-  struct VkAttachmentReference color_attachment_references[GBUFFER_COLOR_ATTACHMENTS] = {color_attachment_ref, normal_attachment_ref};
+  VkAttachmentReference multisample_attachment_references[GBUFFER_COLOR_ATTACHMENTS] = {multisample_color_attachment_ref, multisample_normal_attachment_ref};
+  VkAttachmentReference color_attachment_references[GBUFFER_COLOR_ATTACHMENTS] = {color_attachment_ref, normal_attachment_ref};
   VkSubpassDescription subpass = {0};
   subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
   subpass.colorAttachmentCount = GBUFFER_COLOR_ATTACHMENTS;
@@ -124,8 +125,8 @@ int gbuffer_init(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer
   framebuffer_info.renderPass = gbuffer->render_pass;
   framebuffer_info.attachmentCount = GBUFFER_TOTAL_ATTACHMENTS;
   framebuffer_info.pAttachments = attachments_framebuffer;
-  framebuffer_info.width = vulkan_renderer->swap_chain->swap_chain_extent.width;
-  framebuffer_info.height = vulkan_renderer->swap_chain->swap_chain_extent.height;
+  framebuffer_info.width = gbuffer_width;
+  framebuffer_info.height = gbuffer_height;
   framebuffer_info.layers = 1;
 
   if (vkCreateFramebuffer(vulkan_renderer->device, &framebuffer_info, NULL, &gbuffer->gbuffer_framebuffer) != VK_SUCCESS)
@@ -198,7 +199,8 @@ int gbuffer_start(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_rendere
   render_pass_info.framebuffer = gbuffer->gbuffer_framebuffer;
   render_pass_info.renderArea.offset.x = 0;
   render_pass_info.renderArea.offset.y = 0;
-  render_pass_info.renderArea.extent = vulkan_renderer->swap_chain->swap_chain_extent;
+  render_pass_info.renderArea.extent.width = vulkan_renderer->swap_chain->swap_chain_extent.width * vulkan_renderer->swap_chain->supersample_scale;
+  render_pass_info.renderArea.extent.height = vulkan_renderer->swap_chain->swap_chain_extent.height * vulkan_renderer->swap_chain->supersample_scale;
 
   VkClearValue clear_values[GBUFFER_TOTAL_ATTACHMENTS];
   memset(clear_values, 0, sizeof(clear_values));

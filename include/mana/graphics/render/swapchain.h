@@ -25,6 +25,7 @@ struct SwapChain {
   VkExtent2D swap_chain_extent;
   VkRenderPass render_pass;
   size_t current_frame;
+  float supersample_scale;
 
   VkCommandBuffer swap_chain_command_buffers[MAX_SWAP_CHAIN_FRAMES];
   VkImage swap_chain_images[MAX_SWAP_CHAIN_FRAMES];

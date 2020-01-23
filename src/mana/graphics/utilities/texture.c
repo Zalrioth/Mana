@@ -4,20 +4,35 @@
 
 int texture_init(struct Texture *texture, struct VulkanRenderer *vulkan_renderer, char *path) {
   // Note: Extra 0 needed to ensure end of string
-  int pathLength = strlen(path);
-  texture->path = malloc(pathLength + 1);
-  memset(texture->path, 0, pathLength);
+  int path_length = strlen(path);
+  texture->path = malloc(path_length + 1);
+  memset(texture->path, 0, path_length);
   strcpy(texture->path, path);
 
-  // Todo: Extract filetype
-  int typeLength = 4;
-  texture->type = malloc(typeLength + 1);
-  memset(texture->type, 0, typeLength + 1);
-  strcpy(texture->type, ".tst");
+  // Todo: Extract filetype and detect pixel bit
+  int type_length = 4;
+  texture->type = malloc(type_length + 1);
+  memset(texture->type, 0, type_length + 1);
+  strcpy(texture->type, ".png");
+
+  // Note: Something like this could be useful for optimizing but not needed as stbi will correctly convert up/down bits
+  //int pixel_bit = 16;
+  //int tex_width, tex_height, tex_channels;
+  //void *pixels;
+  //VkDeviceSize image_size;
+  //if (pixel_bit == 8) {
+  //  pixels = (void *)stbi_load(texture->path, &tex_width, &tex_height, &tex_channels, STBI_rgb_alpha);
+  //  image_size = tex_width * tex_height * 4;
+  //} else if (pixel_bit == 16) {
+  //  pixels = (void *)stbi_load_16(texture->path, &tex_width, &tex_height, &tex_channels, STBI_rgb_alpha);
+  //  image_size = tex_width * tex_height * 4 * 2;
+  //} else if (pixel_bit == 32) {
+  //  pixels = (void *)stbi_load_32(texture->path, &tex_width, &tex_height, &tex_channels, STBI_rgb_alpha);
+  //  image_size = tex_width * tex_height * 4 * 2 * 2;
+  //} else
+  //  return -1;
 
   int tex_width, tex_height, tex_channels;
-  //stbi_uc *pixels = stbi_load(texture->path, &tex_width, &tex_height, &tex_channels, STBI_rgb_alpha);
-  //VkDeviceSize image_size = tex_width * tex_height * 4;
   stbi_us *pixels = stbi_load_16(texture->path, &tex_width, &tex_height, &tex_channels, STBI_rgb_alpha);
   VkDeviceSize image_size = tex_width * tex_height * 4 * 2;
 
@@ -43,7 +58,6 @@ int texture_init(struct Texture *texture, struct VulkanRenderer *vulkan_renderer
 
   graphics_utils_transition_image_layout(vulkan_renderer->device, vulkan_renderer->graphics_queue, vulkan_renderer->command_pool, texture->texture_image, VK_FORMAT_R16G16B16A16_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mip_levels);
   graphics_utils_copy_buffer_to_image(vulkan_renderer->device, vulkan_renderer->graphics_queue, vulkan_renderer->command_pool, &staging_buffer, &texture->texture_image, tex_width, tex_height);
-  //graphics_utils_transition_image_layout(vulkan_renderer->device, vulkan_renderer->graphics_queue, vulkan_renderer->command_pool, texture->texture_image, VK_FORMAT_R16G16B16A16_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mip_levels);
 
   vkDestroyBuffer(vulkan_renderer->device, staging_buffer, NULL);
   vkFreeMemory(vulkan_renderer->device, staging_buffer_memory, NULL);

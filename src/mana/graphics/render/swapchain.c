@@ -1,6 +1,8 @@
 #include "mana/graphics/render/swapchain.h"
 
 int swap_chain_init(struct SwapChain* swap_chain, struct VulkanRenderer* vulkan_renderer, int width, int height) {
+  // TODO: Load this from options and maybe move later
+  swap_chain->supersample_scale = 1.0f;
   swap_chain->current_frame = 0;
   struct SwapChainSupportDetails swap_chain_support = {{0}};
 

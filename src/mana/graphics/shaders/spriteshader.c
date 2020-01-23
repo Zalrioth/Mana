@@ -28,7 +28,7 @@ int sprite_shader_init(struct SpriteShader* sprite_shader, struct VulkanRenderer
   VkDescriptorPoolSize pool_sizes[2];
   memset(pool_sizes, 0, sizeof(pool_sizes));
 
-  int sprite_descriptors = 32;
+  int sprite_descriptors = 64;
 
   pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
   pool_sizes[0].descriptorCount = sprite_descriptors;  // Max number of uniform descriptors
@@ -49,29 +49,29 @@ int sprite_shader_init(struct SpriteShader* sprite_shader, struct VulkanRenderer
   VkPipelineVertexInputStateCreateInfo vertex_input_info = {0};
   vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-  VkVertexInputBindingDescription binding_description = get_binding_description();
-  VkVertexInputAttributeDescription attribute_descriptions[5];
+  VkVertexInputBindingDescription binding_description = mesh_get_binding_description();
+  VkVertexInputAttributeDescription attribute_descriptions[SPRITE_SHADER_VERTEX_ATTRIBUTES];
   memset(attribute_descriptions, 0, sizeof(attribute_descriptions));
-  get_attribute_descriptions(attribute_descriptions);
+  mesh_get_attribute_descriptions(attribute_descriptions);
 
   vertex_input_info.vertexBindingDescriptionCount = 1;
-  vertex_input_info.vertexAttributeDescriptionCount = 5;  // Note: length of attributeDescriptions
+  vertex_input_info.vertexAttributeDescriptionCount = SPRITE_SHADER_VERTEX_ATTRIBUTES;
   vertex_input_info.pVertexBindingDescriptions = &binding_description;
   vertex_input_info.pVertexAttributeDescriptions = attribute_descriptions;
 
+  // Note: Independent blending is for certain devices only, all attachments must blend the same otherwise
   VkPipelineColorBlendAttachmentState color_blend_attachments[SPRITE_SHADER_COLOR_ATTACHEMENTS];
   memset(color_blend_attachments, 0, sizeof(VkPipelineColorBlendAttachmentState) * SPRITE_SHADER_COLOR_ATTACHEMENTS);
-  color_blend_attachments[0].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-  color_blend_attachments[0].blendEnable = VK_TRUE;
-  color_blend_attachments[0].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-  color_blend_attachments[0].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-  color_blend_attachments[0].colorBlendOp = VK_BLEND_OP_ADD;
-  color_blend_attachments[0].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-  color_blend_attachments[0].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-  color_blend_attachments[0].alphaBlendOp = VK_BLEND_OP_ADD;
-
-  color_blend_attachments[1].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-  color_blend_attachments[1].blendEnable = VK_FALSE;
+  for (int pipeline_attachment_num = 0; pipeline_attachment_num < SPRITE_SHADER_COLOR_ATTACHEMENTS; pipeline_attachment_num++) {
+    color_blend_attachments[pipeline_attachment_num].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+    color_blend_attachments[pipeline_attachment_num].blendEnable = VK_TRUE;
+    color_blend_attachments[pipeline_attachment_num].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+    color_blend_attachments[pipeline_attachment_num].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+    color_blend_attachments[pipeline_attachment_num].colorBlendOp = VK_BLEND_OP_ADD;
+    color_blend_attachments[pipeline_attachment_num].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+    color_blend_attachments[pipeline_attachment_num].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+    color_blend_attachments[pipeline_attachment_num].alphaBlendOp = VK_BLEND_OP_ADD;
+  }
 
   VkPipelineColorBlendStateCreateInfo color_blending = {0};
   color_blending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -84,7 +84,7 @@ int sprite_shader_init(struct SpriteShader* sprite_shader, struct VulkanRenderer
   color_blending.blendConstants[2] = 0.0f;
   color_blending.blendConstants[3] = 0.0f;
 
-  shader_init(&sprite_shader->shader, vulkan_renderer, "./assets/shaders/spirv/sprite.vert.spv", "./assets/shaders/spirv/sprite.frag.spv", NULL, vertex_input_info, vulkan_renderer->gbuffer->render_pass, color_blending, VK_TRUE, vulkan_renderer->msaa_samples);
+  shader_init(&sprite_shader->shader, vulkan_renderer, "./assets/shaders/spirv/sprite.vert.spv", "./assets/shaders/spirv/sprite.frag.spv", NULL, vertex_input_info, vulkan_renderer->gbuffer->render_pass, color_blending, VK_TRUE, vulkan_renderer->msaa_samples, true);
 
   return 1;
 }

@@ -56,3 +56,39 @@ void mesh_assign_vertex_full(struct Vector* vector, float x, float y, float z, f
 void mesh_assign_indice(struct Vector* vector, uint32_t indice) {
   vector_push_back(vector, &indice);
 }
+
+VkVertexInputBindingDescription mesh_get_binding_description() {
+  VkVertexInputBindingDescription binding_description = {0};
+  binding_description.binding = 0;
+  binding_description.stride = sizeof(struct Vertex);
+  binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+  return binding_description;
+}
+
+void mesh_get_attribute_descriptions(VkVertexInputAttributeDescription* attribute_descriptions) {
+  attribute_descriptions[0].binding = 0;
+  attribute_descriptions[0].location = 0;
+  attribute_descriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+  attribute_descriptions[0].offset = offsetof(struct Vertex, position);
+
+  attribute_descriptions[1].binding = 0;
+  attribute_descriptions[1].location = 1;
+  attribute_descriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+  attribute_descriptions[1].offset = offsetof(struct Vertex, normal);
+
+  attribute_descriptions[2].binding = 0;
+  attribute_descriptions[2].location = 2;
+  attribute_descriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+  attribute_descriptions[2].offset = offsetof(struct Vertex, tex_coord);
+
+  attribute_descriptions[3].binding = 0;
+  attribute_descriptions[3].location = 3;
+  attribute_descriptions[3].format = VK_FORMAT_R32G32B32_SFLOAT;
+  attribute_descriptions[3].offset = offsetof(struct Vertex, tangent);
+
+  attribute_descriptions[4].binding = 0;
+  attribute_descriptions[4].location = 4;
+  attribute_descriptions[4].format = VK_FORMAT_R32G32B32_SFLOAT;
+  attribute_descriptions[4].offset = offsetof(struct Vertex, bit_tangent);
+}

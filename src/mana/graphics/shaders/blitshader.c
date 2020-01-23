@@ -38,7 +38,7 @@ int blit_shader_init(struct BlitShader* blit_shader, struct VulkanRenderer* vulk
   VkPipelineVertexInputStateCreateInfo vertex_input_info = {0};
   vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-  VkVertexInputBindingDescription binding_description = get_binding_description();
+  VkVertexInputBindingDescription binding_description = mesh_get_binding_description();
   vertex_input_info.vertexBindingDescriptionCount = 1;
   vertex_input_info.vertexAttributeDescriptionCount = 0;  // Note: length of attributeDescriptions
   vertex_input_info.pVertexBindingDescriptions = &binding_description;
@@ -59,7 +59,7 @@ int blit_shader_init(struct BlitShader* blit_shader, struct VulkanRenderer* vulk
   color_blending.blendConstants[2] = 0.0f;
   color_blending.blendConstants[3] = 0.0f;
 
-  shader_init(blit_shader->shader, vulkan_renderer, "./assets/shaders/spirv/screenspace.vert.spv", "./assets/shaders/spirv/blit.frag.spv", NULL, vertex_input_info, render_pass, color_blending, VK_FALSE, VK_SAMPLE_COUNT_1_BIT);
+  shader_init(blit_shader->shader, vulkan_renderer, "./assets/shaders/spirv/screenspace.vert.spv", "./assets/shaders/spirv/blit.frag.spv", NULL, vertex_input_info, render_pass, color_blending, VK_FALSE, VK_SAMPLE_COUNT_1_BIT, false);
 
   return 1;
 }

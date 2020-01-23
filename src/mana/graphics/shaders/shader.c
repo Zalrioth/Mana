@@ -23,7 +23,7 @@ char* read_shader_file(const char* filename, int* file_length) {
   return result;
 }
 
-int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, char* vertex_shader, char* fragment_shader, char* geometry_shader, VkPipelineVertexInputStateCreateInfo vertex_input_info, VkRenderPass render_pass, VkPipelineColorBlendStateCreateInfo color_blending, bool depth_test, VkSampleCountFlagBits num_samples) {
+int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, char* vertex_shader, char* fragment_shader, char* geometry_shader, VkPipelineVertexInputStateCreateInfo vertex_input_info, VkRenderPass render_pass, VkPipelineColorBlendStateCreateInfo color_blending, bool depth_test, VkSampleCountFlagBits num_samples, bool supersampled) {
   // Get the current working directory
 #if defined(IS_WINDOWS)
   char* buffer;
@@ -66,15 +66,26 @@ int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, c
   VkViewport viewport = {0};
   viewport.x = 0.0f;
   viewport.y = 0.0f;
-  viewport.width = (float)vulkan_renderer->swap_chain->swap_chain_extent.width;
-  viewport.height = (float)vulkan_renderer->swap_chain->swap_chain_extent.height;
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
+  if (supersampled) {
+    viewport.width = (float)vulkan_renderer->swap_chain->swap_chain_extent.width * vulkan_renderer->swap_chain->supersample_scale;
+    viewport.height = (float)vulkan_renderer->swap_chain->swap_chain_extent.height * vulkan_renderer->swap_chain->supersample_scale;
+  } else {
+    viewport.width = (float)vulkan_renderer->swap_chain->swap_chain_extent.width;
+    viewport.height = (float)vulkan_renderer->swap_chain->swap_chain_extent.height;
+  }
 
   VkRect2D scissor = {0};
   scissor.offset.x = 0;
   scissor.offset.y = 0;
-  scissor.extent = vulkan_renderer->swap_chain->swap_chain_extent;
+  if (supersampled) {
+    scissor.extent.width = vulkan_renderer->swap_chain->swap_chain_extent.width * vulkan_renderer->swap_chain->supersample_scale;
+    scissor.extent.height = vulkan_renderer->swap_chain->swap_chain_extent.height * vulkan_renderer->swap_chain->supersample_scale;
+  } else {
+    scissor.extent.width = vulkan_renderer->swap_chain->swap_chain_extent.width;
+    scissor.extent.height = vulkan_renderer->swap_chain->swap_chain_extent.height;
+  }
 
   VkPipelineViewportStateCreateInfo viewport_state = {0};
   viewport_state.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
