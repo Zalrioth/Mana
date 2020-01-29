@@ -10,6 +10,12 @@
 
 struct VulkanRenderer;
 
+struct SwapChainSupportDetails {
+  struct VkSurfaceCapabilitiesKHR capabilities;
+  struct Vector formats;
+  struct Vector present_modes;
+};
+
 struct BlitSwapChain {
   struct BlitShader* blit_shader;
   VkDescriptorSet descriptor_sets[2];

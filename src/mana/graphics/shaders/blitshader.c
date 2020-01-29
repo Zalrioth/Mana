@@ -18,9 +18,7 @@ int blit_shader_init(struct BlitShader* blit_shader, struct VulkanRenderer* vulk
   if (vkCreateDescriptorSetLayout(vulkan_renderer->device, &layout_info, NULL, &blit_shader->shader->descriptor_set_layout) != VK_SUCCESS)
     return 0;
 
-  VkDescriptorPoolSize pool_size;
-  memset(&pool_size, 0, sizeof(pool_size));
-
+  VkDescriptorPoolSize pool_size = {0};
   pool_size.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
   pool_size.descriptorCount = descriptors;
 

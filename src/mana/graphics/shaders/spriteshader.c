@@ -25,11 +25,8 @@ int sprite_shader_init(struct SpriteShader* sprite_shader, struct VulkanRenderer
   if (vkCreateDescriptorSetLayout(vulkan_renderer->device, &layout_info, NULL, &sprite_shader->shader.descriptor_set_layout) != VK_SUCCESS)
     return 0;
 
-  VkDescriptorPoolSize pool_sizes[2];
-  memset(pool_sizes, 0, sizeof(pool_sizes));
-
   int sprite_descriptors = 64;
-
+  VkDescriptorPoolSize pool_sizes[2] = {{0}};
   pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
   pool_sizes[0].descriptorCount = sprite_descriptors;  // Max number of uniform descriptors
   pool_sizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;

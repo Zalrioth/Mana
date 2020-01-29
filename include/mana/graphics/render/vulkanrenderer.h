@@ -37,18 +37,6 @@ struct QueueFamilyIndices {
   uint32_t present_family;
 };
 
-struct UniformBufferObject {
-  alignas(16) mat4 model;
-  alignas(16) mat4 view;
-  alignas(16) mat4 proj;
-};
-
-struct SwapChainSupportDetails {
-  struct VkSurfaceCapabilitiesKHR capabilities;
-  struct Vector formats;
-  struct Vector present_modes;
-};
-
 struct VulkanRenderer {
   GLFWwindow* glfw_window;
   VkInstance instance;

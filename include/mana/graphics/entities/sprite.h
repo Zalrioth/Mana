@@ -6,6 +6,12 @@
 #include "mana/graphics/shaders/shader.h"
 #include "mana/graphics/utilities/texture.h"
 
+struct SpriteUniformBufferObject {
+  alignas(16) mat4 model;
+  alignas(16) mat4 view;
+  alignas(16) mat4 proj;
+};
+
 struct Sprite {
   struct Mesh* image_mesh;
   struct Texture* image_texture;
@@ -25,13 +31,5 @@ enum {
 
 int sprite_init(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer, struct Shader* shader);
 void sprite_delete(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer);
-int sprite_create_vertex_buffer(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer);
-int sprite_create_index_buffer(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer);
-int sprite_create_uniform_buffers(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer);
-
-int vulkan_index_buffer_cleanup(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer);
-int vulkan_vertex_buffer_cleanup(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer);
-int vulkan_texture_cleanup(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer);
-int sprite_create_descriptor_sets(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer, struct Shader* shader);
 
 #endif  // SPRITE_H

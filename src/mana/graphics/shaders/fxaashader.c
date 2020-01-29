@@ -1,7 +1,5 @@
 #include "mana/graphics/shaders/fxaashader.h"
 
-#include "mana/graphics/shaders/spriteshader.h"
-
 int fxaa_shader_init(struct FXAAShader* fxaa_shader, struct VulkanRenderer* vulkan_renderer) {
   fxaa_shader->shader = calloc(1, sizeof(struct Shader));
 
@@ -20,9 +18,7 @@ int fxaa_shader_init(struct FXAAShader* fxaa_shader, struct VulkanRenderer* vulk
   if (vkCreateDescriptorSetLayout(vulkan_renderer->device, &layout_info, NULL, &fxaa_shader->shader->descriptor_set_layout) != VK_SUCCESS)
     return 0;
 
-  VkDescriptorPoolSize pool_size;
-  memset(&pool_size, 0, sizeof(pool_size));
-
+  VkDescriptorPoolSize pool_size = {0};
   pool_size.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
   pool_size.descriptorCount = 2;
 
