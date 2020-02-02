@@ -23,6 +23,7 @@ struct Mesh {
 
 void mesh_init(struct Mesh* mesh);
 void mesh_delete(struct Mesh* mesh);
+void mesh_clear(struct Mesh* mesh);
 void mesh_assign_vertex(struct Vector* vector, float x, float y, float z, float r, float g, float b, float u, float v);
 void mesh_assign_vertex_full(struct Vector* vector, float x, float y, float z, float r, float g, float b, float u, float v, float tan_x, float tan_y, float tan_z, float bit_x, float bit_y, float bit_z);
 void mesh_assign_indice(struct Vector* vector, uint32_t indice);

@@ -13,6 +13,11 @@ void mesh_delete(struct Mesh* mesh) {
   vector_delete(mesh->indices);
 }
 
+void mesh_clear(struct Mesh* mesh) {
+  vector_clear(mesh->vertices);
+  vector_clear(mesh->indices);
+}
+
 void mesh_assign_vertex(struct Vector* vector, float x, float y, float z, float r, float g, float b, float u, float v) {
   struct Vertex vertex = {{0}};
   vertex.position[0] = x;

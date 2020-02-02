@@ -64,43 +64,6 @@ int atmospheric_scattering_shader_init(struct AtmosphericScatteringShader* atmos
   shader_init(atmospheric_scattering_shader->shader, vulkan_renderer, "./assets/shaders/spirv/screenspace.vert.spv", "./assets/shaders/spirv/atmosphericscattering.frag.spv", NULL, vertex_input_info, vulkan_renderer->gbuffer->render_pass, color_blending, VK_FALSE, VK_SAMPLE_COUNT_1_BIT, false);
 
   //////////////////////////////////////////////////////////////////////
-
-  VkDescriptorSetLayout layout = {0};
-  layout = atmospheric_scattering_shader->shader->descriptor_set_layout;
-
-  VkDescriptorSetAllocateInfo alloc_info = {0};
-  alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-  alloc_info.descriptorPool = atmospheric_scattering_shader->shader->descriptor_pool;
-  alloc_info.descriptorSetCount = 1;
-  alloc_info.pSetLayouts = &layout;
-
-  if (vkAllocateDescriptorSets(vulkan_renderer->device, &alloc_info, &atmospheric_scattering_shader->descriptor_set) != VK_SUCCESS) {
-    fprintf(stderr, "failed to allocate descriptor sets!\n");
-    return 0;
-  }
-
-  VkDescriptorImageInfo image_info = {0};
-  image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  image_info.imageView = vulkan_renderer->gbuffer->color_image_view;
-  image_info.sampler = vulkan_renderer->gbuffer->texture_sampler;
-
-  VkWriteDescriptorSet dc;
-  memset(&dc, 0, sizeof(dc));
-
-  dc.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  dc.dstSet = atmospheric_scattering_shader->descriptor_set;
-  dc.dstBinding = 0;
-  dc.dstArrayElement = 0;
-  dc.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  dc.descriptorCount = 1;
-  dc.pImageInfo = &image_info;
-
-  vkUpdateDescriptorSets(vulkan_renderer->device, 1, &dc, 0, NULL);
-
-  atmospheric_scattering_shader->fullscreen_quad = calloc(1, sizeof(struct FullscreenQuad));
-  fullscreen_quad_init(atmospheric_scattering_shader->fullscreen_quad, vulkan_renderer);
-
-  //////////////////////////////////////////////////////////////////////
   // Uniform buffers
   VkDeviceSize uniform_buffer_size = sizeof(struct AtmosphericScatteringUniformBufferObject);
   graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, uniform_buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &atmospheric_scattering_shader->uniform_buffer, &atmospheric_scattering_shader->uniform_buffer_memory);
@@ -128,10 +91,10 @@ int atmospheric_scattering_shader_init(struct AtmosphericScatteringShader* atmos
   uniform_buffer_info.offset = 0;
   uniform_buffer_info.range = sizeof(struct AtmosphericScatteringUniformBufferObject);
 
-  VkDescriptorBufferInfo uniform_buffer_settings_info = {0};
-  uniform_buffer_settings_info.buffer = atmospheric_scattering_shader->uniform_buffer_settings;
-  uniform_buffer_settings_info.offset = 0;
-  uniform_buffer_settings_info.range = sizeof(struct AtmosphericScatteringUniformBufferObjectSettings);
+  VkDescriptorBufferInfo uniform_buffer_setting_info = {0};
+  uniform_buffer_setting_info.buffer = atmospheric_scattering_shader->uniform_buffer_settings;
+  uniform_buffer_setting_info.offset = 0;
+  uniform_buffer_setting_info.range = sizeof(struct AtmosphericScatteringUniformBufferObjectSettings);
 
   VkWriteDescriptorSet dcs[2];
   memset(dcs, 0, sizeof(dcs));
@@ -150,9 +113,12 @@ int atmospheric_scattering_shader_init(struct AtmosphericScatteringShader* atmos
   dcs[1].dstArrayElement = 0;
   dcs[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
   dcs[1].descriptorCount = 1;
-  dcs[1].pImageInfo = &uniform_buffer_settings_info;
+  dcs[1].pBufferInfo = &uniform_buffer_setting_info;
 
   vkUpdateDescriptorSets(vulkan_renderer->device, 2, dcs, 0, NULL);
+
+  atmospheric_scattering_shader->fullscreen_quad = calloc(1, sizeof(struct FullscreenQuad));
+  fullscreen_quad_init(atmospheric_scattering_shader->fullscreen_quad, vulkan_renderer);
 
   return 0;
 }
@@ -174,32 +140,32 @@ void atmospheric_scattering_shader_delete(struct AtmosphericScatteringShader* at
 }
 
 void atmospheric_scattering_shader_render(struct AtmosphericScatteringShader* atmospheric_scattering_shader, struct VulkanRenderer* vulkan_renderer) {
-  struct AtmosphericScatteringUniformBufferObject ubo = {{{0}}};
-
-  glm_mat4_copy(vulkan_renderer->gbuffer->projection_matrix, ubo.proj);
-  glm_mat4_copy(vulkan_renderer->gbuffer->view_matrix, ubo.view);
-  glm_mat4_identity(ubo.model);
-
-  glm_rotate(ubo.model, time / 4, (vec3){0.0f, 0.0f + entity_num / 3.14159265358979, 1.0f});
-  glm_translate(ubo.model, (vec3){0.0f + entity_num / 3.14159265358979, 0.0f + entity_num / 3.14159265358979, 0.0f + entity_num / 3.14159265358979});
-  ubo.proj[1][1] *= -1;
-
-  void* data;
-  vkMapMemory(vulkan_renderer->device, ((struct Sprite*)array_list_get(&game->sprites, entity_num))->uniform_buffers_memory, 0, sizeof(struct AtmosphericScatteringUniformBufferObject), 0, &data);
-  memcpy(data, &ubo, sizeof(struct UniformBufferObject));
-  vkUnmapMemory(vulkan_renderer->device, ((struct Sprite*)array_list_get(&game->sprites, entity_num))->uniform_buffers_memory);
-
-  //////////////////////////////////////////////////////////////////////////////////
-
-  post_process_start(vulkan_renderer->post_process, vulkan_renderer);
-
-  vkCmdBindPipeline(vulkan_renderer->post_process->post_process_command_buffers[vulkan_renderer->post_process->ping_pong], VK_PIPELINE_BIND_POINT_GRAPHICS, atmospheric_scattering_shader->shader->graphics_pipeline);
-  VkBuffer vertex_buffers[] = {atmospheric_scattering_shader->fullscreen_quad->vertex_buffer};
-  VkDeviceSize offsets[] = {0};
-  vkCmdBindVertexBuffers(vulkan_renderer->post_process->post_process_command_buffers[vulkan_renderer->post_process->ping_pong], 0, 1, vertex_buffers, offsets);
-  vkCmdBindIndexBuffer(vulkan_renderer->post_process->post_process_command_buffers[vulkan_renderer->post_process->ping_pong], atmospheric_scattering_shader->fullscreen_quad->index_buffer, 0, VK_INDEX_TYPE_UINT32);
-  vkCmdBindDescriptorSets(vulkan_renderer->post_process->post_process_command_buffers[vulkan_renderer->post_process->ping_pong], VK_PIPELINE_BIND_POINT_GRAPHICS, atmospheric_scattering_shader->shader->pipeline_layout, 0, 1, &atmospheric_scattering_shader->descriptor_sets[vulkan_renderer->post_process->ping_pong ^ true], 0, NULL);
-  vkCmdDrawIndexed(vulkan_renderer->post_process->post_process_command_buffers[vulkan_renderer->post_process->ping_pong], atmospheric_scattering_shader->fullscreen_quad->mesh->indices->size, 1, 0, 0, 0);
-
-  post_process_stop(vulkan_renderer->post_process, vulkan_renderer);
+  //struct AtmosphericScatteringUniformBufferObject ubo = {{{0}}};
+  //
+  //glm_mat4_copy(vulkan_renderer->gbuffer->projection_matrix, ubo.proj);
+  //glm_mat4_copy(vulkan_renderer->gbuffer->view_matrix, ubo.view);
+  //glm_mat4_identity(ubo.model);
+  //
+  //glm_rotate(ubo.model, time / 4, (vec3){0.0f, 0.0f + entity_num / 3.14159265358979, 1.0f});
+  //glm_translate(ubo.model, (vec3){0.0f + entity_num / 3.14159265358979, 0.0f + entity_num / 3.14159265358979, 0.0f + entity_num / 3.14159265358979});
+  //ubo.proj[1][1] *= -1;
+  //
+  //void* data;
+  //vkMapMemory(vulkan_renderer->device, ((struct Sprite*)array_list_get(&game->sprites, entity_num))->uniform_buffers_memory, 0, sizeof(struct AtmosphericScatteringUniformBufferObject), 0, &data);
+  //memcpy(data, &ubo, sizeof(struct UniformBufferObject));
+  //vkUnmapMemory(vulkan_renderer->device, ((struct Sprite*)array_list_get(&game->sprites, entity_num))->uniform_buffers_memory);
+  //
+  ////////////////////////////////////////////////////////////////////////////////////
+  //
+  //post_process_start(vulkan_renderer->post_process, vulkan_renderer);
+  //
+  //vkCmdBindPipeline(vulkan_renderer->post_process->post_process_command_buffers[vulkan_renderer->post_process->ping_pong], VK_PIPELINE_BIND_POINT_GRAPHICS, atmospheric_scattering_shader->shader->graphics_pipeline);
+  //VkBuffer vertex_buffers[] = {atmospheric_scattering_shader->fullscreen_quad->vertex_buffer};
+  //VkDeviceSize offsets[] = {0};
+  //vkCmdBindVertexBuffers(vulkan_renderer->post_process->post_process_command_buffers[vulkan_renderer->post_process->ping_pong], 0, 1, vertex_buffers, offsets);
+  //vkCmdBindIndexBuffer(vulkan_renderer->post_process->post_process_command_buffers[vulkan_renderer->post_process->ping_pong], atmospheric_scattering_shader->fullscreen_quad->index_buffer, 0, VK_INDEX_TYPE_UINT32);
+  //vkCmdBindDescriptorSets(vulkan_renderer->post_process->post_process_command_buffers[vulkan_renderer->post_process->ping_pong], VK_PIPELINE_BIND_POINT_GRAPHICS, atmospheric_scattering_shader->shader->pipeline_layout, 0, 1, &atmospheric_scattering_shader->descriptor_sets[vulkan_renderer->post_process->ping_pong ^ true], 0, NULL);
+  //vkCmdDrawIndexed(vulkan_renderer->post_process->post_process_command_buffers[vulkan_renderer->post_process->ping_pong], atmospheric_scattering_shader->fullscreen_quad->mesh->indices->size, 1, 0, 0, 0);
+  //
+  //post_process_stop(vulkan_renderer->post_process, vulkan_renderer);
 }

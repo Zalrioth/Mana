@@ -14,3 +14,6 @@ layout(binding = 1) uniform AtmosphericScatteringUniformBufferObjectSettings {
   vec3 sun_direction;
   vec2 sun_size;
 } ubos;
+
+void main() {
+}
