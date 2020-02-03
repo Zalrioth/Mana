@@ -5,13 +5,27 @@
 #include "mana/graphics/dualcontouring/octree.h"
 #include "mana/graphics/utilities/mesh.h"
 
-struct DualContouring {
-  int octree_size;
-  struct Mesh *mesh;
-  struct OctreeNode *head;
+struct DualContouringUniformBufferObject {
+  alignas(16) mat4 model;
+  alignas(16) mat4 view;
+  alignas(16) mat4 proj;
 };
 
-void dual_contorouring_init(struct DualContouring *dual_contouring, int octree_size);
-void dual_contorouring_delete(struct DualContouring *dual_contouring);
+struct DualContouring {
+  int octree_size;
+  struct OctreeNode *head;
+
+  struct Mesh *mesh;
+  VkBuffer vertex_buffer;
+  VkDeviceMemory vertex_buffer_memory;
+  VkBuffer index_buffer;
+  VkDeviceMemory index_buffer_memory;
+  VkBuffer uniform_buffer;
+  VkDeviceMemory uniform_buffers_memory;
+  VkDescriptorSet descriptor_set;
+};
+
+int dual_contouring_init(struct DualContouring *dual_contouring, struct VulkanRenderer *vulkan_renderer, int octree_size, struct Shader *shader);
+void dual_contouring_delete(struct DualContouring *dual_contouring, struct VulkanRenderer *vulkan_renderer);
 
 #endif  // DUAL_CONTOURING_H

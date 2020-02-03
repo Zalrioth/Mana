@@ -18,6 +18,29 @@ const int face_proc_edge_mask[3][4][6] = {{{1, 4, 0, 5, 1, 1}, {1, 6, 2, 7, 3, 1
 const int edge_proc_edge_mask[3][2][5] = {{{3, 2, 1, 0, 0}, {7, 6, 5, 4, 0}}, {{5, 1, 4, 0, 1}, {7, 3, 6, 2, 1}}, {{6, 4, 2, 0, 2}, {7, 5, 3, 1, 2}}};
 const int process_edge_mask[3][4] = {{3, 2, 1, 0}, {7, 5, 6, 4}, {11, 10, 9, 8}};
 
+float Density_Func(float x_pos, float y_pos, float z_pos) {
+  //struct PerlinNoise perlin_noise = {0};
+  //perlin_noise_init(&perlin_noise);
+  ////perlin_noise.octave_count = 4;
+  ////perlin_noise.frequency = 0.5343f;
+  ////perlin_noise.lacunarity = 2.2324f;
+  ////perlin_noise.persistence = 0.68324f;
+  //perlin_noise.position[0] = x_pos;
+  //perlin_noise.position[1] = y_pos;
+  //perlin_noise.position[2] = z_pos;
+  //
+  //const float MAX_HEIGHT = 20.0f;
+  //
+  //float* noise_set = perlin_noise_eval_1d(&perlin_noise, 16);
+  ////float terrain = y_pos - (MAX_HEIGHT * *noise_set);
+  //float terrain = *noise_set - 2.0;
+  //
+  //noise_free(noise_set);
+  //return terrain;
+
+  return ((fmodf(x_pos, 0.66) + fmodf(y_pos, 0.66) + fmodf(z_pos, 0.66)) / 3.0) + 0.15;
+}
+
 void octree_draw_info_init(struct OctreeDrawInfo* octree_draw_info) {
   octree_draw_info->index = -1;
   octree_draw_info->corners = 0;
@@ -43,10 +66,12 @@ struct OctreeNode* octree_simplify_octree(struct OctreeNode* node, float thresho
   if (node->type != NODE_INTERNAL)
     return node;
 
-  struct QefSolver qef;
+  struct QefSolver qef = {0};
+  qef_solver_init(&qef);
+
   int signs[8] = {-1, -1, -1, -1, -1, -1, -1, -1};
   int midsign = -1;
-  int edgeCount = 0;
+  int edge_count = 0;
   bool is_collapsible = true;
 
   for (int i = 0; i < 8; i++) {
@@ -61,7 +86,7 @@ struct OctreeNode* octree_simplify_octree(struct OctreeNode* node, float thresho
         midsign = (child->draw_info->corners >> (7 - i)) & 1;
         signs[i] = (child->draw_info->corners >> i) & 1;
 
-        edgeCount++;
+        edge_count++;
       }
     }
   }
@@ -202,23 +227,23 @@ void octree_contour_edge_proc(struct OctreeNode* node[4], int dir, struct Mesh* 
     }
   }
 }
-
+//const int face_proc_edge_mask[3][4][6] = {{{1, 4, 0, 5, 1, 1}, {1, 6, 2, 7, 3, 1}, {0, 4, 6, 0, 2, 2}, {0, 5, 7, 1, 3, 2}}, {{0, 2, 3, 0, 1, 0}, {0, 6, 7, 4, 5, 0}, {1, 2, 0, 6, 4, 2}, {1, 3, 1, 7, 5, 2}}, {{1, 1, 0, 3, 2, 0}, {1, 5, 4, 7, 6, 0}, {0, 1, 5, 0, 4, 1}, {0, 3, 7, 2, 6, 1}}};
 void octree_contour_face_proc(struct OctreeNode* node[2], int dir, struct Mesh* mesh) {
   if (!node[0] || !node[1])
     return;
 
   if (node[0]->type == NODE_INTERNAL || node[1]->type == NODE_INTERNAL) {
     for (int i = 0; i < 4; i++) {
-      struct OctreeNode* faceNodes[2];
+      struct OctreeNode* face_nodes[2];
       const int c[2] = {face_proc_edge_mask[dir][i][0], face_proc_edge_mask[dir][i][1]};
 
       for (int j = 0; j < 2; j++) {
         if (node[j]->type != NODE_INTERNAL)
-          faceNodes[j] = node[j];
+          face_nodes[j] = node[j];
         else
-          faceNodes[j] = node[j]->children[c[j]];
+          face_nodes[j] = node[j]->children[c[j]];
       }
-      octree_contour_face_proc(faceNodes, face_proc_edge_mask[dir][i][2], mesh);
+      octree_contour_face_proc(face_nodes, face_proc_face_mask[dir][i][2], mesh);
     }
 
     const int orders[2][4] = {{0, 0, 1, 1}, {0, 1, 0, 1}};
@@ -247,13 +272,13 @@ void octree_contour_cell_proc(struct OctreeNode* node, struct Mesh* mesh) {
       octree_contour_cell_proc(node->children[i], mesh);
 
     for (int i = 0; i < 12; i++) {
-      struct OctreeNode* faceNodes[2];
+      struct OctreeNode* face_nodes[2];
       const int c[2] = {cell_proc_face_mask[i][0], cell_proc_face_mask[i][1]};
 
-      faceNodes[0] = node->children[c[0]];
-      faceNodes[1] = node->children[c[1]];
+      face_nodes[0] = node->children[c[0]];
+      face_nodes[1] = node->children[c[1]];
 
-      octree_contour_face_proc(faceNodes, cell_proc_face_mask[i][2], mesh);
+      octree_contour_face_proc(face_nodes, cell_proc_face_mask[i][2], mesh);
     }
 
     for (int i = 0; i < 6; i++) {
@@ -268,7 +293,7 @@ void octree_contour_cell_proc(struct OctreeNode* node, struct Mesh* mesh) {
   }
 }
 
-float* octree_approximate_zero_crossing_position(const vec3 p0, const vec3 p1) {
+void octree_approximate_zero_crossing_position(const vec3 p0, const vec3 p1, vec3 dest) {
   float min_value = 100000.0f;
   float t = 0.0f;
   float current_t = 0.0f;
@@ -277,7 +302,7 @@ float* octree_approximate_zero_crossing_position(const vec3 p0, const vec3 p1) {
 
   while (current_t <= 1.f) {
     const vec3 p = {p0[0] + ((p1[0] - p0[0]) * current_t), p0[1] + ((p1[1] - p0[1]) * current_t), p0[2] + ((p1[2] - p0[2]) * current_t)};
-    const float density = abs(Density_Func(p[0], p[1], p[2]));
+    const float density = fabsf(Density_Func(p[0], p[1], p[2]));
     if (density < min_value) {
       min_value = density;
       t = current_t;
@@ -286,19 +311,21 @@ float* octree_approximate_zero_crossing_position(const vec3 p0, const vec3 p1) {
     current_t += increment;
   }
 
-  return (vec3){p0[0] + ((p1[0] - p0[0]) * t), p0[1] + ((p1[1] - p0[1]) * t), p0[2] + ((p1[2] - p0[2]) * t)};
+  dest[0] = p0[0] + ((p1[0] - p0[0]) * t);
+  dest[1] = p0[1] + ((p1[1] - p0[1]) * t);
+  dest[2] = p0[2] + ((p1[2] - p0[2]) * t);
 }
 
-float* octree_calculate_surface_normal(const vec3 p) {
+void octree_calculate_surface_normal(const vec3 p, vec3 dest) {
   const float h = 0.001f;
   const float dx = Density_Func(p[0] + h, p[1], p[2]) - Density_Func(p[0] - h, p[1], p[2]);
   const float dy = Density_Func(p[0], p[1] + h, p[2]) - Density_Func(p[0], p[1] - h, p[2]);
   const float dz = Density_Func(p[0], p[1], p[2] + h) - Density_Func(p[0], p[1], p[2] - h);
 
-  vec3 temp_return = {dx, dy, dz};
-  glm_normalize(temp_return);
-
-  return (vec3){temp_return[0], temp_return[1], temp_return[2]};
+  dest[0] = dx;
+  dest[1] = dy;
+  dest[2] = dz;
+  glm_normalize(dest);
 }
 
 struct OctreeNode* octree_construct_leaf(struct OctreeNode* leaf) {
@@ -309,7 +336,7 @@ struct OctreeNode* octree_construct_leaf(struct OctreeNode* leaf) {
   for (int i = 0; i < 8; i++) {
     const ivec3 corner_pos = {leaf->min[0] + CHILD_MIN_OFFSETS[i][0], leaf->min[1] + CHILD_MIN_OFFSETS[i][1], leaf->min[2] + CHILD_MIN_OFFSETS[i][2]};
     const float density = Density_Func(corner_pos[0], corner_pos[1], corner_pos[2]);
-    const int material = density < 0.f ? MATERIAL_SOLID : MATERIAL_AIR;
+    const int material = density < 0.0f ? MATERIAL_SOLID : MATERIAL_AIR;
     corners |= (material << i);
   }
 
@@ -321,7 +348,7 @@ struct OctreeNode* octree_construct_leaf(struct OctreeNode* leaf) {
   const int MAX_CROSSINGS = 6;
   int edge_count = 0;
   vec3 average_normal = {0.0, 0.0, 0.0};
-  struct QefSolver qef;
+  struct QefSolver qef = {0};
   qef_solver_init(&qef);
 
   for (int i = 0; i < 12 && edge_count < MAX_CROSSINGS; i++) {
@@ -335,8 +362,10 @@ struct OctreeNode* octree_construct_leaf(struct OctreeNode* leaf) {
 
     const vec3 p1 = {leaf->min[0] + CHILD_MIN_OFFSETS[c1][0], leaf->min[1] + CHILD_MIN_OFFSETS[c1][1], leaf->min[2] + CHILD_MIN_OFFSETS[c1][2]};
     const vec3 p2 = {leaf->min[0] + CHILD_MIN_OFFSETS[c2][0], leaf->min[1] + CHILD_MIN_OFFSETS[c2][1], leaf->min[2] + CHILD_MIN_OFFSETS[c2][2]};
-    const vec3 p = octree_approximate_zero_crossing_position(p1, p2);
-    const vec3 n = octree_calculate_surface_normal(p);
+    vec3 p = {0.0, 0.0, 0.0};
+    octree_approximate_zero_crossing_position(p1, p2, p);
+    vec3 n = {0.0, 0.0, 0.0};
+    octree_calculate_surface_normal(p, n);
     qef_solver_add(&qef, p[0], p[1], p[2], n[0], n[1], n[2]);
     average_normal[0] = average_normal[0] + n[0];
     average_normal[1] = average_normal[1] + n[1];
@@ -347,7 +376,7 @@ struct OctreeNode* octree_construct_leaf(struct OctreeNode* leaf) {
   vec3 qef_position;
   qef_solver_solve(&qef, &qef_position, QEF_ERROR, QEF_SWEEPS, QEF_ERROR);
 
-  struct OctreeDrawInfo* draw_info;
+  struct OctreeDrawInfo* draw_info = calloc(1, sizeof(struct OctreeDrawInfo));
   octree_draw_info_init(draw_info);
 
   memcpy(draw_info->position, qef_position, sizeof(vec3));
@@ -364,7 +393,7 @@ struct OctreeNode* octree_construct_leaf(struct OctreeNode* leaf) {
   draw_info->corners = corners;
 
   leaf->type = NODE_LEAF;
-  memcpy(leaf->draw_info, draw_info, sizeof(struct OctreeDrawInfo));
+  leaf->draw_info = draw_info;
 
   return leaf;
 }
