@@ -15,5 +15,5 @@ layout(location = 1) out vec4 normalColor;
 
 void main() {
   outColor = vec4(1.0, 0.0, 0.0, 1.0);
-  normalColor = vec4(normalize(inNormal), 1.0);
+  outColor = vec4(normalize(inNormal), 1.0);
 }

@@ -86,7 +86,7 @@ void qef_solver_add_vec3(struct QefSolver *qef_solver, const vec3 p, const vec3 
 
 void qef_solver_add_copy(struct QefSolver *qef_solver, struct QefData *rhs) {
   qef_solver->has_solution = false;
-  qef_data_add(qef_solver, rhs);
+  qef_data_add(&qef_solver->data, rhs);
 }
 
 float qef_solver_get_error(struct QefSolver *qef_solver) {
@@ -96,7 +96,7 @@ float qef_solver_get_error(struct QefSolver *qef_solver) {
   return qef_solver_get_error_pos(qef_solver, qef_solver->x);
 }
 
-float qef_solver_get_error_pos(struct QefSolver *qef_solver, const vec3 pos) {
+float qef_solver_get_error_pos(struct QefSolver *qef_solver, vec3 pos) {
   if (!qef_solver->has_solution) {
     qef_solver_set_ata(qef_solver);
     qef_solver_set_atb(qef_solver);
@@ -138,109 +138,123 @@ static float calc_pinv(const float x, const float tol) {
 
 static void calc_symmetric_givens_coefficients(const float a_pp, const float a_pq, const float a_qq, float *c, float *s) {
   if (a_pq == 0) {
-    c = 1;
-    s = 0;
+    *c = 1.0;
+    *s = 0.0;
     return;
   }
 
   const float tau = (a_qq - a_pp) / (2 * a_pq);
   const float stt = sqrt(1.0f + tau * tau);
   const float tan = 1.0f / ((tau >= 0) ? (tau + stt) : (tau - stt));
-  *c = 1.0f / sqrt(1.f + tan * tan);
+  *c = 1.0f / sqrt(1.0f + tan * tan);
   *s = tan * (*c);
 }
 
-void rot01(mat3 *m, float *c, float *s) {
-  calc_symmetric_givens_coefficients(*m[0][0], *m[0][1], *m[1][1], c, s);
+void rot01(mat3 m, float *c, float *s) {
+  //printf("vtav full: %f\n%f\n%f\n%f\n%f\n%f\n", m[0][0], m[0][1], m[0][2], m[1][1], m[1][2], m[2][2]);
+  calc_symmetric_givens_coefficients(m[0][0], m[0][1], m[1][1], c, s);
   const float cc = *c * *c;
   const float ss = *s * *s;
-  const float mix = 2 * *c * *s * *m[0][1];
-  *m[0][0] = cc * *m[0][0] - mix + ss * *m[1][1];
-  *m[0][1] = 0;
-  *m[0][2] = *c * *m[0][2] - *s * *m[1][2];
-  *m[1][1] = ss * *m[0][0] + mix + cc * *m[1][1];
-  *m[1][2] = *s * *m[0][2] + *c * *m[1][2];
-  *m[2][2] = *m[2][2];
+  const float mix = 2 * *c * *s * m[0][1];
+
+  mat3 pre_m;
+  glm_mat3_copy(m, pre_m);
+
+  m[0][0] = cc * pre_m[0][0] - mix + ss * pre_m[1][1];
+  m[0][1] = 0;
+  m[0][2] = *c * pre_m[0][2] - *s * pre_m[1][2];
+  m[1][1] = ss * pre_m[0][0] + mix + cc * pre_m[1][1];
+  m[1][2] = *s * pre_m[0][2] + *c * pre_m[1][2];
+  m[2][2] = pre_m[2][2];
 }
 
-void rot02(mat3 *m, float *c, float *s) {
-  calc_symmetric_givens_coefficients(*m[0][0], *m[0][2], *m[2][2], c, s);
+void rot02(mat3 m, float *c, float *s) {
+  calc_symmetric_givens_coefficients(m[0][0], m[0][2], m[2][2], c, s);
   const float cc = *c * *c;
   const float ss = *s * *s;
-  const float mix = 2 * *c * *s * *m[0][2];
-  *m[0][0] = cc * *m[0][0] - mix + ss * *m[2][2];
-  *m[0][1] = *c * *m[0][1] - *s * *m[1][2];
-  *m[0][2] = 0;
-  *m[1][1] = *m[1][1];
-  *m[1][2] = *s * *m[0][1] + *c * *m[1][2];
-  *m[2][2] = ss * *m[0][0] + mix + cc * *m[2][2];
+  const float mix = 2 * *c * *s * m[0][2];
+
+  mat3 pre_m;
+  glm_mat3_copy(m, pre_m);
+
+  m[0][0] = cc * pre_m[0][0] - mix + ss * pre_m[2][2];
+  m[0][1] = *c * pre_m[0][1] - *s * pre_m[1][2];
+  m[0][2] = 0;
+  m[1][1] = pre_m[1][1];
+  m[1][2] = *s * pre_m[0][1] + *c * pre_m[1][2];
+  m[2][2] = ss * pre_m[0][0] + mix + cc * pre_m[2][2];
 }
 
-void rot12(mat3 *m, float *c, float *s) {
-  calc_symmetric_givens_coefficients(*m[1][1], *m[1][2], *m[2][2], c, s);
+void rot12(mat3 m, float *c, float *s) {
+  calc_symmetric_givens_coefficients(m[1][1], m[1][2], m[2][2], c, s);
   const float cc = *c * *c;
   const float ss = *s * *s;
-  const float mix = 2 * *c * *s * *m[1][2];
-  *m[0][0] = *m[0][0];
-  *m[0][1] = *c * *m[0][1] - *s * *m[0][2];
-  *m[0][2] = *s * *m[0][1] + *c * *m[0][2];
-  *m[1][1] = cc * *m[1][1] - mix + ss * *m[2][2];
-  *m[1][2] = 0;
-  *m[2][2] = ss * *m[1][1] + mix + cc * *m[2][2];
+  const float mix = 2 * *c * *s * m[1][2];
+
+  mat3 pre_m;
+  glm_mat3_copy(m, pre_m);
+
+  m[0][0] = pre_m[0][0];
+  m[0][1] = *c * pre_m[0][1] - *s * pre_m[0][2];
+  m[0][2] = *s * pre_m[0][1] + *c * pre_m[0][2];
+  m[1][1] = cc * pre_m[1][1] - mix + ss * pre_m[2][2];
+  m[1][2] = 0;
+  m[2][2] = ss * pre_m[1][1] + mix + cc * pre_m[2][2];
 }
 
-void rot01_post(mat3 *m, const float c, const float s) {
-  const float m00 = *m[0][0], m01 = *m[0][1], m10 = *m[1][0], m11 = *m[1][1], m20 = *m[2][0], m21 = *m[2][1];
+void rot01_post(mat3 m, const float c, const float s) {
+  const float m00 = m[0][0], m01 = m[0][1], m10 = m[1][0], m11 = m[1][1], m20 = m[2][0], m21 = m[2][1];
 
-  *m[0][0] = c * m00 - s * m01;
-  *m[0][1] = s * m00 + c * m01;
-  *m[0][2] = *m[0][2];
-  *m[1][0] = c * m10 - s * m11;
-  *m[1][1] = s * m10 + c * m11;
-  *m[1][2] = *m[1][2];
-  *m[2][0] = c * m20 - s * m21;
-  *m[2][1] = s * m20 + c * m21;
-  *m[2][2] = *m[2][2];
+  m[0][0] = c * m00 - s * m01;
+  m[0][1] = s * m00 + c * m01;
+  m[0][2] = m[0][2];
+  m[1][0] = c * m10 - s * m11;
+  m[1][1] = s * m10 + c * m11;
+  m[1][2] = m[1][2];
+  m[2][0] = c * m20 - s * m21;
+  m[2][1] = s * m20 + c * m21;
+  m[2][2] = m[2][2];
 }
 
-void rot02_post(mat3 *m, const float c, const float s) {
-  const float m00 = *m[0][0], m02 = *m[0][2], m10 = *m[1][0], m12 = *m[1][2], m20 = *m[2][0], m22 = *m[2][2];
+void rot02_post(mat3 m, const float c, const float s) {
+  const float m00 = m[0][0], m02 = m[0][2], m10 = m[1][0], m12 = m[1][2], m20 = m[2][0], m22 = m[2][2];
 
-  *m[0][0] = c * m00 - s * m02;
-  *m[0][1] = *m[0][1];
-  *m[0][2] = s * m00 + c * m02;
-  *m[1][0] = c * m10 - s * m12;
-  *m[1][1] = *m[1][1];
-  *m[1][2] = s * m10 + c * m12;
-  *m[2][0] = s * m10 + c * m12;
-  *m[2][1] = c * m20 - s * m22;
-  *m[2][2] = *m[2][1], s * m20 + c * m22;
+  m[0][0] = c * m00 - s * m02;
+  m[0][1] = m[0][1];
+  m[0][2] = s * m00 + c * m02;
+  m[1][0] = c * m10 - s * m12;
+  m[1][1] = m[1][1];
+  m[1][2] = s * m10 + c * m12;
+  m[2][0] = c * m20 - s * m22;
+  m[2][1] = m[2][1];
+  m[2][2] = s * m20 + c * m22;
 }
 
-void rot12_post(mat3 *m, const float c, const float s) {
-  const float m01 = *m[0][1], m02 = *m[0][2], m11 = *m[1][1], m12 = *m[1][2], m21 = *m[2][1], m22 = *m[2][2];
+void rot12_post(mat3 m, const float c, const float s) {
+  const float m01 = m[0][1], m02 = m[0][2], m11 = m[1][1], m12 = m[1][2], m21 = m[2][1], m22 = m[2][2];
 
-  *m[0][0] = *m[0][0];
-  *m[0][1] = c * m01 - s * m02;
-  *m[0][2] = s * m01 + c * m02;
-  *m[1][0] = *m[1][0];
-  *m[1][1] = c * m11 - s * m12;
-  *m[1][2] = s * m11 + c * m12;
-  *m[2][0] = *m[2][0];
-  *m[2][1] = c * m21 - s * m22;
-  *m[2][2] = s * m21 + c * m22;
+  m[0][0] = m[0][0];
+  m[0][1] = c * m01 - s * m02;
+  m[0][2] = s * m01 + c * m02;
+  m[1][0] = m[1][0];
+  m[1][1] = c * m11 - s * m12;
+  m[1][2] = s * m11 + c * m12;
+  m[2][0] = m[2][0];
+  m[2][1] = c * m21 - s * m22;
+  m[2][2] = s * m21 + c * m22;
 }
 
-static void rotate01(mat3 *vtav, mat3 *v) {
+static void rotate01(mat3 vtav, mat3 v) {
   if (vtav[0][1] == 0)
     return;
 
   float c, s;
   rot01(vtav, &c, &s);
+  //printf("vtav full: %f\n%f\n%f\n%f\n%f\n%f\n", vtav[0][0], vtav[0][1], vtav[0][2], vtav[1][1], vtav[1][2], vtav[2][2]);
   rot01_post(v, c, s);
 }
 
-static void rotate02(mat3 *vtav, mat3 *v) {
+static void rotate02(mat3 vtav, mat3 v) {
   if (vtav[0][2] == 0)
     return;
 
@@ -249,7 +263,7 @@ static void rotate02(mat3 *vtav, mat3 *v) {
   rot02_post(v, c, s);
 }
 
-static void rotate12(mat3 *vtav, mat3 *v) {
+static void rotate12(mat3 vtav, mat3 v) {
   if (vtav[1][2] == 0)
     return;
 
@@ -258,27 +272,37 @@ static void rotate12(mat3 *vtav, mat3 *v) {
   rot12_post(v, c, s);
 }
 
-float qef_solver_solve(struct QefSolver *qef_solver, vec3 *outx, const float svd_tol, const int svd_sweeps, const float pinv_tol) {
+static float off(mat3 vtav) {
+  return sqrt(2 * ((vtav[0][1] * vtav[0][1]) + (vtav[0][2] * vtav[0][2]) + (vtav[1][2] * vtav[1][2])));
+}
+
+float qef_solver_solve(struct QefSolver *qef_solver, vec3 outx, const float svd_tol, const int svd_sweeps, const float pinv_tol) {
   if (qef_solver->data.num_points == 0)
     printf("Invalid argument\n");
 
-  qef_solver->mass_point[0] = qef_solver->data.mass_point_x;
-  qef_solver->mass_point[1] = qef_solver->data.mass_point_y;
-  qef_solver->mass_point[2] = qef_solver->data.mass_point_z;
+  memcpy(qef_solver->mass_point, (vec3){qef_solver->data.mass_point_x, qef_solver->data.mass_point_y, qef_solver->data.mass_point_z}, sizeof(vec3));
   glm_vec3_scale(qef_solver->mass_point, 1.0f / qef_solver->data.num_points, qef_solver->mass_point);
   qef_solver_set_ata(qef_solver);
   qef_solver_set_atb(qef_solver);
 
-  vec3 tmpv;
+  // Symmetric vmul
+  vec3 tmpv = {0.0, 0.0, 0.0};
   tmpv[0] = (qef_solver->ata[0][0] * qef_solver->mass_point[0]) + (qef_solver->ata[0][1] * qef_solver->mass_point[1]) + (qef_solver->ata[0][2] * qef_solver->mass_point[2]);
   tmpv[1] = (qef_solver->ata[0][1] * qef_solver->mass_point[0]) + (qef_solver->ata[1][1] * qef_solver->mass_point[1]) + (qef_solver->ata[1][2] * qef_solver->mass_point[2]);
-  tmpv[1] = (qef_solver->ata[0][2] * qef_solver->mass_point[0]) + (qef_solver->ata[1][2] * qef_solver->mass_point[1]) + (qef_solver->ata[2][2] * qef_solver->mass_point[2]);
+  tmpv[2] = (qef_solver->ata[0][2] * qef_solver->mass_point[0]) + (qef_solver->ata[1][2] * qef_solver->mass_point[1]) + (qef_solver->ata[2][2] * qef_solver->mass_point[2]);
 
-  glm_vec3_sub(qef_solver->atb, qef_solver->atb, tmpv);
-  memset(qef_solver->x, 0, sizeof(vec3));
+  glm_vec3_sub(qef_solver->atb, tmpv, qef_solver->atb);
+  qef_solver->x[0] = 0.0f;
+  qef_solver->x[1] = 0.0f;
+  qef_solver->x[2] = 0.0f;
 
+  // Solve symmetric
   mat3 mtmp, pinv, v;
   mat3 vtav;
+  glm_mat3_zero(mtmp);
+  glm_mat3_zero(pinv);
+  glm_mat3_zero(v);
+  glm_mat3_zero(vtav);
 
   vtav[0][0] = qef_solver->data.ata_00;
   vtav[0][1] = qef_solver->data.ata_01;
@@ -297,10 +321,11 @@ float qef_solver_solve(struct QefSolver *qef_solver, vec3 *outx, const float svd
   v[2][1] = 0;
   v[2][2] = 1;
 
-  float fnorm_vtav = sqrt((vtav[0][0] * vtav[0][0]) + (vtav[0][1] * vtav[0][1]) + (vtav[0][2] * vtav[0][2]) + (vtav[1][0] * vtav[1][0]) + (vtav[1][1] * vtav[1][1]) + (vtav[1][2] * vtav[1][2]) + (vtav[2][0] * vtav[2][0]) + (vtav[2][1] * vtav[2][1]) + (vtav[2][2] * vtav[2][2]));
+  float fnorm_vtav = sqrt((vtav[0][0] * vtav[0][0]) + (vtav[0][1] * vtav[0][1]) + (vtav[0][2] * vtav[0][2]) + (vtav[0][1] * vtav[0][1]) + (vtav[1][1] * vtav[1][1]) + (vtav[1][2] * vtav[1][2]) + (vtav[0][2] * vtav[0][2]) + (vtav[1][2] * vtav[1][2]) + (vtav[2][2] * vtav[2][2]));
   const float delta = svd_tol * fnorm_vtav;
 
-  for (int i = 0; i < svd_sweeps && fnorm_vtav > delta; ++i) {
+  for (int i = 0; i < svd_sweeps && off(vtav) > delta; ++i) {
+    //printf("vtav: %f\n", off(vtav));
     rotate01(vtav, v);
     rotate02(vtav, v);
     rotate12(vtav, v);
@@ -324,17 +349,31 @@ float qef_solver_solve(struct QefSolver *qef_solver, vec3 *outx, const float svd
 
   // calc error
   mat3 a;
-  vec3 vtmp;
+  glm_mat3_zero(a);
+  vec3 vtmp = {0.0, 0.0, 0.0};
   a[0][0] = qef_solver->ata[0][0];
   a[0][1] = qef_solver->ata[0][1];
   a[0][2] = qef_solver->ata[0][2];
+  a[1][0] = qef_solver->ata[0][1];
   a[1][1] = qef_solver->ata[1][1];
   a[1][2] = qef_solver->ata[1][2];
+  a[2][0] = qef_solver->ata[0][2];
+  a[2][1] = qef_solver->ata[1][2];
   a[2][2] = qef_solver->ata[2][2];
-  glm_vec3_mul(a, qef_solver->x, vtmp);
-  glm_vec3_sub(qef_solver->atb, vtmp, vtmp);
+
+  //glm_vec3_mul(a, qef_solver->x, vtmp);
+
+  vtmp[0] = (a[0][0] * qef_solver->x[0]) + (a[0][1] * qef_solver->x[1]) + (a[0][2] * qef_solver->x[2]);
+  vtmp[1] = (a[1][0] * qef_solver->x[0]) + (a[1][1] * qef_solver->x[1]) + (a[1][2] * qef_solver->x[2]);
+  vtmp[2] = (a[2][0] * qef_solver->x[0]) + (a[2][1] * qef_solver->x[1]) + (a[2][2] * qef_solver->x[2]);
+
+  vec3 pre_vtmp;
+  glm_vec3_copy(vtmp, pre_vtmp);
+
+  glm_vec3_sub(qef_solver->atb, pre_vtmp, vtmp);
   const float result = glm_vec3_dot(vtmp, vtmp);
 
+  // Add scaled
   glm_vec3_add(qef_solver->x, qef_solver->mass_point, qef_solver->x);
   qef_solver_set_atb(qef_solver);
   memcpy(outx, qef_solver->x, sizeof(vec3));

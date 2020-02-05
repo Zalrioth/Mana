@@ -18,7 +18,86 @@ const int face_proc_edge_mask[3][4][6] = {{{1, 4, 0, 5, 1, 1}, {1, 6, 2, 7, 3, 1
 const int edge_proc_edge_mask[3][2][5] = {{{3, 2, 1, 0, 0}, {7, 6, 5, 4, 0}}, {{5, 1, 4, 0, 1}, {7, 3, 6, 2, 1}}, {{6, 4, 2, 0, 2}, {7, 5, 3, 1, 2}}};
 const int process_edge_mask[3][4] = {{3, 2, 1, 0}, {7, 5, 6, 4}, {11, 10, 9, 8}};
 
+float length(vec3 pos) {
+  return sqrtf((pos[0] * pos[0]) + (pos[1] * pos[1]) + (pos[2] * pos[2]));
+}
+
+float sphere_func(const vec3 worldPosition, const vec3 origin, float radius) {
+  return length((vec3){worldPosition[0] - origin[0], worldPosition[1] - origin[1], worldPosition[2] - origin[2]}) - radius;
+}
+
+float cuboid_func(const vec3 worldPosition, const vec3 origin, const vec3 halfDimensions) {
+  const vec3 local_pos = {worldPosition[0] - origin[0], worldPosition[1] - origin[1], worldPosition[2] - origin[2]};
+  const vec3 pos = {local_pos[0], local_pos[1], local_pos[2]};
+
+  vec3 d = {fabsf(pos[0]) - halfDimensions[0], fabsf(pos[1]) - halfDimensions[1], fabsf(pos[2]) - halfDimensions[2]};
+  const float m = MAX(d[0], MAX(d[1], d[2]));
+
+  d[0] = MAX(d[0], 0.f);
+  d[1] = MAX(d[1], 0.f);
+  d[2] = MAX(d[2], 0.f);
+
+  return MIN(m, length(d));
+}
+
+/*float fractal_noise(const int octaves, const float frequency, const float lacunarity, const float persistence, const vec2 position) {
+  const float SCALE = 1.f / 128.f;
+  vec2 p = {0.0, 0.0};
+  p[0] = position[0] * SCALE;
+  p[1] = position[1] * SCALE;
+
+  float noise = 0.f;
+
+  float amplitude = 1.f;
+  p[0] = p[0] * frequency;
+  p[1] = p[1] * frequency;
+
+  for (int i = 0; i < octaves; i++) {
+    noise += 0.0 * amplitude;
+    p[0] = p[0] * lacunarity;
+    p[1] = p[1] * lacunarity;
+    amplitude *= persistence;
+  }
+
+  // move into [0, 1] range
+  return 0.5f + (0.5f * noise);
+}*/
+
+// Density functions work by inside/outside when less than/greater than 0
+// Noise would work the same without much effort
 float Density_Func(float x_pos, float y_pos, float z_pos) {
+  //const float MAX_HEIGHT = 20.f;
+  ////const float noise = FractalNoise(4, 0.5343f, 2.2324f, 0.68324f, (vec2){x_pos, z_pos});
+  //
+  //const float STEP = 1.0 / 256.0;
+  ////
+  //struct PerlinNoise perlin_noise = {0};
+  //perlin_noise_init(&perlin_noise);
+  //perlin_noise.octave_count = 4;
+  //perlin_noise.frequency = 0.5343f;
+  //perlin_noise.lacunarity = 2.2324f;
+  //perlin_noise.persistence = 0.68324f;
+  //perlin_noise.position[0] = x_pos * STEP;
+  //perlin_noise.position[1] = y_pos * STEP;
+  //perlin_noise.position[2] = z_pos * STEP;
+  ////float* noise_set = perlin_noise_eval_1d(&perlin_noise, 16);
+  //float* noise_set = perlin_noise_eval_3d_fallback(&perlin_noise, 1, 1, 1);
+  //float noise = *noise_set;
+  //noise_free(noise_set);
+  //
+  //return noise;
+  //
+  //const float terrain = y_pos - (MAX_HEIGHT * noise);
+
+  //float terrain = 10000.0f;
+
+  const float cube = cuboid_func((vec3){x_pos, y_pos, z_pos}, (vec3){-4., 10.f, -4.f}, (vec3){12.f, 12.f, 12.f});
+  const float sphere = sphere_func((vec3){x_pos, y_pos, z_pos}, (vec3){15.f, 2.5f, 1.f}, 16.f);
+
+  return MIN(cube, -sphere);  //MAX(-cube, MIN(sphere, terrain));
+}
+
+/*float Density_Func(float x_pos, float y_pos, float z_pos) {
   //struct PerlinNoise perlin_noise = {0};
   //perlin_noise_init(&perlin_noise);
   ////perlin_noise.octave_count = 4;
@@ -39,7 +118,7 @@ float Density_Func(float x_pos, float y_pos, float z_pos) {
   //return terrain;
 
   return ((fmodf(x_pos, 0.66) + fmodf(y_pos, 0.66) + fmodf(z_pos, 0.66)) / 3.0) + 0.15;
-}
+}*/
 
 void octree_draw_info_init(struct OctreeDrawInfo* octree_draw_info) {
   octree_draw_info->index = -1;
@@ -94,8 +173,8 @@ struct OctreeNode* octree_simplify_octree(struct OctreeNode* node, float thresho
   if (!is_collapsible)
     return node;
 
-  vec3 position;
-  qef_solver_solve(&qef, &position, QEF_ERROR, QEF_SWEEPS, QEF_ERROR);
+  vec3 position = {0.0, 0.0, 0.0};
+  qef_solver_solve(&qef, position, QEF_ERROR, QEF_SWEEPS, QEF_ERROR);
   float error = qef_solver_get_error(&qef);
 
   if (error > threshold)
@@ -213,21 +292,21 @@ void octree_contour_edge_proc(struct OctreeNode* node[4], int dir, struct Mesh* 
     octree_contour_process_edge(node, dir, mesh);
   else {
     for (int i = 0; i < 2; i++) {
-      struct OctreeNode* edgeNodes[4];
+      struct OctreeNode* edge_nodes[4];
       const int c[4] = {edge_proc_edge_mask[dir][i][0], edge_proc_edge_mask[dir][i][1], edge_proc_edge_mask[dir][i][2], edge_proc_edge_mask[dir][i][3]};
 
       for (int j = 0; j < 4; j++) {
         if (node[j]->type == NODE_LEAF || node[j]->type == NODE_PSUEDO)
-          edgeNodes[j] = node[j];
+          edge_nodes[j] = node[j];
         else
-          edgeNodes[j] = node[j]->children[c[j]];
+          edge_nodes[j] = node[j]->children[c[j]];
       }
 
-      octree_contour_edge_proc(edgeNodes, edge_proc_edge_mask[dir][i][4], mesh);
+      octree_contour_edge_proc(edge_nodes, edge_proc_edge_mask[dir][i][4], mesh);
     }
   }
 }
-//const int face_proc_edge_mask[3][4][6] = {{{1, 4, 0, 5, 1, 1}, {1, 6, 2, 7, 3, 1}, {0, 4, 6, 0, 2, 2}, {0, 5, 7, 1, 3, 2}}, {{0, 2, 3, 0, 1, 0}, {0, 6, 7, 4, 5, 0}, {1, 2, 0, 6, 4, 2}, {1, 3, 1, 7, 5, 2}}, {{1, 1, 0, 3, 2, 0}, {1, 5, 4, 7, 6, 0}, {0, 1, 5, 0, 4, 1}, {0, 3, 7, 2, 6, 1}}};
+
 void octree_contour_face_proc(struct OctreeNode* node[2], int dir, struct Mesh* mesh) {
   if (!node[0] || !node[1])
     return;
@@ -235,7 +314,7 @@ void octree_contour_face_proc(struct OctreeNode* node[2], int dir, struct Mesh* 
   if (node[0]->type == NODE_INTERNAL || node[1]->type == NODE_INTERNAL) {
     for (int i = 0; i < 4; i++) {
       struct OctreeNode* face_nodes[2];
-      const int c[2] = {face_proc_edge_mask[dir][i][0], face_proc_edge_mask[dir][i][1]};
+      const int c[2] = {face_proc_face_mask[dir][i][0], face_proc_face_mask[dir][i][1]};
 
       for (int j = 0; j < 2; j++) {
         if (node[j]->type != NODE_INTERNAL)
@@ -282,13 +361,13 @@ void octree_contour_cell_proc(struct OctreeNode* node, struct Mesh* mesh) {
     }
 
     for (int i = 0; i < 6; i++) {
-      struct OctreeNode* edgeNodes[4];
+      struct OctreeNode* edge_nodes[4];
       const int c[4] = {cell_proc_edge_mask[i][0], cell_proc_edge_mask[i][1], cell_proc_edge_mask[i][2], cell_proc_edge_mask[i][3]};
 
       for (int j = 0; j < 4; j++)
-        edgeNodes[j] = node->children[c[j]];
+        edge_nodes[j] = node->children[c[j]];
 
-      octree_contour_edge_proc(edgeNodes, cell_proc_edge_mask[i][4], mesh);
+      octree_contour_edge_proc(edge_nodes, cell_proc_edge_mask[i][4], mesh);
     }
   }
 }
@@ -298,9 +377,9 @@ void octree_approximate_zero_crossing_position(const vec3 p0, const vec3 p1, vec
   float t = 0.0f;
   float current_t = 0.0f;
   const int steps = 8;
-  const float increment = 1.f / (float)steps;
+  const float increment = 1.0f / (float)steps;
 
-  while (current_t <= 1.f) {
+  while (current_t <= 1.0f) {
     const vec3 p = {p0[0] + ((p1[0] - p0[0]) * current_t), p0[1] + ((p1[1] - p0[1]) * current_t), p0[2] + ((p1[2] - p0[2]) * current_t)};
     const float density = fabsf(Density_Func(p[0], p[1], p[2]));
     if (density < min_value) {
@@ -373,8 +452,8 @@ struct OctreeNode* octree_construct_leaf(struct OctreeNode* leaf) {
     edge_count++;
   }
 
-  vec3 qef_position;
-  qef_solver_solve(&qef, &qef_position, QEF_ERROR, QEF_SWEEPS, QEF_ERROR);
+  vec3 qef_position = {0.0, 0.0, 0.0};
+  qef_solver_solve(&qef, qef_position, QEF_ERROR, QEF_SWEEPS, QEF_ERROR);
 
   struct OctreeDrawInfo* draw_info = calloc(1, sizeof(struct OctreeDrawInfo));
   octree_draw_info_init(draw_info);
@@ -437,7 +516,8 @@ struct OctreeNode* octree_build_octree(const ivec3 min, const int size, const fl
   root->type = NODE_INTERNAL;
 
   octree_construct_octree_nodes(root);
-  root = octree_simplify_octree(root, threshold);
+  // TODO: Fix this
+  //root = octree_simplify_octree(root, threshold);
 
   return root;
 }
