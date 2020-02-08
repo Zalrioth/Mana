@@ -2,6 +2,8 @@
 #ifndef MESH_H
 #define MESH_H
 
+#include "mana/core/memoryallocator.h"
+//
 #include <cstorage/cstorage.h>
 
 #include "mana/graphics/graphicscommon.h"

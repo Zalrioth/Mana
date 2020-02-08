@@ -2,6 +2,8 @@
 #ifndef G_BUFFER_H
 #define G_BUFFER_H
 
+#include "mana/core/memoryallocator.h"
+//
 #include "mana/graphics/render/vulkanrenderer.h"
 
 #define GBUFFER_COLOR_ATTACHMENTS 2

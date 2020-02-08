@@ -2,6 +2,11 @@
 #ifndef DUAL_CONTOURING_H
 #define DUAL_CONTOURING_H
 
+#include "mana/core/memoryallocator.h"
+//
+#include <tinycthread.h>
+
+#include "mana/core/corecommon.h"
 #include "mana/graphics/dualcontouring/octree.h"
 #include "mana/graphics/utilities/mesh.h"
 

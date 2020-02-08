@@ -2,6 +2,8 @@
 #ifndef POST_PROCESS_H
 #define POST_PROCESS_H
 
+#include "mana/core/memoryallocator.h"
+//
 #include <stdbool.h>
 
 #include "mana/graphics/render/vulkanrenderer.h"

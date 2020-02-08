@@ -2,6 +2,8 @@
 #ifndef SWAPCHAIN_H
 #define SWAPCHAIN_H
 
+#include "mana/core/memoryallocator.h"
+//
 #include "mana/graphics/graphicscommon.h"
 #include "mana/graphics/render/vulkanrenderer.h"
 #include "mana/graphics/shaders/blitshader.h"

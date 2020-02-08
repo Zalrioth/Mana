@@ -2,6 +2,8 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
+#include "mana/core/memoryallocator.h"
+//
 #include <stb_image.h>
 
 #include "mana/graphics/graphicscommon.h"

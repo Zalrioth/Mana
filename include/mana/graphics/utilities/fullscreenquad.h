@@ -2,6 +2,8 @@
 #ifndef FULLSCREEN_QUAD_H
 #define FULLSCREEN_QUAD_H
 
+#include "mana/core/memoryallocator.h"
+//
 #include "mana/graphics/utilities/mesh.h"
 
 struct FullscreenQuad {

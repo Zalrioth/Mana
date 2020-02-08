@@ -2,6 +2,7 @@
 #ifndef CORE_COMMON_H
 #define CORE_COMMON_H
 
+// TODO: Move this to custom file io code
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 #define IS_WINDOWS
 #include <direct.h>

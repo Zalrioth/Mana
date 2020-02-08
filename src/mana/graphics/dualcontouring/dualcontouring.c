@@ -2,9 +2,51 @@
 
 #define MAX_THRESHOLDS 5
 
+int HelloThread(void* aArg) {
+  printf("Hello world!\n");
+  return 0;
+}
+
 int dual_contouring_init(struct DualContouring* dual_contouring, struct VulkanRenderer* vulkan_renderer, int octree_size, struct Shader* shader) {
   dual_contouring->mesh = calloc(1, sizeof(struct Mesh));
   mesh_init(dual_contouring->mesh);
+
+  struct Map map = {0};
+  map_init(&map, sizeof(int));
+
+  int value = 123;
+
+  map_set(&map, "testkey1", &value);
+  map_set(&map, "testkey2", &value);
+  map_set(&map, "testkey3", &value);
+  map_set(&map, "testkey4", &value);
+
+  int* val = map_get(&map, "testkey3");
+  if (val)
+    printf("value: %d\n", *val);
+  else
+    printf("value not found\n");
+
+  const char* key;
+  struct MapIter iter = map_iter();
+
+  while ((key = map_next(&map, &iter)))
+    printf("%s -> %d\n", key, *(int*)map_get(&map, key));
+
+  map_delete(&map);
+
+  struct PerlinNoise pn = {0};
+  perlin_noise_init(&pn);
+
+  float* noise_set = perlin_noise_eval_3d(&pn, 16, 16, 16);
+
+  printf("First noise num: %f", *(noise_set + 1024));
+
+  noise_free(noise_set);
+
+  //thrd_t t;
+  //if (thrd_create(&t, HelloThread, NULL) == thrd_success)
+  //  thrd_join(t, NULL);
 
   const float THRESHOLDS[MAX_THRESHOLDS] = {-1.0f, 0.1f, 1.0f, 10.0f, 50.0f};
   int threshold_index = -1;

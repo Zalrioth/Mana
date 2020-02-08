@@ -2,6 +2,8 @@
 #ifndef OCTREE_H
 #define OCTREE_H
 
+#include "mana/core/memoryallocator.h"
+//
 #include <cglm/cglm.h>
 #include <cnoise/cnoise.h>
 

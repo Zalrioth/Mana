@@ -2,6 +2,8 @@
 #ifndef VULKAN_RENDERER_H
 #define VULKAN_RENDERER_H
 
+#include "mana/core/memoryallocator.h"
+//
 #define _CRT_SECURE_NO_DEPRECATE
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>

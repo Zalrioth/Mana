@@ -2,6 +2,8 @@
 #ifndef SHADER_H
 #define SHADER_H
 
+#include "mana/core/memoryallocator.h"
+//
 #include "mana/core/corecommon.h"
 #include "mana/graphics/render/vulkanrenderer.h"
 

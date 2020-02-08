@@ -2,6 +2,8 @@
 #ifndef BLIT_EFFECT_H
 #define BLIT_EFFECT_H
 
+#include "mana/core/memoryallocator.h"
+//
 #include "mana/graphics/shaders/shader.h"
 
 // Effect for blitting images

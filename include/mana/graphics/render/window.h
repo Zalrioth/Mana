@@ -2,6 +2,8 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
+#include "mana/core/memoryallocator.h"
+//
 #include "mana/core/inputmanager.h"
 #include "mana/graphics/render/vulkanrenderer.h"
 

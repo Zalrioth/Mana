@@ -2,6 +2,8 @@
 #ifndef SPRITE_H
 #define SPRITE_H
 
+#include "mana/core/memoryallocator.h"
+//
 #include "mana/graphics/graphicscommon.h"
 #include "mana/graphics/shaders/shader.h"
 #include "mana/graphics/utilities/texture.h"
