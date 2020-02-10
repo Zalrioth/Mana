@@ -66,35 +66,44 @@ float cuboid_func(const vec3 worldPosition, const vec3 origin, const vec3 halfDi
 // Density functions work by inside/outside when less than/greater than 0
 // Noise would work the same without much effort
 float Density_Func(float x_pos, float y_pos, float z_pos) {
-  //const float MAX_HEIGHT = 20.f;
-  ////const float noise = FractalNoise(4, 0.5343f, 2.2324f, 0.68324f, (vec2){x_pos, z_pos});
+  //const float MAX_HEIGHT = x_pos + y_pos;
+  //const float noise = FractalNoise(4, 0.5343f, 2.2324f, 0.68324f, (vec2){x_pos, z_pos});
+
+  float STEP = 100.0;
   //
-  //const float STEP = 1.0 / 256.0;
-  ////
-  //struct PerlinNoise perlin_noise = {0};
-  //perlin_noise_init(&perlin_noise);
-  //perlin_noise.octave_count = 4;
-  //perlin_noise.frequency = 0.5343f;
-  //perlin_noise.lacunarity = 2.2324f;
-  //perlin_noise.persistence = 0.68324f;
-  //perlin_noise.position[0] = x_pos * STEP;
-  //perlin_noise.position[1] = y_pos * STEP;
-  //perlin_noise.position[2] = z_pos * STEP;
-  ////float* noise_set = perlin_noise_eval_1d(&perlin_noise, 16);
-  //float* noise_set = perlin_noise_eval_3d_fallback(&perlin_noise, 1, 1, 1);
-  //float noise = *noise_set;
-  //noise_free(noise_set);
-  //
-  //return noise;
-  //
-  //const float terrain = y_pos - (MAX_HEIGHT * noise);
+  struct PerlinNoise perlin_noise = {0};
+  perlin_noise_init(&perlin_noise);
+  perlin_noise.octave_count = 1;
+  perlin_noise.frequency = 0.000000005343f;
+  perlin_noise.lacunarity = 2.2324f;
+  perlin_noise.seed = 21251234;
+  perlin_noise.persistence = 0.68324f;
+  perlin_noise.position[0] = 16.0f + x_pos / STEP;
+  perlin_noise.position[1] = 16.0f + y_pos / STEP;
+  perlin_noise.position[2] = 16.0f + z_pos / STEP;
+  //vec3 position = {0.25f + y_pos * STEP, 0.25f + x_pos * STEP, 0.25f + z_pos * STEP};
+  //glm_vec3_copy(perlin_noise.position, position);
+
+  float terrain = perlin_noise_eval_3d_single(&perlin_noise);
+
+  //if (terrain < 0)
+  //printf("Problem found at %f, %f, %f\n", x_pos, y_pos, z_pos);
+
+  //printf("value %f\n", terrain);
+
+  return terrain;  //MAX(MAX_HEIGHT, perlin_noise_eval_3d_single(&perlin_noise));
+
+  //if (fabsf(MAX_HEIGHT - terrain) < 0.001)
+  //  return -1.1f;
+  //else
+  //  return terrain;
 
   //float terrain = 10000.0f;
 
-  const float cube = cuboid_func((vec3){x_pos, y_pos, z_pos}, (vec3){-4., 10.f, -4.f}, (vec3){12.f, 12.f, 12.f});
-  const float sphere = sphere_func((vec3){x_pos, y_pos, z_pos}, (vec3){15.f, 2.5f, 1.f}, 16.f);
-
-  return MIN(cube, -sphere);  //MAX(-cube, MIN(sphere, terrain));
+  //const float cube = cuboid_func((vec3){x_pos, y_pos, z_pos}, (vec3){-4., 10.f, -4.f}, (vec3){12.f, 12.f, 12.f});
+  //const float sphere = sphere_func((vec3){x_pos, y_pos, z_pos}, (vec3){15.f, 2.5f, 1.f}, 16.f);
+  //
+  //return MIN(cube, -sphere);  //MAX(-cube, MIN(sphere, terrain));
 }
 
 /*float Density_Func(float x_pos, float y_pos, float z_pos) {

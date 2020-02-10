@@ -3,11 +3,13 @@
 #define CAMERA_H
 
 #include <cglm/cglm.h>
+
 #include "mana/core/engine.h"
 #include "mana/graphics/graphicscommon.h"
 
 #define YAW -90.0f
 #define PITCH 0.0f
+#define ROLL 90.0f
 #define SPEED 2.5f
 #define SENSITIVITY 0.1f
 #define ZOOM 45.0f
@@ -29,6 +31,7 @@ struct Camera {
   vec3 world_up;
   float yaw;
   float pitch;
+  float roll;
   float sensitivity;
   float zoom;
   float z_near;

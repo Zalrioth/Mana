@@ -8,12 +8,14 @@
 
 #include "mana/core/corecommon.h"
 #include "mana/graphics/dualcontouring/octree.h"
+#include "mana/graphics/graphicscommon.h"
 #include "mana/graphics/utilities/mesh.h"
 
 struct DualContouringUniformBufferObject {
   alignas(16) mat4 model;
   alignas(16) mat4 view;
   alignas(16) mat4 proj;
+  alignas(16) vec3 camera_pos;
 };
 
 struct DualContouring {
@@ -25,8 +27,10 @@ struct DualContouring {
   VkDeviceMemory vertex_buffer_memory;
   VkBuffer index_buffer;
   VkDeviceMemory index_buffer_memory;
-  VkBuffer uniform_buffer;
-  VkDeviceMemory uniform_buffers_memory;
+  VkBuffer dc_uniform_buffer;
+  VkDeviceMemory dc_uniform_buffer_memory;
+  VkBuffer lighting_uniform_buffer;
+  VkDeviceMemory lighting_uniform_buffer_memory;
   VkDescriptorSet descriptor_set;
 };
 

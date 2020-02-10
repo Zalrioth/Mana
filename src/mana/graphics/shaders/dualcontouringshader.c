@@ -1,22 +1,21 @@
 #include "mana/graphics/shaders/dualcontouringshader.h"
 
 int dual_contouring_shader_init(struct DualContouringShader* dual_countouring_shader, struct VulkanRenderer* vulkan_renderer) {
-  VkDescriptorSetLayoutBinding ubo_layout_binding = {0};
-  ubo_layout_binding.binding = 0;
-  ubo_layout_binding.descriptorCount = 1;
-  ubo_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  ubo_layout_binding.pImmutableSamplers = NULL;
-  ubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-  //ubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+  VkDescriptorSetLayoutBinding dcubo_layout_binding = {0};
+  dcubo_layout_binding.binding = 0;
+  dcubo_layout_binding.descriptorCount = 1;
+  dcubo_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  dcubo_layout_binding.pImmutableSamplers = NULL;
+  dcubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
-  VkDescriptorSetLayoutBinding sampler_layout_binding = {0};
-  sampler_layout_binding.binding = 1;
-  sampler_layout_binding.descriptorCount = 1;
-  sampler_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  sampler_layout_binding.pImmutableSamplers = NULL;
-  sampler_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+  VkDescriptorSetLayoutBinding lighting_layout_binding = {0};
+  lighting_layout_binding.binding = 1;
+  lighting_layout_binding.descriptorCount = 1;
+  lighting_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  lighting_layout_binding.pImmutableSamplers = NULL;
+  lighting_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
-  VkDescriptorSetLayoutBinding bindings[2] = {ubo_layout_binding, sampler_layout_binding};
+  VkDescriptorSetLayoutBinding bindings[2] = {dcubo_layout_binding, lighting_layout_binding};
   VkDescriptorSetLayoutCreateInfo layout_info = {0};
   layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
   layout_info.bindingCount = 2;
@@ -25,11 +24,11 @@ int dual_contouring_shader_init(struct DualContouringShader* dual_countouring_sh
   if (vkCreateDescriptorSetLayout(vulkan_renderer->device, &layout_info, NULL, &dual_countouring_shader->shader.descriptor_set_layout) != VK_SUCCESS)
     return 0;
 
-  int sprite_descriptors = 64;
+  int sprite_descriptors = 1;
   VkDescriptorPoolSize pool_sizes[2] = {{0}};
   pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
   pool_sizes[0].descriptorCount = sprite_descriptors;  // Max number of uniform descriptors
-  pool_sizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  pool_sizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
   pool_sizes[1].descriptorCount = sprite_descriptors;  // Max number of image sampler descriptors
 
   VkDescriptorPoolCreateInfo poolInfo = {0};

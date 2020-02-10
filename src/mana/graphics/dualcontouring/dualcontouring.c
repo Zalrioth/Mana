@@ -91,9 +91,12 @@ int dual_contouring_init(struct DualContouring* dual_contouring, struct VulkanRe
   vkDestroyBuffer(vulkan_renderer->device, index_staging_buffer, NULL);
   vkFreeMemory(vulkan_renderer->device, index_staging_buffer_memory, NULL);
 
-  // Uniform buffer
-  VkDeviceSize uniform_buffer_size = sizeof(struct DualContouringUniformBufferObject);
-  graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, uniform_buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &dual_contouring->uniform_buffer, &dual_contouring->uniform_buffers_memory);
+  // Uniform buffers
+  VkDeviceSize dc_uniform_buffer_size = sizeof(struct DualContouringUniformBufferObject);
+  graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, dc_uniform_buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &dual_contouring->dc_uniform_buffer, &dual_contouring->dc_uniform_buffer_memory);
+
+  VkDeviceSize lighting_uniform_buffer_size = sizeof(struct LightingUniformBufferObject);
+  graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, lighting_uniform_buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &dual_contouring->lighting_uniform_buffer, &dual_contouring->lighting_uniform_buffer_memory);
 
   // Descriptor sets
   VkDescriptorSetLayout layout = {0};
@@ -110,10 +113,10 @@ int dual_contouring_init(struct DualContouring* dual_contouring, struct VulkanRe
     return 0;
   }
 
-  VkDescriptorBufferInfo buffer_info = {0};
-  buffer_info.buffer = dual_contouring->uniform_buffer;
-  buffer_info.offset = 0;
-  buffer_info.range = sizeof(struct DualContouringUniformBufferObject);
+  VkDescriptorBufferInfo dc_buffer_info = {0};
+  dc_buffer_info.buffer = dual_contouring->dc_uniform_buffer;
+  dc_buffer_info.offset = 0;
+  dc_buffer_info.range = sizeof(struct DualContouringUniformBufferObject);
 
   VkWriteDescriptorSet dc = {0};
 
@@ -123,9 +126,26 @@ int dual_contouring_init(struct DualContouring* dual_contouring, struct VulkanRe
   dc.dstArrayElement = 0;
   dc.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
   dc.descriptorCount = 1;
-  dc.pBufferInfo = &buffer_info;
+  dc.pBufferInfo = &dc_buffer_info;
 
   vkUpdateDescriptorSets(vulkan_renderer->device, 1, &dc, 0, NULL);
+
+  VkDescriptorBufferInfo lighting_buffer_info = {0};
+  lighting_buffer_info.buffer = dual_contouring->lighting_uniform_buffer;
+  lighting_buffer_info.offset = 0;
+  lighting_buffer_info.range = sizeof(struct LightingUniformBufferObject);
+
+  VkWriteDescriptorSet lighting = {0};
+
+  lighting.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  lighting.dstSet = dual_contouring->descriptor_set;
+  lighting.dstBinding = 1;
+  lighting.dstArrayElement = 0;
+  lighting.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  lighting.descriptorCount = 1;
+  lighting.pBufferInfo = &lighting_buffer_info;
+
+  vkUpdateDescriptorSets(vulkan_renderer->device, 1, &lighting, 0, NULL);
 
   return 0;
 }
@@ -137,8 +157,11 @@ void dual_contouring_delete(struct DualContouring* dual_contouring, struct Vulka
   vkDestroyBuffer(vulkan_renderer->device, dual_contouring->vertex_buffer, NULL);
   vkFreeMemory(vulkan_renderer->device, dual_contouring->vertex_buffer_memory, NULL);
 
-  vkDestroyBuffer(vulkan_renderer->device, dual_contouring->uniform_buffer, NULL);
-  vkFreeMemory(vulkan_renderer->device, dual_contouring->uniform_buffers_memory, NULL);
+  vkDestroyBuffer(vulkan_renderer->device, dual_contouring->lighting_uniform_buffer, NULL);
+  vkFreeMemory(vulkan_renderer->device, dual_contouring->lighting_uniform_buffer_memory, NULL);
+
+  vkDestroyBuffer(vulkan_renderer->device, dual_contouring->dc_uniform_buffer, NULL);
+  vkFreeMemory(vulkan_renderer->device, dual_contouring->dc_uniform_buffer_memory, NULL);
 
   octree_destroy_octree(dual_contouring->head);
   mesh_delete(dual_contouring->mesh);

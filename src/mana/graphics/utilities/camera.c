@@ -8,6 +8,7 @@ void camera_init(struct Camera* camera) {
   memcpy(camera->right, (vec3){1.0f, 0.0f, 0.0f}, sizeof(vec3));
   camera->yaw = YAW;
   camera->pitch = PITCH;
+  camera->roll = ROLL;
   camera->zoom = ZOOM;
   camera->z_near = Z_NEAR;
   camera->z_far = Z_FAR;
@@ -38,12 +39,22 @@ void camera_get_view_matrix(struct Camera* camera, mat4 dest) {
 }
 
 void camera_update_vectors(struct Camera* camera) {
-  camera->front[0] = cos(glm_rad(camera->yaw)) * cos(glm_rad(camera->pitch));
-  camera->front[1] = sin(glm_rad(camera->pitch));
-  camera->front[2] = sin(glm_rad(camera->yaw)) * cos(glm_rad(camera->pitch));
-  glm_normalize(camera->front);
-  glm_cross(camera->front, camera->world_up, camera->right);
-  glm_normalize(camera->right);
-  glm_cross(camera->right, camera->front, camera->up);
+  vec3 direction = {0.0, 0.0, 0.0};
+  direction[0] = cos(glm_rad(camera->yaw)) * cos(glm_rad(camera->pitch));
+  direction[1] = sin(glm_rad(camera->pitch));
+  direction[2] = sin(glm_rad(camera->yaw)) * cos(glm_rad(camera->pitch));
+  glm_normalize(direction);
+  glm_vec3_copy(direction, camera->front);
+
+  camera->up[0] = cos(glm_rad(camera->roll));
+  camera->up[1] = sin(glm_rad(camera->roll));
   glm_normalize(camera->up);
+
+  glm_cross(camera->front, camera->up, camera->right);
+  glm_normalize(camera->right);
+
+  //glm_cross(camera->front, camera->world_up, camera->right);
+  //glm_normalize(camera->right);
+  //glm_cross(camera->right, camera->front, camera->up);
+  //glm_normalize(camera->up);
 }
