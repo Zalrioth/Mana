@@ -33,101 +33,78 @@ float cuboid_func(const vec3 worldPosition, const vec3 origin, const vec3 halfDi
   vec3 d = {fabsf(pos[0]) - halfDimensions[0], fabsf(pos[1]) - halfDimensions[1], fabsf(pos[2]) - halfDimensions[2]};
   const float m = MAX(d[0], MAX(d[1], d[2]));
 
-  d[0] = MAX(d[0], 0.f);
-  d[1] = MAX(d[1], 0.f);
-  d[2] = MAX(d[2], 0.f);
+  d[0] = MAX(d[0], 0.0f);
+  d[1] = MAX(d[1], 0.0f);
+  d[2] = MAX(d[2], 0.0f);
 
   return MIN(m, length(d));
 }
 
-/*float fractal_noise(const int octaves, const float frequency, const float lacunarity, const float persistence, const vec2 position) {
-  const float SCALE = 1.f / 128.f;
-  vec2 p = {0.0, 0.0};
-  p[0] = position[0] * SCALE;
-  p[1] = position[1] * SCALE;
-
-  float noise = 0.f;
-
-  float amplitude = 1.f;
-  p[0] = p[0] * frequency;
-  p[1] = p[1] * frequency;
-
-  for (int i = 0; i < octaves; i++) {
-    noise += 0.0 * amplitude;
-    p[0] = p[0] * lacunarity;
-    p[1] = p[1] * lacunarity;
-    amplitude *= persistence;
-  }
-
-  // move into [0, 1] range
-  return 0.5f + (0.5f * noise);
-}*/
-
-// Density functions work by inside/outside when less than/greater than 0
-// Noise would work the same without much effort
-float Density_Func(float x_pos, float y_pos, float z_pos) {
-  //const float MAX_HEIGHT = x_pos + y_pos;
-  //const float noise = FractalNoise(4, 0.5343f, 2.2324f, 0.68324f, (vec2){x_pos, z_pos});
-
-  float STEP = 100.0;
+float density_func(float x_pos, float y_pos, float z_pos) {
+  //float STEP = 64.0;
+  //struct PerlinNoise perlin_noise = {0};
+  //perlin_noise_init(&perlin_noise);
+  //perlin_noise.parallel = false;
+  //perlin_noise.octave_count = 4;
+  //perlin_noise.frequency = 1.0;
+  //perlin_noise.lacunarity = 2.2324f;
+  //perlin_noise.persistence = 0.68324f;
+  //perlin_noise.position[0] = x_pos / STEP;
+  //perlin_noise.position[1] = y_pos / STEP;
+  //perlin_noise.position[2] = z_pos / STEP;
   //
-  struct PerlinNoise perlin_noise = {0};
-  perlin_noise_init(&perlin_noise);
-  perlin_noise.octave_count = 1;
-  perlin_noise.frequency = 0.000000005343f;
-  perlin_noise.lacunarity = 2.2324f;
-  perlin_noise.seed = 21251234;
-  perlin_noise.persistence = 0.68324f;
-  perlin_noise.position[0] = 16.0f + x_pos / STEP;
-  perlin_noise.position[1] = 16.0f + y_pos / STEP;
-  perlin_noise.position[2] = 16.0f + z_pos / STEP;
-  //vec3 position = {0.25f + y_pos * STEP, 0.25f + x_pos * STEP, 0.25f + z_pos * STEP};
-  //glm_vec3_copy(perlin_noise.position, position);
+  //return perlin_noise_eval_3d_single(&perlin_noise);
 
-  float terrain = perlin_noise_eval_3d_single(&perlin_noise);
+  //float* noise_set = perlin_noise_eval_3d_sse2(&perlin_noise, 4, 4, 4);
+  //float terrain = *noise_set;
+  //noise_free(noise_set);
+  //
+  //return terrain;
 
-  //if (terrain < 0)
-  //printf("Problem found at %f, %f, %f\n", x_pos, y_pos, z_pos);
+  // Looks good
+  float STEP = 64.0;
+  struct RidgedFractalNoise ridged_fractal_noise = {0};
+  ridged_fractal_noise_init(&ridged_fractal_noise);
+  ridged_fractal_noise.octave_count = 4;
+  ridged_fractal_noise.frequency = 1.0;
+  ridged_fractal_noise.lacunarity = 2.2324f;
+  ridged_fractal_noise.position[0] = x_pos / STEP;
+  ridged_fractal_noise.position[1] = y_pos / STEP;
+  ridged_fractal_noise.position[2] = z_pos / STEP;
 
-  //printf("value %f\n", terrain);
+  return ridged_fractal_noise_eval_3d_single(&ridged_fractal_noise);
 
-  return terrain;  //MAX(MAX_HEIGHT, perlin_noise_eval_3d_single(&perlin_noise));
+  //float STEP = 16.0;
+  //struct VoronoiNoise voronoi_noise = {0};
+  //voronoi_noise_init(&voronoi_noise);
+  ////voronoi_noise.octave_count = 4;
+  //voronoi_noise.frequency = 1.0;
+  ////voronoi_noise.displacement = 2.2324f;
+  //voronoi_noise.position[0] = x_pos / STEP;
+  //voronoi_noise.position[1] = y_pos / STEP;
+  //voronoi_noise.position[2] = z_pos / STEP;
+  //
+  //return voronoi_noise_eval_3d_single(&voronoi_noise);
 
-  //if (fabsf(MAX_HEIGHT - terrain) < 0.001)
-  //  return -1.1f;
-  //else
-  //  return terrain;
-
-  //float terrain = 10000.0f;
+  //float STEP = 64.0;
+  //struct BillowNoise billow_noise = {0};
+  //billow_noise_init(&billow_noise);
+  //billow_noise.parallel = false;
+  //billow_noise.octave_count = 4;
+  //billow_noise.frequency = 1.0;
+  //billow_noise.lacunarity = 2.2324f;
+  //billow_noise.persistence = 0.68324f;
+  //billow_noise.position[0] = x_pos / STEP;
+  //billow_noise.position[1] = y_pos / STEP;
+  //billow_noise.position[2] = z_pos / STEP;
+  //
+  //return billow_noise_eval_3d_single(&billow_noise);
 
   //const float cube = cuboid_func((vec3){x_pos, y_pos, z_pos}, (vec3){-4., 10.f, -4.f}, (vec3){12.f, 12.f, 12.f});
   //const float sphere = sphere_func((vec3){x_pos, y_pos, z_pos}, (vec3){15.f, 2.5f, 1.f}, 16.f);
   //
   //return MIN(cube, -sphere);  //MAX(-cube, MIN(sphere, terrain));
 }
-
-/*float Density_Func(float x_pos, float y_pos, float z_pos) {
-  //struct PerlinNoise perlin_noise = {0};
-  //perlin_noise_init(&perlin_noise);
-  ////perlin_noise.octave_count = 4;
-  ////perlin_noise.frequency = 0.5343f;
-  ////perlin_noise.lacunarity = 2.2324f;
-  ////perlin_noise.persistence = 0.68324f;
-  //perlin_noise.position[0] = x_pos;
-  //perlin_noise.position[1] = y_pos;
-  //perlin_noise.position[2] = z_pos;
-  //
-  //const float MAX_HEIGHT = 20.0f;
-  //
-  //float* noise_set = perlin_noise_eval_1d(&perlin_noise, 16);
-  ////float terrain = y_pos - (MAX_HEIGHT * *noise_set);
-  //float terrain = *noise_set - 2.0;
-  //
-  //noise_free(noise_set);
-  //return terrain;
-
-  return ((fmodf(x_pos, 0.66) + fmodf(y_pos, 0.66) + fmodf(z_pos, 0.66)) / 3.0) + 0.15;
-}*/
 
 void octree_draw_info_init(struct OctreeDrawInfo* octree_draw_info) {
   octree_draw_info->index = -1;
@@ -390,7 +367,7 @@ void octree_approximate_zero_crossing_position(const vec3 p0, const vec3 p1, vec
 
   while (current_t <= 1.0f) {
     const vec3 p = {p0[0] + ((p1[0] - p0[0]) * current_t), p0[1] + ((p1[1] - p0[1]) * current_t), p0[2] + ((p1[2] - p0[2]) * current_t)};
-    const float density = fabsf(Density_Func(p[0], p[1], p[2]));
+    const float density = fabsf(density_func(p[0], p[1], p[2]));
     if (density < min_value) {
       min_value = density;
       t = current_t;
@@ -406,9 +383,9 @@ void octree_approximate_zero_crossing_position(const vec3 p0, const vec3 p1, vec
 
 void octree_calculate_surface_normal(const vec3 p, vec3 dest) {
   const float h = 0.001f;
-  const float dx = Density_Func(p[0] + h, p[1], p[2]) - Density_Func(p[0] - h, p[1], p[2]);
-  const float dy = Density_Func(p[0], p[1] + h, p[2]) - Density_Func(p[0], p[1] - h, p[2]);
-  const float dz = Density_Func(p[0], p[1], p[2] + h) - Density_Func(p[0], p[1], p[2] - h);
+  const float dx = density_func(p[0] + h, p[1], p[2]) - density_func(p[0] - h, p[1], p[2]);
+  const float dy = density_func(p[0], p[1] + h, p[2]) - density_func(p[0], p[1] - h, p[2]);
+  const float dz = density_func(p[0], p[1], p[2] + h) - density_func(p[0], p[1], p[2] - h);
 
   dest[0] = dx;
   dest[1] = dy;
@@ -423,7 +400,9 @@ struct OctreeNode* octree_construct_leaf(struct OctreeNode* leaf) {
   int corners = 0;
   for (int i = 0; i < 8; i++) {
     const ivec3 corner_pos = {leaf->min[0] + CHILD_MIN_OFFSETS[i][0], leaf->min[1] + CHILD_MIN_OFFSETS[i][1], leaf->min[2] + CHILD_MIN_OFFSETS[i][2]};
-    const float density = Density_Func(corner_pos[0], corner_pos[1], corner_pos[2]);
+    // TODO: 3D array(noise data) -> land octree -> dual contouring octree
+    // Note: Local chunks stick with 3D array for performance like grass growing
+    const float density = density_func(corner_pos[0], corner_pos[1], corner_pos[2]);
     const int material = density < 0.0f ? MATERIAL_SOLID : MATERIAL_AIR;
     corners |= (material << i);
   }
