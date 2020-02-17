@@ -7,15 +7,15 @@ layout(location = 0) in vec2 inTexCoord;
 
 layout(location = 0) out vec4 outFragColor;
 
-#define SHOW_EDGES 0
-#define LUMA_THRESHOLD 0.5
-#define MUL_REDUCE 8.0
-#define MIN_REDUCE 128.0
+//#define SHOW_EDGES
+#define LUMA_THRESHOLD 0.1 // 0.5
+#define MUL_REDUCE (1.0 / 8.0)
+#define MIN_REDUCE (1.0 / 128.0)
 #define MAX_SPAN 8.0
 
 void main(void)
 {
-	vec2 textureDimensions = textureSize(texSampler, 0).xy;
+	ivec2 textureDimensions = textureSize(texSampler, 0).xy;
 	vec2 texelStep = vec2(1.0 / textureDimensions.x, 1.0 / textureDimensions.y);
 
 	vec3 rgbM = texture(texSampler, inTexCoord).rgb;
@@ -49,11 +49,11 @@ void main(void)
 
 	samplingDirection = clamp(samplingDirection * minSamplingDirectionFactor, vec2(-MAX_SPAN, -MAX_SPAN), vec2(MAX_SPAN, MAX_SPAN)) * texelStep;
 
-	vec3 rgbSampleNeg = texture(texSampler, inTexCoord + samplingDirection * (1.0/3.0 - 0.5)).rgb;
-	vec3 rgbSamplePos = texture(texSampler, inTexCoord + samplingDirection * (2.0/3.0 - 0.5)).rgb;
+	vec3 rgbSampleNeg = texture(texSampler, inTexCoord + samplingDirection * (1.0 / 3.0 - 0.5)).rgb;
+	vec3 rgbSamplePos = texture(texSampler, inTexCoord + samplingDirection * (2.0 / 3.0 - 0.5)).rgb;
 	vec3 rgbTwoTab = (rgbSamplePos + rgbSampleNeg) * 0.5;
-	vec3 rgbSampleNegOuter = texture(texSampler, inTexCoord + samplingDirection * (0.0/3.0 - 0.5)).rgb;
-	vec3 rgbSamplePosOuter = texture(texSampler, inTexCoord + samplingDirection * (3.0/3.0 - 0.5)).rgb;
+	vec3 rgbSampleNegOuter = texture(texSampler, inTexCoord + samplingDirection * (0.0 / 3.0 - 0.5)).rgb;
+	vec3 rgbSamplePosOuter = texture(texSampler, inTexCoord + samplingDirection * (3.0 / 3.0 - 0.5)).rgb;
 	vec3 rgbFourTab = (rgbSamplePosOuter + rgbSampleNegOuter) * 0.25 + rgbTwoTab * 0.5;
 
 	float lumaFourTab = dot(rgbFourTab, toLuma);
@@ -62,6 +62,7 @@ void main(void)
 	else
 		outFragColor = vec4(rgbFourTab, 1.0);
 
-	if (SHOW_EDGES != 0)
+	#ifdef SHOW_EDGES
 		outFragColor.r = 1.0;
+	#endif
 }

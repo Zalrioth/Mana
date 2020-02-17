@@ -21,6 +21,7 @@ struct DualContouringUniformBufferObject {
 struct DualContouring {
   int octree_size;
   struct OctreeNode *head;
+  float *noise_set;
 
   struct Mesh *mesh;
   VkBuffer vertex_buffer;

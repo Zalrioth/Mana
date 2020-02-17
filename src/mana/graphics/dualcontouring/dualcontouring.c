@@ -28,11 +28,13 @@ int dual_contouring_init(struct DualContouring* dual_contouring, struct VulkanRe
     printf("%s -> %d\n", key, *(int*)map_get(&map, key));
   map_delete(&map);
 
-  struct PerlinNoise pn = {0};
-  perlin_noise_init(&pn);
-  float* noise_set = perlin_noise_eval_3d(&pn, 16, 16, 16);
-  printf("First noise num: %f", *(noise_set + 1024));
-  noise_free(noise_set);
+  float STEP = 1.0 / octree_size;
+  struct VoronoiNoise ridged_fractal_noise = {0};
+  voronoi_noise_init(&ridged_fractal_noise);
+  ridged_fractal_noise.parallel = true;
+  ridged_fractal_noise.frequency = 1.0;
+  ridged_fractal_noise.step = STEP;
+  dual_contouring->noise_set = voronoi_noise_eval_3d(&ridged_fractal_noise, octree_size + 8, octree_size + 8, octree_size + 8);
 
   //thrd_t t;
   //if (thrd_create(&t, HelloThread, NULL) == thrd_success)
@@ -42,7 +44,7 @@ int dual_contouring_init(struct DualContouring* dual_contouring, struct VulkanRe
   int threshold_index = -1;
   threshold_index = (threshold_index + 1) % MAX_THRESHOLDS;
   dual_contouring->octree_size = octree_size;
-  dual_contouring->head = octree_build_octree((ivec3){-dual_contouring->octree_size / 2, -dual_contouring->octree_size / 2, -dual_contouring->octree_size / 2}, dual_contouring->octree_size, THRESHOLDS[threshold_index]);
+  dual_contouring->head = octree_build_octree((ivec3){-dual_contouring->octree_size / 2, -dual_contouring->octree_size / 2, -dual_contouring->octree_size / 2}, dual_contouring->octree_size, THRESHOLDS[threshold_index], dual_contouring->noise_set);
   octree_generate_mesh_from_octree(dual_contouring->head, dual_contouring->mesh);
 
   // Vertex buffer

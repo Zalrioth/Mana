@@ -22,88 +22,18 @@ float length(vec3 pos) {
   return sqrtf((pos[0] * pos[0]) + (pos[1] * pos[1]) + (pos[2] * pos[2]));
 }
 
-float sphere_func(const vec3 worldPosition, const vec3 origin, float radius) {
-  return length((vec3){worldPosition[0] - origin[0], worldPosition[1] - origin[1], worldPosition[2] - origin[2]}) - radius;
-}
-
-float cuboid_func(const vec3 worldPosition, const vec3 origin, const vec3 halfDimensions) {
-  const vec3 local_pos = {worldPosition[0] - origin[0], worldPosition[1] - origin[1], worldPosition[2] - origin[2]};
-  const vec3 pos = {local_pos[0], local_pos[1], local_pos[2]};
-
-  vec3 d = {fabsf(pos[0]) - halfDimensions[0], fabsf(pos[1]) - halfDimensions[1], fabsf(pos[2]) - halfDimensions[2]};
-  const float m = MAX(d[0], MAX(d[1], d[2]));
-
-  d[0] = MAX(d[0], 0.0f);
-  d[1] = MAX(d[1], 0.0f);
-  d[2] = MAX(d[2], 0.0f);
-
-  return MIN(m, length(d));
-}
-
 float density_func(float x_pos, float y_pos, float z_pos) {
-  //float STEP = 64.0;
-  //struct PerlinNoise perlin_noise = {0};
-  //perlin_noise_init(&perlin_noise);
-  //perlin_noise.parallel = false;
-  //perlin_noise.octave_count = 4;
-  //perlin_noise.frequency = 1.0;
-  //perlin_noise.lacunarity = 2.2324f;
-  //perlin_noise.persistence = 0.68324f;
-  //perlin_noise.position[0] = x_pos / STEP;
-  //perlin_noise.position[1] = y_pos / STEP;
-  //perlin_noise.position[2] = z_pos / STEP;
-  //
-  //return perlin_noise_eval_3d_single(&perlin_noise);
-
-  //float* noise_set = perlin_noise_eval_3d_sse2(&perlin_noise, 4, 4, 4);
-  //float terrain = *noise_set;
-  //noise_free(noise_set);
-  //
-  //return terrain;
-
-  // Looks good
-  float STEP = 64.0;
+  float STEP = 1.0 / 32;
   struct RidgedFractalNoise ridged_fractal_noise = {0};
   ridged_fractal_noise_init(&ridged_fractal_noise);
   ridged_fractal_noise.octave_count = 4;
   ridged_fractal_noise.frequency = 1.0;
   ridged_fractal_noise.lacunarity = 2.2324f;
-  ridged_fractal_noise.position[0] = x_pos / STEP;
-  ridged_fractal_noise.position[1] = y_pos / STEP;
-  ridged_fractal_noise.position[2] = z_pos / STEP;
+  ridged_fractal_noise.position[0] = x_pos * STEP;
+  ridged_fractal_noise.position[1] = y_pos * STEP;
+  ridged_fractal_noise.position[2] = z_pos * STEP;
 
   return ridged_fractal_noise_eval_3d_single(&ridged_fractal_noise);
-
-  //float STEP = 16.0;
-  //struct VoronoiNoise voronoi_noise = {0};
-  //voronoi_noise_init(&voronoi_noise);
-  ////voronoi_noise.octave_count = 4;
-  //voronoi_noise.frequency = 1.0;
-  ////voronoi_noise.displacement = 2.2324f;
-  //voronoi_noise.position[0] = x_pos / STEP;
-  //voronoi_noise.position[1] = y_pos / STEP;
-  //voronoi_noise.position[2] = z_pos / STEP;
-  //
-  //return voronoi_noise_eval_3d_single(&voronoi_noise);
-
-  //float STEP = 64.0;
-  //struct BillowNoise billow_noise = {0};
-  //billow_noise_init(&billow_noise);
-  //billow_noise.parallel = false;
-  //billow_noise.octave_count = 4;
-  //billow_noise.frequency = 1.0;
-  //billow_noise.lacunarity = 2.2324f;
-  //billow_noise.persistence = 0.68324f;
-  //billow_noise.position[0] = x_pos / STEP;
-  //billow_noise.position[1] = y_pos / STEP;
-  //billow_noise.position[2] = z_pos / STEP;
-  //
-  //return billow_noise_eval_3d_single(&billow_noise);
-
-  //const float cube = cuboid_func((vec3){x_pos, y_pos, z_pos}, (vec3){-4., 10.f, -4.f}, (vec3){12.f, 12.f, 12.f});
-  //const float sphere = sphere_func((vec3){x_pos, y_pos, z_pos}, (vec3){15.f, 2.5f, 1.f}, 16.f);
-  //
-  //return MIN(cube, -sphere);  //MAX(-cube, MIN(sphere, terrain));
 }
 
 void octree_draw_info_init(struct OctreeDrawInfo* octree_draw_info) {
@@ -393,7 +323,7 @@ void octree_calculate_surface_normal(const vec3 p, vec3 dest) {
   glm_normalize(dest);
 }
 
-struct OctreeNode* octree_construct_leaf(struct OctreeNode* leaf) {
+struct OctreeNode* octree_construct_leaf(struct OctreeNode* leaf, float* noise_set) {
   if (!leaf || leaf->size != 1)
     return NULL;
 
@@ -401,8 +331,9 @@ struct OctreeNode* octree_construct_leaf(struct OctreeNode* leaf) {
   for (int i = 0; i < 8; i++) {
     const ivec3 corner_pos = {leaf->min[0] + CHILD_MIN_OFFSETS[i][0], leaf->min[1] + CHILD_MIN_OFFSETS[i][1], leaf->min[2] + CHILD_MIN_OFFSETS[i][2]};
     // TODO: 3D array(noise data) -> land octree -> dual contouring octree
-    // Note: Local chunks stick with 3D array for performance like grass growing
-    const float density = density_func(corner_pos[0], corner_pos[1], corner_pos[2]);
+    // Note: Local chunks stick with 3D array for performance like grass growing?
+    float density = noise_get(noise_set, 40, 40, 40, corner_pos[0] + 16, corner_pos[1] + 16, corner_pos[2] + 16);
+
     const int material = density < 0.0f ? MATERIAL_SOLID : MATERIAL_AIR;
     corners |= (material << i);
   }
@@ -465,12 +396,12 @@ struct OctreeNode* octree_construct_leaf(struct OctreeNode* leaf) {
   return leaf;
 }
 
-struct OctreeNode* octree_construct_octree_nodes(struct OctreeNode* node) {
+struct OctreeNode* octree_construct_octree_nodes(struct OctreeNode* node, float* noise_set) {
   if (!node)
     return NULL;
 
   if (node->size == 1)
-    return octree_construct_leaf(node);
+    return octree_construct_leaf(node, noise_set);
 
   const int child_size = node->size / 2;
   bool has_children = false;
@@ -484,7 +415,7 @@ struct OctreeNode* octree_construct_octree_nodes(struct OctreeNode* node) {
     child->min[2] = node->min[2] + (CHILD_MIN_OFFSETS[i][2] * child_size);
     child->type = NODE_INTERNAL;
 
-    node->children[i] = octree_construct_octree_nodes(child);
+    node->children[i] = octree_construct_octree_nodes(child, noise_set);
     has_children |= (node->children[i] != NULL);
   }
 
@@ -496,14 +427,14 @@ struct OctreeNode* octree_construct_octree_nodes(struct OctreeNode* node) {
   return node;
 }
 
-struct OctreeNode* octree_build_octree(const ivec3 min, const int size, const float threshold) {
+struct OctreeNode* octree_build_octree(const ivec3 min, const int size, const float threshold, float* noise_set) {
   struct OctreeNode* root = calloc(1, sizeof(struct OctreeNode));
   octree_init_none(root);
   memcpy(root->min, min, sizeof(ivec3));
   root->size = size;
   root->type = NODE_INTERNAL;
 
-  octree_construct_octree_nodes(root);
+  octree_construct_octree_nodes(root, noise_set);
   // TODO: Fix this
   //root = octree_simplify_octree(root, threshold);
 

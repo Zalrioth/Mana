@@ -45,9 +45,9 @@ void octree_contour_face_proc(struct OctreeNode* node[2], int dir, struct Mesh* 
 void octree_contour_cell_proc(struct OctreeNode* node, struct Mesh* mesh);
 void octree_approximate_zero_crossing_position(const vec3 p0, const vec3 p1, vec3 dest);
 void octree_calculate_surface_normal(const vec3 p, vec3 dest);
-struct OctreeNode* octree_construct_leaf(struct OctreeNode* leaf);
-struct OctreeNode* octree_construct_octree_nodes(struct OctreeNode* node);
-struct OctreeNode* octree_build_octree(const ivec3 min, const int size, const float threshold);
+struct OctreeNode* octree_construct_leaf(struct OctreeNode* leaf, float* noise_set);
+struct OctreeNode* octree_construct_octree_nodes(struct OctreeNode* node, float* noise_set);
+struct OctreeNode* octree_build_octree(const ivec3 min, const int size, const float threshold, float* noise_set);
 void octree_generate_mesh_from_octree(struct OctreeNode* node, struct Mesh* mesh);
 void octree_destroy_octree(struct OctreeNode* node);
 

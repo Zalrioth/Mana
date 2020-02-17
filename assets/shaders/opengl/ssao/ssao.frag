@@ -29,14 +29,14 @@ float linearDepth(float depth) {
 	return (2.0f * Z_NEAR * Z_FAR) / (Z_FAR + Z_NEAR - z * (Z_FAR - Z_NEAR));	
 }
 
-vec3 worldPosFromDepth(float depth) {
-    float z = depth * 2.0 - 1.0;
-    vec4 clipSpacePosition = vec4(fragTexCoord * 2.0 - 1.0, z, 1.0);
-    vec4 viewSpacePosition = inverse(ubo.proj) * clipSpacePosition;
-    viewSpacePosition /= viewSpacePosition.w;
-    vec4 worldSpacePosition = inverse(ubo.view) * viewSpacePosition;
-    return worldSpacePosition.xyz;
-}
+//vec3 worldPosFromDepth(float depth) {
+//    float z = depth * 2.0 - 1.0;
+//    vec4 clipSpacePosition = vec4(fragTexCoord * 2.0 - 1.0, z, 1.0);
+//    vec4 viewSpacePosition = inverse(ubo.proj) * clipSpacePosition;
+//    viewSpacePosition /= viewSpacePosition.w;
+//    vec4 worldSpacePosition = inverse(ubo.view) * viewSpacePosition;
+//    return worldSpacePosition.xyz;
+//}
 
 void main() 
 {
