@@ -7,7 +7,11 @@ int HelloThread(void* aArg) {
   return 0;
 }
 
-int dual_contouring_init(struct DualContouring* dual_contouring, struct VulkanRenderer* vulkan_renderer, int octree_size, struct Shader* shader) {
+int dual_contouring_init(struct DualContouring* dual_contouring, struct VulkanRenderer* vulkan_renderer, int octree_size, struct Shader* shader, struct Vector* noises, float (*density_func_single)(struct Vector*, float, float, float), float* (*density_func_set)(struct Vector*, float, float, float, int, int, int)) {
+  dual_contouring->noises = noises;
+  dual_contouring->density_func_single = density_func_single;
+  dual_contouring->density_func_set = density_func_set;
+
   dual_contouring->mesh = calloc(1, sizeof(struct Mesh));
   mesh_init(dual_contouring->mesh);
 
@@ -28,13 +32,7 @@ int dual_contouring_init(struct DualContouring* dual_contouring, struct VulkanRe
     printf("%s -> %d\n", key, *(int*)map_get(&map, key));
   map_delete(&map);
 
-  float STEP = 1.0 / octree_size;
-  struct VoronoiNoise ridged_fractal_noise = {0};
-  voronoi_noise_init(&ridged_fractal_noise);
-  ridged_fractal_noise.parallel = true;
-  ridged_fractal_noise.frequency = 1.0;
-  ridged_fractal_noise.step = STEP;
-  dual_contouring->noise_set = voronoi_noise_eval_3d(&ridged_fractal_noise, octree_size + 8, octree_size + 8, octree_size + 8);
+  dual_contouring->noise_set = density_func_set(noises, 0.0f, 0.0f, 0.0f, octree_size, octree_size, octree_size);
 
   //thrd_t t;
   //if (thrd_create(&t, HelloThread, NULL) == thrd_success)
@@ -44,8 +42,8 @@ int dual_contouring_init(struct DualContouring* dual_contouring, struct VulkanRe
   int threshold_index = -1;
   threshold_index = (threshold_index + 1) % MAX_THRESHOLDS;
   dual_contouring->octree_size = octree_size;
-  dual_contouring->head = octree_build_octree((ivec3){-dual_contouring->octree_size / 2, -dual_contouring->octree_size / 2, -dual_contouring->octree_size / 2}, dual_contouring->octree_size, THRESHOLDS[threshold_index], dual_contouring->noise_set);
-  octree_generate_mesh_from_octree(dual_contouring->head, dual_contouring->mesh);
+  dual_contouring->head = octree_build_octree((ivec3){-dual_contouring->octree_size / 2, -dual_contouring->octree_size / 2, -dual_contouring->octree_size / 2}, dual_contouring->octree_size, THRESHOLDS[threshold_index], dual_contouring);
+  octree_generate_mesh_from_octree(dual_contouring->head, dual_contouring);
 
   // Vertex buffer
   VkDeviceSize vertex_buffer_size = dual_contouring->mesh->vertices->memory_size * dual_contouring->mesh->vertices->size;

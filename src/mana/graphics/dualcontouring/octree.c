@@ -22,20 +22,6 @@ float length(vec3 pos) {
   return sqrtf((pos[0] * pos[0]) + (pos[1] * pos[1]) + (pos[2] * pos[2]));
 }
 
-float density_func(float x_pos, float y_pos, float z_pos) {
-  float STEP = 1.0 / 32;
-  struct RidgedFractalNoise ridged_fractal_noise = {0};
-  ridged_fractal_noise_init(&ridged_fractal_noise);
-  ridged_fractal_noise.octave_count = 4;
-  ridged_fractal_noise.frequency = 1.0;
-  ridged_fractal_noise.lacunarity = 2.2324f;
-  ridged_fractal_noise.position[0] = x_pos * STEP;
-  ridged_fractal_noise.position[1] = y_pos * STEP;
-  ridged_fractal_noise.position[2] = z_pos * STEP;
-
-  return ridged_fractal_noise_eval_3d_single(&ridged_fractal_noise);
-}
-
 void octree_draw_info_init(struct OctreeDrawInfo* octree_draw_info) {
   octree_draw_info->index = -1;
   octree_draw_info->corners = 0;
@@ -133,13 +119,13 @@ struct OctreeNode* octree_simplify_octree(struct OctreeNode* node, float thresho
   return node;
 }
 
-void octree_generate_vertex_indices(struct OctreeNode* node, struct Mesh* mesh) {
+void octree_generate_vertex_indices(struct OctreeNode* node, struct DualContouring* dual_contouring) {
   if (!node)
     return;
 
   if (node->type != NODE_LEAF)
     for (int i = 0; i < 8; i++)
-      octree_generate_vertex_indices(node->children[i], mesh);
+      octree_generate_vertex_indices(node->children[i], dual_contouring);
 
   if (node->type != NODE_INTERNAL) {
     struct OctreeDrawInfo* d = node->draw_info;
@@ -148,12 +134,12 @@ void octree_generate_vertex_indices(struct OctreeNode* node, struct Mesh* mesh) 
       exit(EXIT_FAILURE);
     }
 
-    d->index = vector_size(mesh->vertices);
-    mesh_assign_vertex(mesh->vertices, d->position[0], d->position[1], d->position[2], d->average_normal[0], d->average_normal[1], d->average_normal[2], 0.0, 0.0);
+    d->index = vector_size(dual_contouring->mesh->vertices);
+    mesh_assign_vertex(dual_contouring->mesh->vertices, d->position[0], d->position[1], d->position[2], d->average_normal[0], d->average_normal[1], d->average_normal[2], 0.0, 0.0);
   }
 }
 
-void octree_contour_process_edge(struct OctreeNode* node[4], int dir, struct Mesh* mesh) {
+void octree_contour_process_edge(struct OctreeNode* node[4], int dir, struct DualContouring* dual_contouring) {
   int min_size = 1000000;
   int min_index = 0;
   int indices[4] = {-1, -1, -1, -1};
@@ -181,31 +167,31 @@ void octree_contour_process_edge(struct OctreeNode* node[4], int dir, struct Mes
 
   if (sign_change[min_index]) {
     if (!flip) {
-      mesh_assign_indice(mesh->indices, indices[0]);
-      mesh_assign_indice(mesh->indices, indices[1]);
-      mesh_assign_indice(mesh->indices, indices[3]);
+      mesh_assign_indice(dual_contouring->mesh->indices, indices[0]);
+      mesh_assign_indice(dual_contouring->mesh->indices, indices[1]);
+      mesh_assign_indice(dual_contouring->mesh->indices, indices[3]);
 
-      mesh_assign_indice(mesh->indices, indices[0]);
-      mesh_assign_indice(mesh->indices, indices[3]);
-      mesh_assign_indice(mesh->indices, indices[2]);
+      mesh_assign_indice(dual_contouring->mesh->indices, indices[0]);
+      mesh_assign_indice(dual_contouring->mesh->indices, indices[3]);
+      mesh_assign_indice(dual_contouring->mesh->indices, indices[2]);
     } else {
-      mesh_assign_indice(mesh->indices, indices[0]);
-      mesh_assign_indice(mesh->indices, indices[3]);
-      mesh_assign_indice(mesh->indices, indices[1]);
+      mesh_assign_indice(dual_contouring->mesh->indices, indices[0]);
+      mesh_assign_indice(dual_contouring->mesh->indices, indices[3]);
+      mesh_assign_indice(dual_contouring->mesh->indices, indices[1]);
 
-      mesh_assign_indice(mesh->indices, indices[0]);
-      mesh_assign_indice(mesh->indices, indices[2]);
-      mesh_assign_indice(mesh->indices, indices[3]);
+      mesh_assign_indice(dual_contouring->mesh->indices, indices[0]);
+      mesh_assign_indice(dual_contouring->mesh->indices, indices[2]);
+      mesh_assign_indice(dual_contouring->mesh->indices, indices[3]);
     }
   }
 }
 
-void octree_contour_edge_proc(struct OctreeNode* node[4], int dir, struct Mesh* mesh) {
+void octree_contour_edge_proc(struct OctreeNode* node[4], int dir, struct DualContouring* dual_contouring) {
   if (!node[0] || !node[1] || !node[2] || !node[3])
     return;
 
   if (node[0]->type != NODE_INTERNAL && node[1]->type != NODE_INTERNAL && node[2]->type != NODE_INTERNAL && node[3]->type != NODE_INTERNAL)
-    octree_contour_process_edge(node, dir, mesh);
+    octree_contour_process_edge(node, dir, dual_contouring);
   else {
     for (int i = 0; i < 2; i++) {
       struct OctreeNode* edge_nodes[4];
@@ -218,12 +204,12 @@ void octree_contour_edge_proc(struct OctreeNode* node[4], int dir, struct Mesh* 
           edge_nodes[j] = node[j]->children[c[j]];
       }
 
-      octree_contour_edge_proc(edge_nodes, edge_proc_edge_mask[dir][i][4], mesh);
+      octree_contour_edge_proc(edge_nodes, edge_proc_edge_mask[dir][i][4], dual_contouring);
     }
   }
 }
 
-void octree_contour_face_proc(struct OctreeNode* node[2], int dir, struct Mesh* mesh) {
+void octree_contour_face_proc(struct OctreeNode* node[2], int dir, struct DualContouring* dual_contouring) {
   if (!node[0] || !node[1])
     return;
 
@@ -238,7 +224,7 @@ void octree_contour_face_proc(struct OctreeNode* node[2], int dir, struct Mesh* 
         else
           face_nodes[j] = node[j]->children[c[j]];
       }
-      octree_contour_face_proc(face_nodes, face_proc_face_mask[dir][i][2], mesh);
+      octree_contour_face_proc(face_nodes, face_proc_face_mask[dir][i][2], dual_contouring);
     }
 
     const int orders[2][4] = {{0, 0, 1, 1}, {0, 1, 0, 1}};
@@ -253,18 +239,18 @@ void octree_contour_face_proc(struct OctreeNode* node[2], int dir, struct Mesh* 
         else
           edgeNodes[j] = node[order[j]]->children[c[j]];
       }
-      octree_contour_edge_proc(edgeNodes, face_proc_edge_mask[dir][i][5], mesh);
+      octree_contour_edge_proc(edgeNodes, face_proc_edge_mask[dir][i][5], dual_contouring);
     }
   }
 }
 
-void octree_contour_cell_proc(struct OctreeNode* node, struct Mesh* mesh) {
+void octree_contour_cell_proc(struct OctreeNode* node, struct DualContouring* dual_contouring) {
   if (node == NULL)
     return;
 
   if (node->type == NODE_INTERNAL) {
     for (int i = 0; i < 8; i++)
-      octree_contour_cell_proc(node->children[i], mesh);
+      octree_contour_cell_proc(node->children[i], dual_contouring);
 
     for (int i = 0; i < 12; i++) {
       struct OctreeNode* face_nodes[2];
@@ -273,7 +259,7 @@ void octree_contour_cell_proc(struct OctreeNode* node, struct Mesh* mesh) {
       face_nodes[0] = node->children[c[0]];
       face_nodes[1] = node->children[c[1]];
 
-      octree_contour_face_proc(face_nodes, cell_proc_face_mask[i][2], mesh);
+      octree_contour_face_proc(face_nodes, cell_proc_face_mask[i][2], dual_contouring);
     }
 
     for (int i = 0; i < 6; i++) {
@@ -283,12 +269,12 @@ void octree_contour_cell_proc(struct OctreeNode* node, struct Mesh* mesh) {
       for (int j = 0; j < 4; j++)
         edge_nodes[j] = node->children[c[j]];
 
-      octree_contour_edge_proc(edge_nodes, cell_proc_edge_mask[i][4], mesh);
+      octree_contour_edge_proc(edge_nodes, cell_proc_edge_mask[i][4], dual_contouring);
     }
   }
 }
 
-void octree_approximate_zero_crossing_position(const vec3 p0, const vec3 p1, vec3 dest) {
+void octree_approximate_zero_crossing_position(const vec3 p0, const vec3 p1, vec3 dest, struct DualContouring* dual_contouring) {
   float min_value = 100000.0f;
   float t = 0.0f;
   float current_t = 0.0f;
@@ -297,7 +283,10 @@ void octree_approximate_zero_crossing_position(const vec3 p0, const vec3 p1, vec
 
   while (current_t <= 1.0f) {
     const vec3 p = {p0[0] + ((p1[0] - p0[0]) * current_t), p0[1] + ((p1[1] - p0[1]) * current_t), p0[2] + ((p1[2] - p0[2]) * current_t)};
-    const float density = fabsf(density_func(p[0], p[1], p[2]));
+    //const float density = fabsf(density_func(p[0], p[1], p[2]));
+    int half_size = dual_contouring->octree_size / 2;
+    vec3 new_pos = {p[0] + half_size, p[1] + half_size, p[2] + half_size};
+    const float density = fabsf(dual_contouring->density_func_single(dual_contouring->noises, new_pos[0], new_pos[1], new_pos[2]));
     if (density < min_value) {
       min_value = density;
       t = current_t;
@@ -311,11 +300,13 @@ void octree_approximate_zero_crossing_position(const vec3 p0, const vec3 p1, vec
   dest[2] = p0[2] + ((p1[2] - p0[2]) * t);
 }
 
-void octree_calculate_surface_normal(const vec3 p, vec3 dest) {
+void octree_calculate_surface_normal(const vec3 p, vec3 dest, struct DualContouring* dual_contouring) {
   const float h = 0.001f;
-  const float dx = density_func(p[0] + h, p[1], p[2]) - density_func(p[0] - h, p[1], p[2]);
-  const float dy = density_func(p[0], p[1] + h, p[2]) - density_func(p[0], p[1] - h, p[2]);
-  const float dz = density_func(p[0], p[1], p[2] + h) - density_func(p[0], p[1], p[2] - h);
+  int half_size = dual_contouring->octree_size / 2;
+  vec3 new_pos = {p[0] + half_size, p[1] + half_size, p[2] + half_size};
+  const float dx = dual_contouring->density_func_single(dual_contouring->noises, new_pos[0] + h, new_pos[1], new_pos[2]) - dual_contouring->density_func_single(dual_contouring->noises, new_pos[0] - h, new_pos[1], new_pos[2]);
+  const float dy = dual_contouring->density_func_single(dual_contouring->noises, new_pos[0], new_pos[1] + h, new_pos[2]) - dual_contouring->density_func_single(dual_contouring->noises, new_pos[0], new_pos[1] - h, new_pos[2]);
+  const float dz = dual_contouring->density_func_single(dual_contouring->noises, new_pos[0], new_pos[1], new_pos[2] + h) - dual_contouring->density_func_single(dual_contouring->noises, new_pos[0], new_pos[1], new_pos[2] - h);
 
   dest[0] = dx;
   dest[1] = dy;
@@ -323,7 +314,7 @@ void octree_calculate_surface_normal(const vec3 p, vec3 dest) {
   glm_normalize(dest);
 }
 
-struct OctreeNode* octree_construct_leaf(struct OctreeNode* leaf, float* noise_set) {
+struct OctreeNode* octree_construct_leaf(struct OctreeNode* leaf, struct DualContouring* dual_contouring) {
   if (!leaf || leaf->size != 1)
     return NULL;
 
@@ -332,7 +323,9 @@ struct OctreeNode* octree_construct_leaf(struct OctreeNode* leaf, float* noise_s
     const ivec3 corner_pos = {leaf->min[0] + CHILD_MIN_OFFSETS[i][0], leaf->min[1] + CHILD_MIN_OFFSETS[i][1], leaf->min[2] + CHILD_MIN_OFFSETS[i][2]};
     // TODO: 3D array(noise data) -> land octree -> dual contouring octree
     // Note: Local chunks stick with 3D array for performance like grass growing?
-    float density = noise_get(noise_set, 40, 40, 40, corner_pos[0] + 16, corner_pos[1] + 16, corner_pos[2] + 16);
+    int octree_size = dual_contouring->octree_size;
+    int half_size = octree_size / 2;
+    float density = noise_get(dual_contouring->noise_set, octree_size, octree_size, octree_size, corner_pos[0] + half_size, corner_pos[1] + half_size, corner_pos[2] + half_size);
 
     const int material = density < 0.0f ? MATERIAL_SOLID : MATERIAL_AIR;
     corners |= (material << i);
@@ -361,9 +354,9 @@ struct OctreeNode* octree_construct_leaf(struct OctreeNode* leaf, float* noise_s
     const vec3 p1 = {leaf->min[0] + CHILD_MIN_OFFSETS[c1][0], leaf->min[1] + CHILD_MIN_OFFSETS[c1][1], leaf->min[2] + CHILD_MIN_OFFSETS[c1][2]};
     const vec3 p2 = {leaf->min[0] + CHILD_MIN_OFFSETS[c2][0], leaf->min[1] + CHILD_MIN_OFFSETS[c2][1], leaf->min[2] + CHILD_MIN_OFFSETS[c2][2]};
     vec3 p = {0.0, 0.0, 0.0};
-    octree_approximate_zero_crossing_position(p1, p2, p);
+    octree_approximate_zero_crossing_position(p1, p2, p, dual_contouring);
     vec3 n = {0.0, 0.0, 0.0};
-    octree_calculate_surface_normal(p, n);
+    octree_calculate_surface_normal(p, n, dual_contouring);
     qef_solver_add(&qef, p[0], p[1], p[2], n[0], n[1], n[2]);
     average_normal[0] = average_normal[0] + n[0];
     average_normal[1] = average_normal[1] + n[1];
@@ -396,12 +389,12 @@ struct OctreeNode* octree_construct_leaf(struct OctreeNode* leaf, float* noise_s
   return leaf;
 }
 
-struct OctreeNode* octree_construct_octree_nodes(struct OctreeNode* node, float* noise_set) {
+struct OctreeNode* octree_construct_octree_nodes(struct OctreeNode* node, struct DualContouring* dual_contouring) {
   if (!node)
     return NULL;
 
   if (node->size == 1)
-    return octree_construct_leaf(node, noise_set);
+    return octree_construct_leaf(node, dual_contouring);
 
   const int child_size = node->size / 2;
   bool has_children = false;
@@ -415,7 +408,7 @@ struct OctreeNode* octree_construct_octree_nodes(struct OctreeNode* node, float*
     child->min[2] = node->min[2] + (CHILD_MIN_OFFSETS[i][2] * child_size);
     child->type = NODE_INTERNAL;
 
-    node->children[i] = octree_construct_octree_nodes(child, noise_set);
+    node->children[i] = octree_construct_octree_nodes(child, dual_contouring);
     has_children |= (node->children[i] != NULL);
   }
 
@@ -427,28 +420,28 @@ struct OctreeNode* octree_construct_octree_nodes(struct OctreeNode* node, float*
   return node;
 }
 
-struct OctreeNode* octree_build_octree(const ivec3 min, const int size, const float threshold, float* noise_set) {
+struct OctreeNode* octree_build_octree(const ivec3 min, const int size, const float threshold, struct DualContouring* dual_contouring) {
   struct OctreeNode* root = calloc(1, sizeof(struct OctreeNode));
   octree_init_none(root);
   memcpy(root->min, min, sizeof(ivec3));
   root->size = size;
   root->type = NODE_INTERNAL;
 
-  octree_construct_octree_nodes(root, noise_set);
+  octree_construct_octree_nodes(root, dual_contouring);
   // TODO: Fix this
   //root = octree_simplify_octree(root, threshold);
 
   return root;
 }
 
-void octree_generate_mesh_from_octree(struct OctreeNode* node, struct Mesh* mesh) {
+void octree_generate_mesh_from_octree(struct OctreeNode* node, struct DualContouring* dual_contouring) {
   if (!node)
     return;
 
-  mesh_clear(mesh);
+  mesh_clear(dual_contouring->mesh);
 
-  octree_generate_vertex_indices(node, mesh);
-  octree_contour_cell_proc(node, mesh);
+  octree_generate_vertex_indices(node, dual_contouring);
+  octree_contour_cell_proc(node, dual_contouring);
 }
 
 void octree_destroy_octree(struct OctreeNode* node) {

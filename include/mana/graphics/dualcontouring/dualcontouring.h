@@ -21,6 +21,9 @@ struct DualContouringUniformBufferObject {
 struct DualContouring {
   int octree_size;
   struct OctreeNode *head;
+  struct Vector *noises;
+  float (*density_func_single)(struct Vector *, float, float, float);
+  float *(*density_func_set)(struct Vector *, float, float, float, int, int, int);
   float *noise_set;
 
   struct Mesh *mesh;
@@ -35,7 +38,7 @@ struct DualContouring {
   VkDescriptorSet descriptor_set;
 };
 
-int dual_contouring_init(struct DualContouring *dual_contouring, struct VulkanRenderer *vulkan_renderer, int octree_size, struct Shader *shader);
+int dual_contouring_init(struct DualContouring *dual_contouring, struct VulkanRenderer *vulkan_renderer, int octree_size, struct Shader *shader, struct Vector *noises, float (*density_func_single)(struct Vector *, float, float, float), float *(*density_func_set)(struct Vector *, float, float, float, int, int, int));
 void dual_contouring_delete(struct DualContouring *dual_contouring, struct VulkanRenderer *vulkan_renderer);
 
 #endif  // DUAL_CONTOURING_H
