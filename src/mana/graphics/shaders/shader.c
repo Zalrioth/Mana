@@ -1,48 +1,17 @@
 #include "mana/graphics/shaders/shader.h"
 
-char* read_shader_file(const char* filename, int* file_length) {
-  FILE* fp = fopen(filename, "rb");
-
-  fseek(fp, 0, SEEK_END);
-  long int size = ftell(fp);
-  rewind(fp);
-
-  *file_length = size;
-
-  char* result = (char*)malloc(size);
-
-  int index = 0;
-  int c;
-  while ((c = fgetc(fp)) != EOF) {
-    result[index] = c;
-    index++;
-  }
-
-  fclose(fp);
-
-  return result;
-}
-
 int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, char* vertex_shader, char* fragment_shader, char* geometry_shader, VkPipelineVertexInputStateCreateInfo vertex_input_info, VkRenderPass render_pass, VkPipelineColorBlendStateCreateInfo color_blending, bool depth_test, VkSampleCountFlagBits num_samples, bool supersampled) {
-  // Get the current working directory
-#if defined(IS_WINDOWS)
-  char* buffer;
-  buffer = _getcwd(NULL, 0);
-  //printf("%s \nLength: %llu\n", buffer, strlen(buffer));
-#else
-  char cwd[4096];
-    getcwd(cwd, sizeof(cwd);
-    //printf("Current working dir: %s\n", cwd);
-#endif
-
   int vertex_length = 0;
   int fragment_length = 0;
 
-  char* vert_shader_code = read_shader_file(vertex_shader, &vertex_length);
-  char* frag_shader_code = read_shader_file(fragment_shader, &fragment_length);
+  char* vert_shader_code = read_file(vertex_shader, &vertex_length);
+  char* frag_shader_code = read_file(fragment_shader, &fragment_length);
 
   VkShaderModule vert_shader_module = shader_create_shader_module(vulkan_renderer, vert_shader_code, vertex_length);
   VkShaderModule frag_shader_module = shader_create_shader_module(vulkan_renderer, frag_shader_code, fragment_length);
+
+  free(vert_shader_code);
+  free(frag_shader_code);
 
   VkPipelineShaderStageCreateInfo vert_shader_stage_info = {0};
   vert_shader_stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
