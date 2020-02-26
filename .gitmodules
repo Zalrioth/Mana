@@ -25,6 +25,3 @@
 [submodule "lib/stb"]
 	path = lib/stb
 	url = https://github.com/nothings/stb
-[submodule "lib/tiny-regex-c"]
-	path = lib/tiny-regex-c
-	url = https://github.com/kokke/tiny-regex-c
