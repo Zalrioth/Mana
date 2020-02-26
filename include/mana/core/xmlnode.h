@@ -24,7 +24,7 @@ static inline void xml_node_add_child(struct XmlNode* xml_node, struct XmlNode* 
 static inline void xml_node_set_data(struct XmlNode* xml_node, char* data);
 
 static inline void xml_node_init(struct XmlNode* xml_node, char* name) {
-  xml_node->name = strdup(name);
+  xml_node->name = name;
 }
 
 static inline void xml_node_delete(struct XmlNode* xml_node) {
@@ -85,7 +85,7 @@ static inline void xml_node_add_attribute(struct XmlNode* xml_node, char* attr, 
 static inline void xml_node_add_child(struct XmlNode* xml_node, struct XmlNode* child) {
   if (xml_node->child_nodes == NULL) {
     xml_node->child_nodes = calloc(1, sizeof(struct Map));
-    map_init(xml_node->child_nodes, sizeof(struct ArrayList*));
+    map_init(xml_node->child_nodes, sizeof(struct ArrayList));
   }
   struct ArrayList* list = (struct ArrayList*)map_get(xml_node->child_nodes, child->name);
   if (list == NULL) {
@@ -97,7 +97,7 @@ static inline void xml_node_add_child(struct XmlNode* xml_node, struct XmlNode* 
 }
 
 static inline void xml_node_set_data(struct XmlNode* xml_node, char* data) {
-  xml_node->data = strdup(data);
+  xml_node->data = data;
 }
 
 #endif  // XML_NODE_H
