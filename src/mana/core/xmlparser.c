@@ -78,7 +78,7 @@ struct XmlNode* xml_parser_load_node(char** xml_file_data) {
     memmove(check_slash, check_slash + 1, strlen(node_name) - strlen(check_slash));
   xml_node_init(xml_node, node_name);
 
-  // Add attributes
+  // Add attributes//
   for (int tag_num = 0; tag_num < array_list_size(&tag_parts); tag_num++) {
     char* tag_text = (char*)array_list_get(&tag_parts, tag_num);
     size_t tag_text_length = strlen(tag_text);
