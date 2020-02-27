@@ -3,28 +3,32 @@
 struct XmlNode* xml_parser_load_xml_file(char* xml_file_path) {
   int xml_file_length = 0;
   char* xml_file_data = read_file(xml_file_path, &xml_file_length);
-  char** scanner = &xml_file_data;
+  char* file_start = xml_file_data;
+
+  if (strncmp(file_start, "<?", 2) == 0)
+    file_start = strchr(file_start, '\n') + 1;
+  char** scanner = &file_start;
 
   struct XmlNode* xml_node = xml_parser_load_node(scanner);
 
   free(xml_file_data);
 
-  return NULL;
+  return xml_node;
 }
 
-struct XmlNode* xml_parser_load_node(char** xml_file_data) {
+struct XmlNode* xml_parser_load_node(char** scanner) {
   // Extract line
-  char* line_end = strchr(*xml_file_data, '\n');
+  char* line_end = strchr(*scanner, '\n');
   if (line_end == NULL)
-    line_end = strchr(*xml_file_data, '\0');
-  size_t line_length = line_end - *xml_file_data;
+    line_end = strchr(*scanner, '\0');
+  size_t line_length = line_end - *scanner;
   if (line_length == 0)
     return NULL;
   char* line = malloc(sizeof(char) * (line_length + 1));
-  strncpy(line, *xml_file_data, line_length);
+  strncpy(line, *scanner, line_length);
   line[line_length] = '\0';
 
-  *xml_file_data += line_length + 1;
+  *scanner += line_length + 1;
 
   // Trim whitespace
   char* remove_whitespace_line = line;
@@ -32,8 +36,8 @@ struct XmlNode* xml_parser_load_node(char** xml_file_data) {
     remove_whitespace_line++;
 
   if (strncmp(remove_whitespace_line, "</", 2) == 0) {
-    return NULL;
     free(line);
+    return NULL;
   }
 
   // Extract tag in line
@@ -111,7 +115,7 @@ struct XmlNode* xml_parser_load_node(char** xml_file_data) {
 
   // Recursive all nodes
   struct XmlNode* xml_child = NULL;
-  while ((xml_child = xml_parser_load_node(xml_file_data)) != NULL)
+  while ((xml_child = xml_parser_load_node(scanner)) != NULL)
     xml_node_add_child(xml_node, xml_child);
 
   // Done with current node

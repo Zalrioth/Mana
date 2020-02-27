@@ -21,6 +21,7 @@ static inline struct XmlNode* xml_node_get_child_with_attribute(struct XmlNode* 
 static inline struct ArrayList* xml_node_get_children(struct XmlNode* xml_node, char* name);
 static inline void xml_node_add_attribute(struct XmlNode* xml_node, char* attr, char* value);
 static inline void xml_node_add_child(struct XmlNode* xml_node, struct XmlNode* child);
+static inline char* xml_node_get_data(struct XmlNode* xml_node);
 static inline void xml_node_set_data(struct XmlNode* xml_node, char* data);
 
 static inline void xml_node_init(struct XmlNode* xml_node, char* name) {
@@ -32,20 +33,23 @@ static inline void xml_node_delete(struct XmlNode* xml_node) {
   map_delete(xml_node->attributes);
   free(xml_node->attributes);
   free(xml_node->data);
+
+  // TODO: Recursive delete nodes to prevent memory leak
+  // Only needs to be done from head node
 }
 
 static inline char* xml_node_get_attribute(struct XmlNode* xml_node, char* attr) {
   if (xml_node->attributes != NULL)
-    return map_get(xml_node->attributes, attr);
+    return *(char**)map_get(xml_node->attributes, attr);
   else
     return NULL;
 }
 
 static inline struct XmlNode* xml_node_get_child(struct XmlNode* xml_node, char* child_name) {
   if (xml_node->child_nodes != NULL) {
-    struct ArrayList* nodes = (struct ArrayList*)map_get(xml_node->child_nodes, child_name);
-    if (nodes != NULL && !array_list_empty(nodes))
-      return array_list_get(nodes, 0);
+    struct ArrayList** nodes = (struct ArrayList**)map_get(xml_node->child_nodes, child_name);
+    if (nodes != NULL && !array_list_empty(*nodes))
+      return array_list_get(*nodes, 0);
   }
   return NULL;
 }
@@ -58,7 +62,7 @@ static inline struct XmlNode* xml_node_get_child_with_attribute(struct XmlNode* 
   for (int child_num = 0; child_num < array_list_size(children); child_num++) {
     struct XmlNode* child = (struct XmlNode*)array_list_get(children, child_num);
     char* val = xml_node_get_attribute(child, attr);
-    if (strcmp(value, val))
+    if (strcmp(value, val) == 0)
       return child;
   }
 
@@ -67,33 +71,38 @@ static inline struct XmlNode* xml_node_get_child_with_attribute(struct XmlNode* 
 
 static inline struct ArrayList* xml_node_get_children(struct XmlNode* xml_node, char* name) {
   if (xml_node->child_nodes != NULL) {
-    struct ArrayList* children = (struct ArrayList*)map_get(xml_node->child_nodes, name);
+    struct ArrayList** children = (struct ArrayList**)map_get(xml_node->child_nodes, name);
     if (children != NULL)
-      return children;
+      return *children;
   }
   return NULL;
 }
 
 static inline void xml_node_add_attribute(struct XmlNode* xml_node, char* attr, char* value) {
   if (xml_node->attributes == NULL) {
-    xml_node->attributes = calloc(1, sizeof(struct Map));
+    xml_node->attributes = malloc(sizeof(struct Map));
     map_init(xml_node->attributes, sizeof(char*));
   }
-  map_set(xml_node->attributes, attr, value);
+  map_set(xml_node->attributes, attr, &value);
 }
 
 static inline void xml_node_add_child(struct XmlNode* xml_node, struct XmlNode* child) {
   if (xml_node->child_nodes == NULL) {
-    xml_node->child_nodes = calloc(1, sizeof(struct Map));
-    map_init(xml_node->child_nodes, sizeof(struct ArrayList));
+    xml_node->child_nodes = malloc(sizeof(struct Map));
+    map_init(xml_node->child_nodes, sizeof(struct ArrayList*));
   }
-  struct ArrayList* list = (struct ArrayList*)map_get(xml_node->child_nodes, child->name);
+  struct ArrayList** list = (struct ArrayList**)map_get(xml_node->child_nodes, child->name);
   if (list == NULL) {
-    list = calloc(1, sizeof(struct ArrayList));
-    array_list_init(list);
-    map_set(xml_node->child_nodes, child->name, list);
-  }
-  array_list_add(list, child);
+    struct ArrayList* new_list = malloc(sizeof(struct ArrayList));
+    array_list_init(new_list);
+    map_set(xml_node->child_nodes, child->name, &new_list);
+    array_list_add(new_list, child);
+  } else
+    array_list_add(*list, child);
+}
+
+static inline char* xml_node_get_data(struct XmlNode* xml_node) {
+  return xml_node->data;
 }
 
 static inline void xml_node_set_data(struct XmlNode* xml_node, char* data) {

@@ -6,14 +6,17 @@
 //
 #include "mana/core/xmlparser.h"
 #include "mana/graphics/graphicscommon.h"
+#include "mana/graphics/utilities/collada/modelgeometry.h"
+#include "mana/graphics/utilities/collada/modelskeleton.h"
+#include "mana/graphics/utilities/collada/modelskinning.h"
 #include "mana/graphics/utilities/mesh.h"
 
 struct Model {
-  //struct Texture texture;
-  //struct Mesh mesh;
-  bool animated;
+  struct Texture* texture;
+  struct SkeletonData* joints;
+  struct Mesh* mesh;
 };
 
-void model_init(struct Model* model, char* path, bool animated);
+void model_init(struct Model* model, char* path, int max_weights);
 
 #endif  // MODEL_H

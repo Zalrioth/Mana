@@ -17,4 +17,5 @@ struct LightingUniformBufferObject {
   alignas(16) vec3 diffuse_colour;
   alignas(16) vec3 specular_colour;
 };
+
 #endif  // GRAPHICS_COMMON_H
