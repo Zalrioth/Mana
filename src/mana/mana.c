@@ -11,17 +11,17 @@ int your_moms_init(struct *mana) {
     return YOUR_MOMS_SUCCESS;
 }
 
-int mana_new_window(struct Mana *mana, int width, int height) {
+int your_moms_new_window(struct Mana *mana, int width, int height) {
     if (window_init(&mana->engine.window, width, height) != YOUR_MOMS_SUCCESS)
         return YOUR_MOMS_WINDOW_ERROR;
 
     return YOUR_MOMS_SUCCESS;
 }
 
-void mana_close_window(struct Mana *mana) {
+void your_moms_close_window(struct Mana *mana) {
     window_delete(&mana->engine.window);
 }
 
-void mana_cleanup(struct Mana *mana) {
+void your_moms_cleanup(struct Mana *mana) {
     engine_delete(&mana->engine);
 }
