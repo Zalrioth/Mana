@@ -106,7 +106,7 @@ struct Vector* skin_loader_load_joints_list(struct XmlNode* skinning_data) {
   while (raw_part != NULL) {
     // TODO: These will need to be freed
     char* parsed_joint = strdup(raw_part);
-    vector_push_back(joints_list, &raw_part);
+    vector_push_back(joints_list, &parsed_joint);
     raw_part = strtok(NULL, " ");
   }
   free(raw_data);
