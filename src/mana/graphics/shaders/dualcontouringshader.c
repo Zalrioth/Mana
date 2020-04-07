@@ -45,10 +45,10 @@ int dual_contouring_shader_init(struct DualContouringShader* dual_countouring_sh
   VkPipelineVertexInputStateCreateInfo vertex_input_info = {0};
   vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-  VkVertexInputBindingDescription binding_description = mesh_get_binding_description();
+  VkVertexInputBindingDescription binding_description = mesh_dual_contouring_get_binding_description();
   VkVertexInputAttributeDescription attribute_descriptions[DUAL_CONTOURING_VERTEX_ATTRIBUTES];
   memset(attribute_descriptions, 0, sizeof(attribute_descriptions));
-  mesh_get_attribute_descriptions(attribute_descriptions);
+  mesh_dual_contouring_get_attribute_descriptions(attribute_descriptions);
 
   vertex_input_info.vertexBindingDescriptionCount = 1;
   vertex_input_info.vertexAttributeDescriptionCount = DUAL_CONTOURING_VERTEX_ATTRIBUTES;

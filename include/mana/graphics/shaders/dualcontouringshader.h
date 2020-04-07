@@ -7,7 +7,7 @@
 // Effect for blitting dual contouring
 
 #define DUAL_CONTOURING_COLOR_ATTACHEMENTS 2
-#define DUAL_CONTOURING_VERTEX_ATTRIBUTES 5
+#define DUAL_CONTOURING_VERTEX_ATTRIBUTES 2
 
 struct DualContouringShader {
   struct Shader shader;

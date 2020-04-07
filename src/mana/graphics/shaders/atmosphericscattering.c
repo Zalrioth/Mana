@@ -40,7 +40,7 @@ int atmospheric_scattering_shader_init(struct AtmosphericScatteringShader* atmos
   VkPipelineVertexInputStateCreateInfo vertex_input_info = {0};
   vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-  VkVertexInputBindingDescription binding_description = mesh_get_binding_description();
+  VkVertexInputBindingDescription binding_description = mesh_sprite_get_binding_description();
   vertex_input_info.vertexBindingDescriptionCount = 1;
   vertex_input_info.vertexAttributeDescriptionCount = 0;  // Note: length of attributeDescriptions
   vertex_input_info.pVertexBindingDescriptions = &binding_description;

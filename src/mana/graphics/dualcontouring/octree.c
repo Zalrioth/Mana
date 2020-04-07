@@ -135,7 +135,7 @@ void octree_generate_vertex_indices(struct OctreeNode* node, struct DualContouri
     }
 
     d->index = vector_size(dual_contouring->mesh->vertices);
-    mesh_assign_vertex(dual_contouring->mesh->vertices, d->position[0], d->position[1], d->position[2], d->average_normal[0], d->average_normal[1], d->average_normal[2], 0.0, 0.0);
+    mesh_dual_contouring_assign_vertex(dual_contouring->mesh->vertices, d->position[0], d->position[1], d->position[2], d->average_normal[0], d->average_normal[1], d->average_normal[2]);
   }
 }
 

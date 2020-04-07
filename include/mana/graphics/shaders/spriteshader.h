@@ -7,7 +7,7 @@
 // Effect for blitting sprite to gbuffer
 
 #define SPRITE_SHADER_COLOR_ATTACHEMENTS 2
-#define SPRITE_SHADER_VERTEX_ATTRIBUTES 5
+#define SPRITE_SHADER_VERTEX_ATTRIBUTES 2
 
 struct SpriteShader {
   struct Shader shader;

@@ -32,13 +32,13 @@ int sprite_shader_init(struct SpriteShader* sprite_shader, struct VulkanRenderer
   pool_sizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
   pool_sizes[1].descriptorCount = sprite_descriptors;  // Max number of image sampler descriptors
 
-  VkDescriptorPoolCreateInfo poolInfo = {0};
-  poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-  poolInfo.poolSizeCount = 2;  // Number of things being passed to GPU
-  poolInfo.pPoolSizes = pool_sizes;
-  poolInfo.maxSets = sprite_descriptors;  // Max number of sets made from this pool
+  VkDescriptorPoolCreateInfo pool_info = {0};
+  pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+  pool_info.poolSizeCount = 2;  // Number of things being passed to GPU
+  pool_info.pPoolSizes = pool_sizes;
+  pool_info.maxSets = sprite_descriptors;  // Max number of sets made from this pool
 
-  if (vkCreateDescriptorPool(vulkan_renderer->device, &poolInfo, NULL, &sprite_shader->shader.descriptor_pool) != VK_SUCCESS) {
+  if (vkCreateDescriptorPool(vulkan_renderer->device, &pool_info, NULL, &sprite_shader->shader.descriptor_pool) != VK_SUCCESS) {
     fprintf(stderr, "failed to create descriptor pool!\n");
     return 0;
   }
@@ -46,10 +46,10 @@ int sprite_shader_init(struct SpriteShader* sprite_shader, struct VulkanRenderer
   VkPipelineVertexInputStateCreateInfo vertex_input_info = {0};
   vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-  VkVertexInputBindingDescription binding_description = mesh_get_binding_description();
+  VkVertexInputBindingDescription binding_description = mesh_sprite_get_binding_description();
   VkVertexInputAttributeDescription attribute_descriptions[SPRITE_SHADER_VERTEX_ATTRIBUTES];
   memset(attribute_descriptions, 0, sizeof(attribute_descriptions));
-  mesh_get_attribute_descriptions(attribute_descriptions);
+  mesh_sprite_get_attribute_descriptions(attribute_descriptions);
 
   vertex_input_info.vertexBindingDescriptionCount = 1;
   vertex_input_info.vertexAttributeDescriptionCount = SPRITE_SHADER_VERTEX_ATTRIBUTES;

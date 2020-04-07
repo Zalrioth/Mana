@@ -2,19 +2,7 @@
 
 void fullscreen_quad_init(struct FullscreenQuad* fullscreen_quad, struct VulkanRenderer* vulkan_renderer) {
   fullscreen_quad->mesh = calloc(1, sizeof(struct Mesh));
-  mesh_init(fullscreen_quad->mesh);
-
-  mesh_assign_vertex(fullscreen_quad->mesh->vertices, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-  mesh_assign_vertex(fullscreen_quad->mesh->vertices, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f);
-  mesh_assign_vertex(fullscreen_quad->mesh->vertices, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
-  mesh_assign_vertex(fullscreen_quad->mesh->vertices, -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
-
-  mesh_assign_indice(fullscreen_quad->mesh->indices, 0);
-  mesh_assign_indice(fullscreen_quad->mesh->indices, 1);
-  mesh_assign_indice(fullscreen_quad->mesh->indices, 2);
-  mesh_assign_indice(fullscreen_quad->mesh->indices, 2);
-  mesh_assign_indice(fullscreen_quad->mesh->indices, 3);
-  mesh_assign_indice(fullscreen_quad->mesh->indices, 0);
+  mesh_quad_init(fullscreen_quad->mesh);
 
   // Vertex
   VkDeviceSize buffer_size_vertex = fullscreen_quad->mesh->vertices->memory_size * fullscreen_quad->mesh->vertices->size;

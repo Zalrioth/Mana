@@ -13,7 +13,7 @@ int dual_contouring_init(struct DualContouring* dual_contouring, struct VulkanRe
   dual_contouring->density_func_set = density_func_set;
 
   dual_contouring->mesh = calloc(1, sizeof(struct Mesh));
-  mesh_init(dual_contouring->mesh);
+  mesh_dual_contouring_init(dual_contouring->mesh);
 
   struct Map map = {0};
   map_init(&map, sizeof(int));

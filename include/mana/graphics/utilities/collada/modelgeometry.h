@@ -1,4 +1,4 @@
-#pragma once
+/*#pragma once
 #ifndef MODEL_GEOMETRY_H
 #define MODEL_GEOMETRY_H
 
@@ -41,4 +41,4 @@ void geometry_loader_read_positions(struct XmlNode* mesh_data) {
 void geometry_loader_read_normals(struct XmlNode* mesh_data) {
 }
 
-#endif  // MODEL_GEOMETRY_H
+#endif  // MODEL_GEOMETRY_H*/

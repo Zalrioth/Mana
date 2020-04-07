@@ -5,7 +5,7 @@ void model_init(struct Model* model, struct VulkanRenderer* vulkan_renderer, cha
   struct SkinningData* skinning_data = skin_loader_extract_skin_data(xml_node_get_child(node, "library_controllers"), max_weights);
 
   model->joints = skeleton_loader_extract_bone_data(xml_node_get_child(node, "library_visual_scenes"), skinning_data->joint_order);
-  model->mesh = geometry_loader_extract_model_data(xml_node_get_child(node, "library_geometries"), skinning_data->vertices_skin_data);
+  //model->mesh = geometry_loader_extract_model_data(xml_node_get_child(node, "library_geometries"), skinning_data->vertices_skin_data);
   model->texture = malloc(sizeof(struct Texture));
   texture_init(model->texture, vulkan_renderer, texture_path);
 
