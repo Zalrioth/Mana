@@ -29,7 +29,8 @@ struct VertexModel {
   vec3 position;
   vec3 normal;
   vec2 tex_coord;
-  vec2 weight;
+  ivec3 joints_ids;
+  vec3 weights;
 };
 
 struct VertexDualContouring {
@@ -52,7 +53,7 @@ static inline void mesh_quad_assign_vertex(struct Vector* vector, float x, float
 static inline VkVertexInputBindingDescription mesh_quad_get_binding_description();
 static inline void mesh_quad_get_attribute_descriptions(VkVertexInputAttributeDescription* attribute_descriptions);
 static inline void mesh_model_init(struct Mesh* mesh);
-static inline void mesh_model_assign_vertex(struct Vector* vector, float x, float y, float z, float r, float g, float b, float u, float v, float weight_x, float weight_y);
+static inline void mesh_model_assign_vertex(struct Vector* vector, float x, float y, float z, float r, float g, float b, float u, float v, int joint_id_x, int joint_id_y, int joint_id_z, float weight_x, float weight_y, float weight_z);
 static inline VkVertexInputBindingDescription mesh_model_get_binding_description();
 static inline void mesh_model_get_attribute_descriptions(VkVertexInputAttributeDescription* attribute_descriptions);
 static inline void mesh_dual_contouring_init(struct Mesh* mesh);
@@ -163,7 +164,7 @@ static inline void mesh_model_init(struct Mesh* mesh) {
   vector_init(mesh->indices, sizeof(uint32_t));
 }
 
-static inline void mesh_model_assign_vertex(struct Vector* vector, float x, float y, float z, float r, float g, float b, float u, float v, float weight_x, float weight_y) {
+static inline void mesh_model_assign_vertex(struct Vector* vector, float x, float y, float z, float r, float g, float b, float u, float v, int joint_id_x, int joint_id_y, int joint_id_z, float weight_x, float weight_y, float weight_z) {
   struct VertexModel vertex = {{0}};
   vertex.position[0] = x;
   vertex.position[1] = y;
@@ -176,8 +177,13 @@ static inline void mesh_model_assign_vertex(struct Vector* vector, float x, floa
   vertex.tex_coord[0] = u;
   vertex.tex_coord[1] = v;
 
-  vertex.weight[0] = weight_x;
-  vertex.weight[1] = weight_y;
+  vertex.joints_ids[0] = joint_id_x;
+  vertex.joints_ids[1] = joint_id_y;
+  vertex.joints_ids[2] = joint_id_y;
+
+  vertex.weights[0] = weight_x;
+  vertex.weights[1] = weight_y;
+  vertex.weights[2] = weight_y;
 
   vector_push_back(vector, &vertex);
 }
@@ -209,8 +215,13 @@ static inline void mesh_model_get_attribute_descriptions(VkVertexInputAttributeD
 
   attribute_descriptions[3].binding = 0;
   attribute_descriptions[3].location = 3;
-  attribute_descriptions[3].format = VK_FORMAT_R32G32_SFLOAT;
-  attribute_descriptions[3].offset = offsetof(struct VertexModel, weight);
+  attribute_descriptions[3].format = VK_FORMAT_R32G32B32_SINT;
+  attribute_descriptions[3].offset = offsetof(struct VertexModel, joints_ids);
+
+  attribute_descriptions[4].binding = 0;
+  attribute_descriptions[4].location = 4;
+  attribute_descriptions[4].format = VK_FORMAT_R32G32B32_SFLOAT;
+  attribute_descriptions[4].offset = offsetof(struct VertexModel, weights);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
