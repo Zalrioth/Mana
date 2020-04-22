@@ -27,7 +27,6 @@ struct SkeletonData *skeleton_loader_extract_bone_data(struct XmlNode *visual_sc
   struct XmlNode *head_node = xml_node_get_child(armature_data, "node");
 
   int joint_count = 0;
-
   struct JointData *head_joint = skeleton_loader_load_joint_data(head_node, bone_order, true, &joint_count);
   struct SkeletonData *skeleton_data = malloc(sizeof(struct SkeletonData));
   skeleton_data_init(skeleton_data, joint_count, head_joint);
@@ -39,8 +38,8 @@ struct JointData *skeleton_loader_load_joint_data(struct XmlNode *joint_node, st
   struct ArrayList *joint_node_children = xml_node_get_children(joint_node, "node");
   if (joint_node_children != NULL) {
     for (int child_num = 0; child_num < array_list_size(joint_node_children); child_num++) {
-      struct XmlNode *joint_data = (struct XmlNode *)array_list_get(joint_node_children, child_num);
-      joint_data_add_child(joint, skeleton_loader_load_joint_data(joint_data, bone_order, false, joint_count));
+      struct XmlNode *child_node = (struct XmlNode *)array_list_get(joint_node_children, child_num);
+      joint_data_add_child(joint, skeleton_loader_load_joint_data(child_node, bone_order, false, joint_count));
     }
   }
 

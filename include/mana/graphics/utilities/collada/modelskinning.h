@@ -5,6 +5,7 @@
 #include "mana/core/memoryallocator.h"
 //
 #include <cstorage/cstorage.h>
+#include <stdint.h>
 
 #include "mana/core/corecommon.h"
 #include "mana/core/xmlnode.h"

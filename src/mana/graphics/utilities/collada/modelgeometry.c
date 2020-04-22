@@ -2,26 +2,28 @@
 
 struct Mesh* geometry_loader_extract_model_data(struct XmlNode* geometry_node, struct Vector* vertex_weights) {
   struct XmlNode* mesh_data = xml_node_get_child(xml_node_get_child(geometry_node, "geometry"), "mesh");
-  geomtry_leader_read_raw_data(mesh_data);
+  struct ModelData* model_data = malloc(sizeof(struct ModelData));
+  model_data_init(model_data);
 
-  return NULL;
+  geometry_loader_read_raw_data(model_data, mesh_data, vertex_weights);
+  geometry_loader_assemble_vertices(model_data, mesh_data);
+  geometry_loader_remove_unused_vertices(model_data);
+
+  struct Mesh* model_mesh = malloc(sizeof(struct Mesh));
+  mesh_model_init(model_mesh);
+  geometry_loader_convert_data_to_arrays(model_data, model_mesh);
+  model_mesh->indices = model_data->indices;
+
+  return model_mesh;
 }
 
-void geomtry_leader_read_raw_data(struct XmlNode* mesh_data) {
-  struct Vector vertices;
-  vector_init(&vertices, sizeof(vec3));
-  geometry_loader_read_positions(mesh_data, &vertices);
-
-  struct Vector normals;
-  vector_init(&normals, sizeof(vec3));
-  geometry_loader_read_normals(mesh_data, &normals);
-
-  struct Vector tex_coords;
-  vector_init(&tex_coords, sizeof(vec2));
-  geometry_loader_read_texture_coordinates(mesh_data, &tex_coords);
+void geometry_loader_read_raw_data(struct ModelData* model_data, struct XmlNode* mesh_data, struct Vector* vertex_weights) {
+  geometry_loader_read_positions(model_data, mesh_data, vertex_weights);
+  geometry_loader_read_normals(model_data, mesh_data);
+  geometry_loader_read_texture_coordinates(model_data, mesh_data);
 }
 
-void geometry_loader_read_positions(struct XmlNode* mesh_data, struct Vector* vertices) {
+void geometry_loader_read_positions(struct ModelData* model_data, struct XmlNode* mesh_data, struct Vector* vertex_weights) {
   char* positions_id = xml_node_get_attribute(xml_node_get_child(xml_node_get_child(mesh_data, "vertices"), "input"), "source") + 1;
   struct XmlNode* positions_data = xml_node_get_child(xml_node_get_child_with_attribute(mesh_data, "source", "id", positions_id), "float_array");
   int count = atoi(xml_node_get_attribute(positions_data, "count"));
@@ -41,12 +43,17 @@ void geometry_loader_read_positions(struct XmlNode* mesh_data, struct Vector* ve
     glm_mat4_identity(correction);
     glm_rotate(correction, glm_rad(-90.0f), (vec3){1.0f, 0.0f, 0.0f});
     glm_mat4_mulv(correction, position, position);
-    vector_push_back(vertices, &position);
+
+    //struct VertexSkinData* vertex_weight = (struct VertexSkinData*)vector_get(vertex_weights, vector_size(mesh));
+    vec3 position_corrected = {position[0], position[1], position[2]};
+    struct RawVertexModel* raw_vertex = malloc(sizeof(struct RawVertexModel));
+    raw_vertex_model_init(raw_vertex, vector_size(model_data->vertices), position_corrected, vector_get(vertex_weights, vector_size(model_data->vertices)));
+    vector_push_back(model_data->vertices, raw_vertex);
   }
   free(raw_data);
 }
 
-void geometry_loader_read_normals(struct XmlNode* mesh_data, struct Vector* normals) {
+void geometry_loader_read_normals(struct ModelData* model_data, struct XmlNode* mesh_data) {
   char* normals_id = xml_node_get_attribute(xml_node_get_child_with_attribute(xml_node_get_child(mesh_data, "polylist"), "input", "semantic", "NORMAL"), "source") + 1;
   struct XmlNode* normals_data = xml_node_get_child(xml_node_get_child_with_attribute(mesh_data, "source", "id", normals_id), "float_array");
   int count = atoi(xml_node_get_attribute(normals_data, "count"));
@@ -66,12 +73,12 @@ void geometry_loader_read_normals(struct XmlNode* mesh_data, struct Vector* norm
     glm_mat4_identity(correction);
     glm_rotate(correction, glm_rad(-90.0f), (vec3){1.0f, 0.0f, 0.0f});
     glm_mat4_mulv(correction, normal, normal);
-    vector_push_back(normals, &normal);
+    vector_push_back(model_data->normals, &normal);
   }
   free(raw_data);
 }
 
-void geometry_loader_read_texture_coordinates(struct XmlNode* mesh_data, struct Vector* tex_coords) {
+void geometry_loader_read_texture_coordinates(struct ModelData* model_data, struct XmlNode* mesh_data) {
   char* tex_coords_id = xml_node_get_attribute(xml_node_get_child_with_attribute(xml_node_get_child(mesh_data, "polylist"), "input", "semantic", "TEXCOORD"), "source") + 1;
   struct XmlNode* tex_coords_data = xml_node_get_child(xml_node_get_child_with_attribute(mesh_data, "source", "id", tex_coords_id), "float_array");
   int count = atoi(xml_node_get_attribute(tex_coords_data, "count"));
@@ -84,7 +91,95 @@ void geometry_loader_read_texture_coordinates(struct XmlNode* mesh_data, struct 
     float t = atof(raw_part);
     raw_part = strtok(NULL, " ");
     vec2 tex_coord = {s, t};
-    vector_push_back(tex_coords, &tex_coord);
+    vector_push_back(model_data->tex_coords, &tex_coord);
   }
   free(raw_data);
+}
+
+void geometry_loader_assemble_vertices(struct ModelData* model_data, struct XmlNode* mesh_data) {
+  struct XmlNode* poly = xml_node_get_child(mesh_data, "polylist");
+  struct XmlNode* index_data = xml_node_get_child(poly, "p");
+
+  char* raw_data = strdup(xml_node_get_data(index_data));
+  char* raw_part = strtok(raw_data, " ");
+  while (raw_part != NULL) {
+    int position_index = atoi(raw_part);
+    raw_part = strtok(NULL, " ");
+    int normal_index = atoi(raw_part);
+    raw_part = strtok(NULL, " ");
+    int tex_coord_index = atoi(raw_part);
+    raw_part = strtok(NULL, " ");
+
+    geometry_loader_process_vertex(model_data, position_index, normal_index, tex_coord_index);
+  }
+  free(raw_data);
+}
+
+struct RawVertexModel* geometry_loader_process_vertex(struct ModelData* model_data, int position_index, int normal_index, int tex_coord_index) {
+  struct RawVertexModel* current_vertex = vector_get(model_data->vertices, position_index);
+  if (raw_vertex_model_is_set(current_vertex) == false) {
+    current_vertex->texture_index = tex_coord_index;
+    current_vertex->normal_index = normal_index;
+    vector_push_back(model_data->indices, &position_index);
+    return current_vertex;
+  } else
+    return geometry_loader_deal_with_already_processed_vertex(model_data, current_vertex, tex_coord_index, normal_index);
+}
+
+float geometry_loader_convert_data_to_arrays(struct ModelData* model_data, struct Mesh* model_mesh) {
+  float furthest_point = 0;
+  for (int vertex_num = 0; vertex_num < vector_size(model_data->vertices); vertex_num++) {
+    struct RawVertexModel* current_vertex = (struct RawVertexModel*)vector_get(model_data->vertices, vertex_num);
+    if (current_vertex->length > furthest_point)
+      furthest_point = current_vertex->length;
+
+    vec3 model_position;
+    glm_vec3_copy(current_vertex->position, model_position);
+    vec3 model_normal;
+    glm_vec3_copy(vector_get(model_data->normals, current_vertex->normal_index), model_normal);
+    vec2 model_tex_coord = {*((vec2*)vector_get(model_data->tex_coords, current_vertex->texture_index))[0], *((vec2*)vector_get(model_data->tex_coords, current_vertex->texture_index))[1]};
+
+    struct VertexSkinData* model_weights = current_vertex->weights_data;
+
+    mesh_model_assign_vertex(model_mesh->vertices,
+                             current_vertex->position[0], current_vertex->position[1], current_vertex->position[2],
+                             model_normal[0], model_normal[1], model_normal[2],
+                             model_tex_coord[0], model_tex_coord[1],
+                             *(uint32_t*)vector_get(model_weights->joint_ids, 0), *(uint32_t*)vector_get(model_weights->joint_ids, 1), *(uint32_t*)vector_get(model_weights->joint_ids, 2),
+                             *(float*)vector_get(model_weights->weights, 0), *(float*)vector_get(model_weights->weights, 1), *(float*)vector_get(model_weights->weights, 2));
+  }
+
+  return furthest_point;
+}
+
+struct RawVertexModel* geometry_loader_deal_with_already_processed_vertex(struct ModelData* model_data, struct RawVertexModel* previous_vertex, int new_texture_index, int new_normal_index) {
+  if (raw_vertex_model_has_same_texture_and_normal(previous_vertex, new_texture_index, new_normal_index)) {
+    vector_push_back(model_data->indices, &previous_vertex->index);
+    return previous_vertex;
+  } else {
+    struct RawVertexModel* another_vertex = previous_vertex->duplicate_vertex;
+    if (another_vertex != NULL) {
+      return geometry_loader_deal_with_already_processed_vertex(model_data, another_vertex, new_texture_index, new_normal_index);
+    } else {
+      struct RawVertexModel* duplicate_vertex = malloc(sizeof(struct RawVertexModel));
+      raw_vertex_model_init(duplicate_vertex, vector_size(model_data->vertices), previous_vertex->position, previous_vertex->weights_data);
+      duplicate_vertex->texture_index = new_texture_index;
+      duplicate_vertex->normal_index = new_normal_index;
+      previous_vertex->duplicate_vertex = duplicate_vertex;
+      vector_push_back(model_data->vertices, duplicate_vertex);
+      vector_push_back(model_data->indices, &duplicate_vertex->index);
+      return duplicate_vertex;
+    }
+  }
+}
+
+void geometry_loader_remove_unused_vertices(struct ModelData* model_data) {
+  for (int vertex_num = 0; vertex_num < vector_size(model_data->vertices); vertex_num++) {
+    // Average tangents might be needed
+    struct RawVertexModel* vertex = (struct RawVertexModel*)vector_get(model_data->vertices, vertex_num);
+    if (raw_vertex_model_is_set(vertex)) {
+      vertex->texture_index = 0;
+      vertex->normal_index = 0;
+    }
+  }
 }
