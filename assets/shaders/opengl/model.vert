@@ -26,7 +26,7 @@ void main(void){
 	vec4 totalLocalPos = vec4(0.0);
 	vec4 totalNormal = vec4(0.0);
 	
-	for(int i=0; i < MAX_WEIGHTS; i++){
+	for(int i = 0; i < MAX_WEIGHTS; i++){
 		mat4 jointTransform = ubo.jointTransforms[joints_ids[i]];
 		vec4 posePosition = jointTransform * vec4(position, 1.0);
 		totalLocalPos += posePosition * weights[i];
@@ -35,9 +35,8 @@ void main(void){
 		totalNormal += worldNormal * weights[i];
 	}
 	
-  //gl_Position = ubo.proj * ubo.view * ubo.model * totalLocalPos;
-	gl_Position = ubo.proj * ubo.view * ubo.model * vec4(position, 1.0);
+	gl_Position = ubo.proj * ubo.view * ubo.model * totalLocalPos;
+  //gl_Position = ubo.proj * ubo.view * ubo.model * vec4(position, 1.0);
 	outNormal = totalNormal.xyz;
 	textureCoords = tex_coord;
-
 }

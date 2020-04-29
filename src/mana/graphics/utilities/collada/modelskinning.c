@@ -66,9 +66,9 @@ void vertex_skin_data_refill_weight_list(struct VertexSkinData* vertex_skin_data
 
 void vertex_skin_data_remove_excess_joint_ids(struct VertexSkinData* vertex_skin_data, int max) {
   // TODO: FIX ASAP
-  //while (vector_size(vertex_skin_data->joint_ids) > 0) {
-  //  vector_remove(vertex_skin_data->joint_ids, vector_size(vertex_skin_data->joint_ids) - 1);
-  //}
+  while (vector_size(vertex_skin_data->joint_ids) > max) {
+    vector_remove(vertex_skin_data->joint_ids, vector_size(vertex_skin_data->joint_ids) - 1);
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -126,7 +126,7 @@ struct Vector* skin_loader_load_weights(struct XmlNode* skinning_data) {
   vector_init(weights, sizeof(float));
   char* raw_part = strtok(raw_data, " ");
   while (raw_part != NULL) {
-    float parsed_weight = strtof(raw_part, NULL);
+    float parsed_weight = atof(raw_part);
     vector_push_back(weights, &parsed_weight);
     raw_part = strtok(NULL, " ");
   }

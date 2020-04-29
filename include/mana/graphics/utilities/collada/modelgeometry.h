@@ -12,19 +12,21 @@
 #include "mana/graphics/entities/model.h"
 #include "mana/graphics/utilities/mesh.h"
 
+#define NO_INDEX -1
+
 struct RawVertexModel {
   vec3 position;
   int texture_index;
   int normal_index;
   struct RawVertexModel* duplicate_vertex;
-  int index;
+  uint32_t index;
   float length;
   struct VertexSkinData* weights_data;
 };
 
-static inline void raw_vertex_model_init(struct RawVertexModel* raw_vertex_model, int index, vec3 position, struct VertexSkinData* weights_data) {
-  raw_vertex_model->texture_index = -1;
-  raw_vertex_model->normal_index = -1;
+static inline void raw_vertex_model_init(struct RawVertexModel* raw_vertex_model, uint32_t index, vec3 position, struct VertexSkinData* weights_data) {
+  raw_vertex_model->texture_index = NO_INDEX;
+  raw_vertex_model->normal_index = NO_INDEX;
   raw_vertex_model->index = index;
   raw_vertex_model->weights_data = weights_data;
   glm_vec3_copy(position, raw_vertex_model->position);
@@ -33,7 +35,7 @@ static inline void raw_vertex_model_init(struct RawVertexModel* raw_vertex_model
 };
 
 static inline bool raw_vertex_model_is_set(struct RawVertexModel* raw_vertex_model) {
-  return raw_vertex_model->texture_index != -1 && raw_vertex_model->normal_index != -1;
+  return raw_vertex_model->texture_index != NO_INDEX && raw_vertex_model->normal_index != NO_INDEX;
 }
 
 static inline bool raw_vertex_model_has_same_texture_and_normal(struct RawVertexModel* raw_vertex_model, int texture_index_other, int normal_index_other) {

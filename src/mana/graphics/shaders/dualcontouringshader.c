@@ -80,7 +80,7 @@ int dual_contouring_shader_init(struct DualContouringShader* dual_countouring_sh
   color_blending.blendConstants[2] = 0.0f;
   color_blending.blendConstants[3] = 0.0f;
 
-  shader_init(&dual_countouring_shader->shader, vulkan_renderer, "./assets/shaders/spirv/dualcontouring.vert.spv", "./assets/shaders/spirv/dualcontouring.frag.spv", NULL, vertex_input_info, vulkan_renderer->gbuffer->render_pass, color_blending, VK_TRUE, vulkan_renderer->msaa_samples, true);
+  shader_init(&dual_countouring_shader->shader, vulkan_renderer, "./assets/shaders/spirv/dualcontouring.vert.spv", "./assets/shaders/spirv/dualcontouring.frag.spv", NULL, vertex_input_info, vulkan_renderer->gbuffer->render_pass, color_blending, VK_FRONT_FACE_CLOCKWISE, VK_TRUE, vulkan_renderer->msaa_samples, true);
 
   return 1;
 }

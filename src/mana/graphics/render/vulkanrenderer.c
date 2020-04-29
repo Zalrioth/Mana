@@ -311,13 +311,13 @@ bool is_device_suitable(struct VulkanRenderer* vulkan_renderer, VkPhysicalDevice
 }
 
 int create_logical_device(struct VulkanRenderer* vulkan_renderer) {
-  // Note: Check this ma cause problems later
+  // Note: Check this may cause problems later
+  // TODO: Redo below
   struct Vector queue_create_infos;
   memset(&queue_create_infos, 0, sizeof(queue_create_infos));
   vector_init(&queue_create_infos, sizeof(struct VkDeviceQueueCreateInfo));
 
   float queue_priority = 1.0f;
-
   if (vulkan_renderer->indices.graphics_family == vulkan_renderer->indices.present_family) {
     VkDeviceQueueCreateInfo queue_create_infos_graphics = {0};
     queue_create_infos_graphics.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -497,18 +497,17 @@ void recreate_swap_chain(struct VulkanRenderer* vulkan_renderer) {
 VkFormat find_depth_format(struct VulkanRenderer* vulkan_renderer) {
   VkFormat candidate[TOTAL_CANDIDIATES] = {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT};
   VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
-  VkFormatFeatureFlags features =
-      VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
+  VkFormatFeatureFlags features = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
-  for (int loopNum = 0; loopNum < TOTAL_CANDIDIATES; loopNum++) {
+  for (int loop_num = 0; loop_num < TOTAL_CANDIDIATES; loop_num++) {
     VkFormatProperties props;
-    vkGetPhysicalDeviceFormatProperties(vulkan_renderer->physical_device, candidate[loopNum], &props);
+    vkGetPhysicalDeviceFormatProperties(vulkan_renderer->physical_device, candidate[loop_num], &props);
 
     if (tiling == VK_IMAGE_TILING_LINEAR &&
         (props.linearTilingFeatures & features) == features) {
-      return candidate[loopNum];
+      return candidate[loop_num];
     } else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) {
-      return candidate[loopNum];
+      return candidate[loop_num];
     }
   }
 

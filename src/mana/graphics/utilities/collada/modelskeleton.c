@@ -64,8 +64,7 @@ struct JointData *skeleton_loader_extract_main_joint_data(struct XmlNode *joint_
   skeleton_loader_convert_data(matrix, matrix_data);
   glm_mat4_transpose(matrix);
   if (is_root) {
-    mat4 correction;
-    glm_mat4_identity(correction);
+    mat4 correction = GLM_MAT4_IDENTITY_INIT;
     glm_rotate(correction, glm_rad(-90.0f), (vec3){1.0f, 0.0f, 0.0f});
     glm_mat4_mul(correction, matrix, matrix);
   }
