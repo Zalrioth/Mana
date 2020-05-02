@@ -47,26 +47,21 @@ void animation_load_joint_transform(struct ArrayList* frames, struct XmlNode* jo
   memcpy(joint_name_id, joint_name_raw, joint_name_length);
   joint_name_id[joint_name_length] = '\0';
   char* data_id = xml_node_get_attribute(xml_node_get_child_with_attribute(xml_node_get_child(joint_data, "sampler"), "input", "semantic", "OUTPUT"), "source") + 1;
-  struct XmlNode* transform_data = xml_node_get_child_with_attribute(joint_data, "source", "id", data_id);
-  char* raw_data = xml_node_get_data(xml_node_get_child(transform_data, "float_array"));
-  animation_process_transforms(joint_name_id, raw_data, frames, strcmp(joint_name_id, root_node_id) == 0);
+  //TODO: Support other animation transforms
+  if (strstr(data_id, "matrix-output") != NULL) {
+    struct XmlNode* transform_data = xml_node_get_child_with_attribute(joint_data, "source", "id", data_id);
+    char* raw_data = xml_node_get_data(xml_node_get_child(transform_data, "float_array"));
+    animation_process_transforms(joint_name_id, raw_data, frames, strcmp(joint_name_id, root_node_id) == 0);
+  }
 }
 
 void animation_process_transforms(char* joint_name, char* raw_data, struct ArrayList* key_frames, bool root) {
   char* raw_part = strtok(raw_data, " ");
   for (int key_frame_num = 0; key_frame_num < array_list_size(key_frames); key_frame_num++) {
     mat4 transform = GLM_MAT4_ZERO_INIT;
-    for (int matrix_value = 0; matrix_value < 4; matrix_value++) {
-      float m0 = atof(raw_part);
+    for (int matrix_value = 0; matrix_value < 16; matrix_value++) {
+      *(((float*)&transform) + matrix_value) = atof(raw_part);
       raw_part = strtok(NULL, " ");
-      float m1 = atof(raw_part);
-      raw_part = strtok(NULL, " ");
-      float m2 = atof(raw_part);
-      raw_part = strtok(NULL, " ");
-      float m3 = atof(raw_part);
-      raw_part = strtok(NULL, " ");
-      vec4 matrix_slice = {m0, m1, m2, m3};
-      glm_vec4_copy(matrix_slice, transform[matrix_value]);
     }
     glm_mat4_transpose(transform);
     if (root) {

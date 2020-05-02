@@ -87,6 +87,7 @@ void geometry_loader_read_texture_coordinates(struct ModelData* model_data, stru
     raw_part = strtok(NULL, " ");
     float t = atof(raw_part);
     raw_part = strtok(NULL, " ");
+
     vec2 tex_coord = {s, t};
     vector_push_back(model_data->tex_coords, &tex_coord);
   }
@@ -96,19 +97,30 @@ void geometry_loader_read_texture_coordinates(struct ModelData* model_data, stru
 void geometry_loader_assemble_vertices(struct ModelData* model_data, struct XmlNode* mesh_data) {
   struct XmlNode* poly = xml_node_get_child(mesh_data, "polylist");
   struct XmlNode* index_data = xml_node_get_child(poly, "p");
+  int type_count = array_list_size(xml_node_get_children(poly, "input"));
 
   char* raw_data = strdup(xml_node_get_data(index_data));
   char* raw_part = strtok(raw_data, " ");
   while (raw_part != NULL) {
-    int position_index = atoi(raw_part);
-    raw_part = strtok(NULL, " ");
-    int normal_index = atoi(raw_part);
-    raw_part = strtok(NULL, " ");
-    int tex_coord_index = atoi(raw_part);
-    raw_part = strtok(NULL, " ");
-    int color_index = atoi(raw_part);
-    raw_part = strtok(NULL, " ");
+    int position_index = -1, normal_index = -1, tex_coord_index = -1, color_index = -1;
 
+    for (int type_num = 0; type_num < type_count; type_num++) {
+      switch (type_num) {
+        case 0:
+          position_index = atoi(raw_part);
+          break;
+        case 1:
+          normal_index = atoi(raw_part);
+          break;
+        case 2:
+          tex_coord_index = atoi(raw_part);
+          break;
+        case 3:
+          color_index = atoi(raw_part);
+          break;
+      }
+      raw_part = strtok(NULL, " ");
+    }
     geometry_loader_process_vertex(model_data, position_index, normal_index, tex_coord_index);
   }
   free(raw_data);
@@ -136,17 +148,26 @@ float geometry_loader_convert_data_to_arrays(struct ModelData* model_data, struc
     vec3 model_position = GLM_VEC3_ZERO_INIT;
     glm_vec3_copy(current_vertex->position, model_position);
     vec3 model_normal = GLM_VEC3_ZERO_INIT;
-    glm_vec3_copy(vector_get(model_data->normals, current_vertex->normal_index), model_normal);
+    glm_vec3_copy(*(vec3*)vector_get(model_data->normals, current_vertex->normal_index), model_normal);
     vec2 model_tex_coord = {0.0f, 0.0f};
     memcpy(model_tex_coord, (vec2*)vector_get(model_data->tex_coords, current_vertex->texture_index), sizeof(vec2));
     model_tex_coord[1] = 1.0f - model_tex_coord[1];
-    ivec3 joint_ids = {0};
+    ivec3 joint_ids = {0, 0, 0};  //{*(int*)vector_get(model_weights->joint_ids, 0), *(int*)vector_get(model_weights->joint_ids, 1), *(int*)vector_get(model_weights->joint_ids, 2)};
     memcpy(joint_ids, (ivec3*)vector_get(model_weights->joint_ids, 0), sizeof(ivec3));
     vec3 joint_weights = GLM_VEC3_ZERO_INIT;
     memcpy(joint_weights, (vec3*)vector_get(model_weights->weights, 0), sizeof(vec3));
 
+    //printf("Indice: %d is: %f:%f:%f\n", vertex_num, model_position[0], model_position[1], model_position[2]);
+
     mesh_model_assign_vertex(model_mesh->vertices, model_position[0], model_position[1], model_position[2], model_normal[0], model_normal[1], model_normal[2], model_tex_coord[0], model_tex_coord[1], joint_ids[0], joint_ids[1], joint_ids[2], joint_weights[0], joint_weights[1], joint_weights[2]);
   }
+
+  //// Seems like the last integer is always a copy of the scond value
+  //for (int loop_num = 0; loop_num < vector_size(model_mesh->vertices); loop_num++) {
+  //  vec3 weights = {0, 0, 0};
+  //  memcpy(weights, (vec3*)(((struct VertexModel*)vector_get(model_mesh->vertices, loop_num))->position), sizeof(vec3));
+  //  printf("Indice: %d is: %f:%f:%f\n", loop_num, weights[0], weights[1], weights[2]);
+  //}
 
   return furthest_point;
 }
@@ -174,7 +195,6 @@ struct RawVertexModel* geometry_loader_deal_with_already_processed_vertex(struct
 
 void geometry_loader_remove_unused_vertices(struct ModelData* model_data) {
   for (int vertex_num = 0; vertex_num < vector_size(model_data->vertices); vertex_num++) {
-    // Average tangents might be needed
     struct RawVertexModel* vertex = (struct RawVertexModel*)vector_get(model_data->vertices, vertex_num);
     if (raw_vertex_model_is_set(vertex) == false) {
       vertex->texture_index = 0;

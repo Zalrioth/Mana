@@ -7,7 +7,7 @@ void animator_init(struct Animator* animator, struct Model* entity) {
 }
 
 void animator_do_animation(struct Animator* animator, struct Animation* animation) {
-  animator->animation_time = 0;
+  animator->animation_time = 0.0f;
   animator->current_animation = animation;
 }
 
@@ -23,7 +23,7 @@ void animator_update(struct Animator* animator, float delta_time) {
 }
 
 void animator_increase_animation_time(struct Animator* animator, float delta_time) {
-  animator->animation_time += delta_time;
+  animator->animation_time += delta_time / 2.0f;
   if (animator->animation_time > animator->current_animation->length)
     animator->animation_time = fmodf(animator->animation_time, animator->current_animation->length);
 }
@@ -37,7 +37,7 @@ struct Map* animator_calculate_current_animation_pose(struct Animator* animator)
 
 void animator_apply_pose_to_joints(struct Map* current_pose, struct Joint* joint, mat4 parent_transform) {
   mat4 current_local_transform = GLM_MAT4_ZERO_INIT;
-  glm_mat4_copy(map_get(current_pose, joint->name), current_local_transform);
+  glm_mat4_copy(*(mat4*)map_get(current_pose, joint->name), current_local_transform);
   mat4 current_transform = GLM_MAT4_ZERO_INIT;
   glm_mat4_mul(parent_transform, current_local_transform, current_transform);
 
@@ -53,7 +53,7 @@ void animator_apply_pose_to_joints(struct Map* current_pose, struct Joint* joint
 void animator_get_previous_and_next_frames(struct Animator* animator, struct KeyFrame** previous_frame, struct KeyFrame** next_frame) {
   struct ArrayList* all_frames = animator->current_animation->key_frames;
   *previous_frame = (struct KeyFrame*)array_list_get(all_frames, 0);
-  *next_frame = *previous_frame;
+  *next_frame = (struct KeyFrame*)array_list_get(all_frames, 0);
   for (int frame_num = 1; frame_num < array_list_size(all_frames); frame_num++) {
     *next_frame = (struct KeyFrame*)array_list_get(all_frames, frame_num);
     if ((*next_frame)->time_step > animator->animation_time)
@@ -72,15 +72,17 @@ struct Map* animator_interpolate_poses(struct KeyFrame* previous_frame, struct K
   struct Map* current_pose = malloc(sizeof(struct Map));
   map_init(current_pose, sizeof(mat4));
 
-  const char* joint_name;
+  const char* joint_name = NULL;
   struct MapIter iter = map_iter();
   while ((joint_name = map_next(previous_frame->pose, &iter))) {
+    // xyz quaternions have signs flipped for some reason on previous and next transforms
     struct JointTransform* previous_transform = (struct JointTransform*)map_get(previous_frame->pose, joint_name);
     struct JointTransform* next_transform = (struct JointTransform*)map_get(next_frame->pose, joint_name);
     struct JointTransform* current_transform = joint_transform_interpolate(previous_transform, next_transform, progression);
-    mat4 local_transform = GLM_MAT4_ZERO_INIT;
+    mat4 local_transform = GLM_MAT4_IDENTITY_INIT;
     joint_transform_get_local_transform(current_transform, local_transform);
     map_set(current_pose, joint_name, local_transform);
+    //printf("Joint name: %s\n", joint_name);
     free(current_transform);
   }
   return current_pose;

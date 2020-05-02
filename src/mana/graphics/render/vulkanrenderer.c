@@ -271,7 +271,7 @@ bool is_device_suitable(struct VulkanRenderer* vulkan_renderer, VkPhysicalDevice
   uint32_t queue_family_count = 0;
   vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, NULL);
 
-  struct Vector queue_families;
+  struct Vector queue_families = {0};
   memset(&queue_families, 0, sizeof(queue_families));
   vector_init(&queue_families, sizeof(VkQueueFamilyProperties));
   vector_resize(&queue_families, queue_family_count);

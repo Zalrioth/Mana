@@ -7,6 +7,8 @@
 #include "mana/core/inputmanager.h"
 #include "mana/graphics/render/vulkanrenderer.h"
 
+#define VULKAN_WAIT_SEMAPHORES 2
+
 enum RendererType { VULKAN };
 
 union Renderer {

@@ -79,8 +79,14 @@ struct XmlNode* xml_parser_load_node(char** scanner) {
       strncpy(tag_equal_text, tag_text, tag_equal_length);
       tag_equal_text[tag_equal_length] = '\0';
 
+      //TODO: Add support for " " name tags like line 2242 of model
       char* tag_attr_start = tag_text + tag_equal_length + 2;
-      char* tag_attr_end = strchr(tag_attr_start, '\"');
+      char* tag_attr_end;
+      // Null or empty tag value
+      if (*tag_attr_start == '\0')
+        tag_attr_end = tag_attr_start + 1;
+      else
+        tag_attr_end = strchr(tag_attr_start, '\"');
       size_t tag_value_length = tag_attr_end - tag_attr_start;
       char* tag_value = malloc(sizeof(char) * (tag_value_length + 1));
       strncpy(tag_value, tag_attr_start, tag_value_length);

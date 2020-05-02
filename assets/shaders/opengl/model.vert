@@ -22,7 +22,6 @@ layout(location = 0) out vec2 textureCoords;
 layout(location = 1) out vec3 outNormal;
 
 void main(void){
-	
 	vec4 totalLocalPos = vec4(0.0);
 	vec4 totalNormal = vec4(0.0);
 	

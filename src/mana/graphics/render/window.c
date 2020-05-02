@@ -93,12 +93,9 @@ void window_end_frame(struct Window *window) {
   VkSubmitInfo swap_chain_submit_info = {0};
   swap_chain_submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-  const int semaphores = 2;
-  VkSemaphore wait_semaphores[semaphores] = {vulkan_renderer->swap_chain->image_available_semaphores[vulkan_renderer->swap_chain->current_frame], vulkan_renderer->post_process->post_process_semaphores[vulkan_renderer->post_process->ping_pong ^ true]};
-  VkPipelineStageFlags wait_stages[semaphores] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-  //VkSemaphore wait_semaphores[] = {vulkan_renderer->image_available_semaphores[vulkan_renderer->current_frame]};
-  //VkPipelineStageFlags wait_stages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-  swap_chain_submit_info.waitSemaphoreCount = semaphores;
+  VkSemaphore wait_semaphores[VULKAN_WAIT_SEMAPHORES] = {vulkan_renderer->swap_chain->image_available_semaphores[vulkan_renderer->swap_chain->current_frame], vulkan_renderer->post_process->post_process_semaphores[vulkan_renderer->post_process->ping_pong ^ true]};
+  VkPipelineStageFlags wait_stages[VULKAN_WAIT_SEMAPHORES] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+  swap_chain_submit_info.waitSemaphoreCount = VULKAN_WAIT_SEMAPHORES;
   swap_chain_submit_info.pWaitSemaphores = wait_semaphores;
   swap_chain_submit_info.pWaitDstStageMask = wait_stages;
 

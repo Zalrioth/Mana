@@ -58,7 +58,7 @@ static inline void joint_init(struct Joint* joint, int index, char* name, mat4 b
 }
 
 static inline void joint_calc_inverse_bind_transform(struct Joint* joint, mat4 parent_bind_transform) {
-  mat4 bind_transform = GLM_MAT4_IDENTITY_INIT;
+  mat4 bind_transform = GLM_MAT4_ZERO_INIT;
   glm_mat4_mul(parent_bind_transform, joint->local_bind_transform, bind_transform);
   glm_mat4_inv(bind_transform, joint->inverse_bind_transform);
   for (int child_num = 0; child_num < array_list_size(joint->children); child_num++) {

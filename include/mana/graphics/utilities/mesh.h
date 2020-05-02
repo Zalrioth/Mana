@@ -26,11 +26,11 @@ struct VertexQuad {
 };
 
 struct VertexModel {
-  vec3 position;
-  vec3 normal;
-  vec2 tex_coord;
-  ivec3 joints_ids;
-  vec3 weights;
+  alignas(16) vec3 position;
+  alignas(16) vec3 normal;
+  alignas(16) vec2 tex_coord;
+  alignas(16) ivec3 joints_ids;
+  alignas(16) vec3 weights;
 };
 
 struct VertexDualContouring {
@@ -166,6 +166,7 @@ static inline void mesh_model_init(struct Mesh* mesh) {
 
 static inline void mesh_model_assign_vertex(struct Vector* vector, float x, float y, float z, float r, float g, float b, float u, float v, int joint_id_x, int joint_id_y, int joint_id_z, float weight_x, float weight_y, float weight_z) {
   struct VertexModel vertex = {{0}};
+
   vertex.position[0] = x;
   vertex.position[1] = y;
   vertex.position[2] = z;
@@ -179,11 +180,11 @@ static inline void mesh_model_assign_vertex(struct Vector* vector, float x, floa
 
   vertex.joints_ids[0] = joint_id_x;
   vertex.joints_ids[1] = joint_id_y;
-  vertex.joints_ids[2] = joint_id_y;
+  vertex.joints_ids[2] = joint_id_z;
 
   vertex.weights[0] = weight_x;
   vertex.weights[1] = weight_y;
-  vertex.weights[2] = weight_y;
+  vertex.weights[2] = weight_z;
 
   vector_push_back(vector, &vertex);
 }

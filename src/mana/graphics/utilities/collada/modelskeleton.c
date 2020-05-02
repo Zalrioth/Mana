@@ -1,27 +1,5 @@
 #include "mana/graphics/utilities/collada/modelskeleton.h"
 
-void joint_data_init(struct JointData *joint_data, int index, char *name_id, mat4 bind_local_transform) {
-  joint_data->index = index;
-  // NOTE: Might need to be duplicated
-  joint_data->name_id = name_id;
-  glm_mat4_copy(bind_local_transform, joint_data->bind_local_transform);
-  joint_data->children = malloc(sizeof(struct ArrayList));
-  array_list_init(joint_data->children);
-}
-
-void joint_data_delete(struct JointData *joint_data) {
-  // TODO: Clean up
-}
-
-void joint_data_add_child(struct JointData *joint_data, struct JointData *child) {
-  array_list_add(joint_data->children, child);
-}
-
-void skeleton_data_init(struct SkeletonData *skeleton_data, int joint_count, struct JointData *head_joint) {
-  skeleton_data->joint_count = joint_count;
-  skeleton_data->head_joint = head_joint;
-}
-
 struct SkeletonData *skeleton_loader_extract_bone_data(struct XmlNode *visual_scene_node, struct Vector *bone_order) {
   struct XmlNode *armature_data = xml_node_get_child_with_attribute(xml_node_get_child(visual_scene_node, "visual_scene"), "node", "id", "Armature");
   struct XmlNode *head_node = xml_node_get_child(armature_data, "node");
@@ -39,10 +17,9 @@ struct JointData *skeleton_loader_load_joint_data(struct XmlNode *joint_node, st
   if (joint_node_children != NULL) {
     for (int child_num = 0; child_num < array_list_size(joint_node_children); child_num++) {
       struct XmlNode *child_node = (struct XmlNode *)array_list_get(joint_node_children, child_num);
-      joint_data_add_child(joint, skeleton_loader_load_joint_data(child_node, bone_order, false, joint_count));
+      array_list_add(joint->children, skeleton_loader_load_joint_data(child_node, bone_order, false, joint_count));
     }
   }
-
   return joint;
 }
 
@@ -59,8 +36,7 @@ struct JointData *skeleton_loader_extract_main_joint_data(struct XmlNode *joint_
   }
 
   char *matrix_data = xml_node_get_data(xml_node_get_child(joint_node, "matrix"));
-  mat4 matrix;
-  glm_mat4_identity(matrix);
+  mat4 matrix = GLM_MAT4_IDENTITY_INIT;
   skeleton_loader_convert_data(matrix, matrix_data);
   glm_mat4_transpose(matrix);
   if (is_root) {
@@ -77,14 +53,17 @@ struct JointData *skeleton_loader_extract_main_joint_data(struct XmlNode *joint_
 void skeleton_loader_convert_data(mat4 mat_dest, char *matrix_data) {
   char *raw_data = strdup(matrix_data);
   char *raw_part = strtok(raw_data, " ");
-  int column = 0, row = 0;
-  while (raw_part != NULL) {
-    float parsed_weight = strtof(raw_part, NULL);
-    mat_dest[column][row++] = parsed_weight;
-    if (row == 4)
-      column++, row = 0;
-
+  for (int matrix_value = 0; matrix_value < 4; matrix_value++) {
+    float m0 = atof(raw_part);
     raw_part = strtok(NULL, " ");
+    float m1 = atof(raw_part);
+    raw_part = strtok(NULL, " ");
+    float m2 = atof(raw_part);
+    raw_part = strtok(NULL, " ");
+    float m3 = atof(raw_part);
+    raw_part = strtok(NULL, " ");
+    vec4 matrix_slice = {m0, m1, m2, m3};
+    glm_vec4_copy(matrix_slice, mat_dest[matrix_value]);
   }
   free(raw_data);
 }
