@@ -70,7 +70,6 @@ struct SkinningData* skin_loader_extract_skin_data(struct XmlNode* skinning_data
   struct Vector* weights = skin_loader_load_weights(skinning_data);
   struct XmlNode* weights_data_node = xml_node_get_child(skinning_data, "vertex_weights");
   struct Vector* effector_joint_counts = skin_loader_get_effective_joints_counts(weights_data_node);
-  /////////////////////////
   struct Vector* vertex_weights = skin_loader_get_skin_data(max_weights, weights_data_node, effector_joint_counts, weights);
   struct SkinningData* parsed_skinning_data = malloc(sizeof(struct SkinningData));
   skinning_data_init(parsed_skinning_data, joints_list, vertex_weights);

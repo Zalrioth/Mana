@@ -44,14 +44,20 @@ void geometry_loader_read_positions(struct ModelData* model_data, struct XmlNode
     glm_mat4_mulv(correction, position, position);
     vec3 position_corrected = {position[0], position[1], position[2]};
     struct RawVertexModel* raw_vertex = malloc(sizeof(struct RawVertexModel));
-    raw_vertex_model_init(raw_vertex, vector_size(model_data->vertices), position_corrected, (struct VertexSkinData*)vector_get(vertex_weights, vector_size(model_data->vertices)));
+    if (vertex_weights != NULL)
+      raw_vertex_model_init(raw_vertex, vector_size(model_data->vertices), position_corrected, (struct VertexSkinData*)vector_get(vertex_weights, vector_size(model_data->vertices)));
+    else
+      raw_vertex_model_init(raw_vertex, vector_size(model_data->vertices), position_corrected, NULL);
     vector_push_back(model_data->vertices, raw_vertex);
   }
   free(raw_data);
 }
 
 void geometry_loader_read_normals(struct ModelData* model_data, struct XmlNode* mesh_data) {
-  char* normals_id = xml_node_get_attribute(xml_node_get_child_with_attribute(xml_node_get_child(mesh_data, "polylist"), "input", "semantic", "NORMAL"), "source") + 1;
+  struct XmlNode* material_node = xml_node_get_child(mesh_data, "polylist");
+  if (material_node == NULL)
+    material_node = xml_node_get_child(mesh_data, "triangles");
+  char* normals_id = xml_node_get_attribute(xml_node_get_child_with_attribute(material_node, "input", "semantic", "NORMAL"), "source") + 1;
   struct XmlNode* normals_data = xml_node_get_child(xml_node_get_child_with_attribute(mesh_data, "source", "id", normals_id), "float_array");
   int count = atoi(xml_node_get_attribute(normals_data, "count"));
 
@@ -76,7 +82,10 @@ void geometry_loader_read_normals(struct ModelData* model_data, struct XmlNode* 
 }
 
 void geometry_loader_read_texture_coordinates(struct ModelData* model_data, struct XmlNode* mesh_data) {
-  char* tex_coords_id = xml_node_get_attribute(xml_node_get_child_with_attribute(xml_node_get_child(mesh_data, "polylist"), "input", "semantic", "TEXCOORD"), "source") + 1;
+  struct XmlNode* material_node = xml_node_get_child(mesh_data, "polylist");
+  if (material_node == NULL)
+    material_node = xml_node_get_child(mesh_data, "triangles");
+  char* tex_coords_id = xml_node_get_attribute(xml_node_get_child_with_attribute(material_node, "input", "semantic", "TEXCOORD"), "source") + 1;
   struct XmlNode* tex_coords_data = xml_node_get_child(xml_node_get_child_with_attribute(mesh_data, "source", "id", tex_coords_id), "float_array");
   int count = atoi(xml_node_get_attribute(tex_coords_data, "count"));
 
@@ -96,6 +105,8 @@ void geometry_loader_read_texture_coordinates(struct ModelData* model_data, stru
 
 void geometry_loader_assemble_vertices(struct ModelData* model_data, struct XmlNode* mesh_data) {
   struct XmlNode* poly = xml_node_get_child(mesh_data, "polylist");
+  if (poly == NULL)
+    poly = xml_node_get_child(mesh_data, "triangles");
   struct XmlNode* index_data = xml_node_get_child(poly, "p");
   int type_count = array_list_size(xml_node_get_children(poly, "input"));
 
@@ -152,22 +163,15 @@ float geometry_loader_convert_data_to_arrays(struct ModelData* model_data, struc
     vec2 model_tex_coord = {0.0f, 0.0f};
     memcpy(model_tex_coord, (vec2*)vector_get(model_data->tex_coords, current_vertex->texture_index), sizeof(vec2));
     model_tex_coord[1] = 1.0f - model_tex_coord[1];
-    ivec3 joint_ids = {0, 0, 0};  //{*(int*)vector_get(model_weights->joint_ids, 0), *(int*)vector_get(model_weights->joint_ids, 1), *(int*)vector_get(model_weights->joint_ids, 2)};
-    memcpy(joint_ids, (ivec3*)vector_get(model_weights->joint_ids, 0), sizeof(ivec3));
+    ivec3 joint_ids = {0, 0, 0};
     vec3 joint_weights = GLM_VEC3_ZERO_INIT;
-    memcpy(joint_weights, (vec3*)vector_get(model_weights->weights, 0), sizeof(vec3));
-
-    //printf("Indice: %d is: %f:%f:%f\n", vertex_num, model_position[0], model_position[1], model_position[2]);
+    if (model_weights != NULL) {
+      memcpy(joint_ids, (ivec3*)vector_get(model_weights->joint_ids, 0), sizeof(ivec3));
+      memcpy(joint_weights, (vec3*)vector_get(model_weights->weights, 0), sizeof(vec3));
+    }
 
     mesh_model_assign_vertex(model_mesh->vertices, model_position[0], model_position[1], model_position[2], model_normal[0], model_normal[1], model_normal[2], model_tex_coord[0], model_tex_coord[1], joint_ids[0], joint_ids[1], joint_ids[2], joint_weights[0], joint_weights[1], joint_weights[2]);
   }
-
-  //// Seems like the last integer is always a copy of the scond value
-  //for (int loop_num = 0; loop_num < vector_size(model_mesh->vertices); loop_num++) {
-  //  vec3 weights = {0, 0, 0};
-  //  memcpy(weights, (vec3*)(((struct VertexModel*)vector_get(model_mesh->vertices, loop_num))->position), sizeof(vec3));
-  //  printf("Indice: %d is: %f:%f:%f\n", loop_num, weights[0], weights[1], weights[2]);
-  //}
 
   return furthest_point;
 }
