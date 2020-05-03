@@ -23,6 +23,41 @@ struct KeyFrameData;
 struct JointTransform;
 struct JointTransformData;
 
+static inline void mat4_to_collada_quaternion(mat4 matrix, versor dest) {
+  float diagonal = matrix[0][0] + matrix[1][1] + matrix[2][2];
+  if (diagonal > 0) {
+    float w4 = (float)(sqrtf(diagonal + 1.0f) * 2.0f);
+    dest[3] = w4 / 4.0f;
+    dest[0] = (matrix[2][1] - matrix[1][2]) / w4;
+    dest[1] = (matrix[0][2] - matrix[2][0]) / w4;
+    dest[2] = (matrix[1][0] - matrix[0][1]) / w4;
+  } else if ((matrix[0][0] > matrix[1][1]) && (matrix[0][0] > matrix[2][2])) {
+    float x4 = (float)(sqrtf(1.0f + matrix[0][0] - matrix[1][1] - matrix[2][2]) * 2.0f);
+    dest[3] = (matrix[2][1] - matrix[1][2]) / x4;
+    dest[0] = x4 / 4.0f;
+    dest[1] = (matrix[0][1] + matrix[1][0]) / x4;
+    dest[2] = (matrix[0][2] + matrix[2][0]) / x4;
+  } else if (matrix[1][1] > matrix[2][2]) {
+    float y4 = (float)(sqrtf(1.0f + matrix[1][1] - matrix[0][0] - matrix[2][2]) * 2.0f);
+    dest[3] = (matrix[0][2] - matrix[2][0]) / y4;
+    dest[0] = (matrix[0][1] + matrix[1][0]) / y4;
+    dest[1] = y4 / 4.0f;
+    dest[2] = (matrix[1][2] + matrix[2][1]) / y4;
+  } else {
+    float z4 = (float)(sqrtf(1.0f + matrix[2][2] - matrix[0][0] - matrix[1][1]) * 2.0f);
+    dest[3] = (matrix[1][0] - matrix[0][1]) / z4;
+    dest[0] = (matrix[0][2] + matrix[2][0]) / z4;
+    dest[1] = (matrix[1][2] + matrix[2][1]) / z4;
+    dest[2] = z4 / 4.0f;
+  }
+
+  float mag = sqrtf(dest[3] * dest[3] + dest[0] * dest[0] + dest[1] * dest[1] + dest[2] * dest[2]);
+  dest[3] /= mag;
+  dest[0] /= mag;
+  dest[1] /= mag;
+  dest[2] /= mag;
+}
+
 struct ModelUniformBufferObject {
   alignas(16) mat4 model;
   alignas(16) mat4 view;
