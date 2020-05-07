@@ -1,6 +1,6 @@
 #include "mana/graphics/shaders/atmosphericscattering.h"
 
-int atmospheric_scattering_shader_init(struct AtmosphericScatteringShader* atmospheric_scattering_shader, struct VulkanRenderer* vulkan_renderer) {
+int atmospheric_scattering_shader_init(struct AtmosphericScatteringShader* atmospheric_scattering_shader, struct VulkanState* vulkan_renderer) {
   // Set up stuff
 
   //////////////////////////////////////////////////////////////////////
@@ -123,7 +123,7 @@ int atmospheric_scattering_shader_init(struct AtmosphericScatteringShader* atmos
   return 0;
 }
 
-void atmospheric_scattering_shader_delete(struct AtmosphericScatteringShader* atmospheric_scattering_shader, struct VulkanRenderer* vulkan_renderer) {
+void atmospheric_scattering_shader_delete(struct AtmosphericScatteringShader* atmospheric_scattering_shader, struct VulkanState* vulkan_renderer) {
   vkDestroyBuffer(vulkan_renderer->device, atmospheric_scattering_shader->uniform_buffer, NULL);
   vkFreeMemory(vulkan_renderer->device, atmospheric_scattering_shader->uniform_buffer_memory, NULL);
 
@@ -139,7 +139,7 @@ void atmospheric_scattering_shader_delete(struct AtmosphericScatteringShader* at
   free(atmospheric_scattering_shader->shader);
 }
 
-void atmospheric_scattering_shader_render(struct AtmosphericScatteringShader* atmospheric_scattering_shader, struct VulkanRenderer* vulkan_renderer) {
+void atmospheric_scattering_shader_render(struct AtmosphericScatteringShader* atmospheric_scattering_shader, struct VulkanState* vulkan_renderer) {
   //struct AtmosphericScatteringUniformBufferObject ubo = {{{0}}};
   //
   //glm_mat4_copy(vulkan_renderer->gbuffer->projection_matrix, ubo.proj);

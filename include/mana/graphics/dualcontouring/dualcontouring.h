@@ -38,7 +38,7 @@ struct DualContouring {
   VkDescriptorSet descriptor_set;
 };
 
-int dual_contouring_init(struct DualContouring *dual_contouring, struct VulkanRenderer *vulkan_renderer, int octree_size, struct Shader *shader, struct Vector *noises, float (*density_func_single)(struct Vector *, float, float, float), float *(*density_func_set)(struct Vector *, float, float, float, int, int, int));
-void dual_contouring_delete(struct DualContouring *dual_contouring, struct VulkanRenderer *vulkan_renderer);
+int dual_contouring_init(struct DualContouring *dual_contouring, struct VulkanState *vulkan_renderer, int octree_size, struct Shader *shader, struct Vector *noises, float (*density_func_single)(struct Vector *, float, float, float), float *(*density_func_set)(struct Vector *, float, float, float, int, int, int));
+void dual_contouring_delete(struct DualContouring *dual_contouring, struct VulkanState *vulkan_renderer);
 
 #endif  // DUAL_CONTOURING_H

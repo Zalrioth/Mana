@@ -1,15 +1,16 @@
 #include "mana/graphics/entities/model.h"
 
-int model_init(struct Model* model, struct VulkanRenderer* vulkan_renderer, char* node_path, char* texture_path, int max_weights, struct Shader* shader) {
+int model_init(struct Model* model, struct VulkanState* vulkan_instance, char* node_path, char* texture_path, int max_weights, struct Shader* shader) {
   struct XmlNode* collada_node = xml_parser_load_xml_file(node_path);
 
+  // If texture is null, attempt to load raw colors
   struct XmlNode* library_controllers_node = xml_node_get_child(collada_node, "library_controllers");
   // Static model
   if (library_controllers_node == NULL) {
     struct ModelCache* model_cache = malloc(sizeof(struct ModelCache));
     model_cache->model_mesh = geometry_loader_extract_model_data(xml_node_get_child(collada_node, "library_geometries"), NULL);
     model_cache->model_texture = malloc(sizeof(struct Texture));
-    texture_init(model_cache->model_texture, vulkan_renderer, texture_path);
+    texture_init(model_cache->model_texture, vulkan_instance, texture_path);
 
     model->model_raw = model_cache;
 
@@ -17,41 +18,41 @@ int model_init(struct Model* model, struct VulkanRenderer* vulkan_renderer, char
     VkDeviceSize vertex_buffer_size = model_cache->model_mesh->vertices->memory_size * model_cache->model_mesh->vertices->size;
     VkBuffer vertex_staging_buffer = {0};
     VkDeviceMemory vertex_staging_buffer_memory = {0};
-    graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, vertex_buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &vertex_staging_buffer, &vertex_staging_buffer_memory);
+    graphics_utils_create_buffer(vulkan_instance->device, vulkan_instance->physical_device, vertex_buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &vertex_staging_buffer, &vertex_staging_buffer_memory);
 
     void* vertex_data;
-    vkMapMemory(vulkan_renderer->device, vertex_staging_buffer_memory, 0, vertex_buffer_size, 0, &vertex_data);
+    vkMapMemory(vulkan_instance->device, vertex_staging_buffer_memory, 0, vertex_buffer_size, 0, &vertex_data);
     memcpy(vertex_data, model_cache->model_mesh->vertices->items, vertex_buffer_size);
-    vkUnmapMemory(vulkan_renderer->device, vertex_staging_buffer_memory);
+    vkUnmapMemory(vulkan_instance->device, vertex_staging_buffer_memory);
 
-    graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, vertex_buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &model->vertex_buffer, &model->vertex_buffer_memory);
+    graphics_utils_create_buffer(vulkan_instance->device, vulkan_instance->physical_device, vertex_buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &model->vertex_buffer, &model->vertex_buffer_memory);
 
-    copy_buffer(vulkan_renderer, vertex_staging_buffer, model->vertex_buffer, vertex_buffer_size);
+    copy_buffer(vulkan_instance, vertex_staging_buffer, model->vertex_buffer, vertex_buffer_size);
 
-    vkDestroyBuffer(vulkan_renderer->device, vertex_staging_buffer, NULL);
-    vkFreeMemory(vulkan_renderer->device, vertex_staging_buffer_memory, NULL);
+    vkDestroyBuffer(vulkan_instance->device, vertex_staging_buffer, NULL);
+    vkFreeMemory(vulkan_instance->device, vertex_staging_buffer_memory, NULL);
 
     // Index buffer
     VkDeviceSize index_buffer_size = model_cache->model_mesh->indices->memory_size * model_cache->model_mesh->indices->size;
     VkBuffer index_staging_buffer = {0};
     VkDeviceMemory index_staging_buffer_memory = {0};
-    graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, index_buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &index_staging_buffer, &index_staging_buffer_memory);
+    graphics_utils_create_buffer(vulkan_instance->device, vulkan_instance->physical_device, index_buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &index_staging_buffer, &index_staging_buffer_memory);
 
     void* index_data;
-    vkMapMemory(vulkan_renderer->device, index_staging_buffer_memory, 0, index_buffer_size, 0, &index_data);
+    vkMapMemory(vulkan_instance->device, index_staging_buffer_memory, 0, index_buffer_size, 0, &index_data);
     memcpy(index_data, model_cache->model_mesh->indices->items, index_buffer_size);
-    vkUnmapMemory(vulkan_renderer->device, index_staging_buffer_memory);
+    vkUnmapMemory(vulkan_instance->device, index_staging_buffer_memory);
 
-    graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, index_buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &model->index_buffer, &model->index_buffer_memory);
+    graphics_utils_create_buffer(vulkan_instance->device, vulkan_instance->physical_device, index_buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &model->index_buffer, &model->index_buffer_memory);
 
-    copy_buffer(vulkan_renderer, index_staging_buffer, model->index_buffer, index_buffer_size);
+    copy_buffer(vulkan_instance, index_staging_buffer, model->index_buffer, index_buffer_size);
 
-    vkDestroyBuffer(vulkan_renderer->device, index_staging_buffer, NULL);
-    vkFreeMemory(vulkan_renderer->device, index_staging_buffer_memory, NULL);
+    vkDestroyBuffer(vulkan_instance->device, index_staging_buffer, NULL);
+    vkFreeMemory(vulkan_instance->device, index_staging_buffer_memory, NULL);
 
     // Uniform buffer
     VkDeviceSize uniform_buffer_size = sizeof(struct ModelUniformBufferObject);
-    graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, uniform_buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &model->uniform_buffer, &model->uniform_buffers_memory);
+    graphics_utils_create_buffer(vulkan_instance->device, vulkan_instance->physical_device, uniform_buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &model->uniform_buffer, &model->uniform_buffers_memory);
 
     // Descriptor sets
     VkDescriptorSetLayout layout = {0};
@@ -63,7 +64,7 @@ int model_init(struct Model* model, struct VulkanRenderer* vulkan_renderer, char
     alloc_info.descriptorSetCount = 1;
     alloc_info.pSetLayouts = &layout;
 
-    if (vkAllocateDescriptorSets(vulkan_renderer->device, &alloc_info, &model->descriptor_set) != VK_SUCCESS) {
+    if (vkAllocateDescriptorSets(vulkan_instance->device, &alloc_info, &model->descriptor_set) != VK_SUCCESS) {
       fprintf(stderr, "failed to allocate descriptor sets!\n");
       return 0;
     }
@@ -97,14 +98,14 @@ int model_init(struct Model* model, struct VulkanRenderer* vulkan_renderer, char
     dcs[1].descriptorCount = 1;
     dcs[1].pImageInfo = &image_info;
 
-    vkUpdateDescriptorSets(vulkan_renderer->device, 2, dcs, 0, NULL);
+    vkUpdateDescriptorSets(vulkan_instance->device, 2, dcs, 0, NULL);
   } else {
     struct SkinningData* skinning_data = skin_loader_extract_skin_data(library_controllers_node, max_weights);
     struct ModelCache* model_cache = malloc(sizeof(struct ModelCache));
     model_cache->joints = skeleton_loader_extract_bone_data(xml_node_get_child(collada_node, "library_visual_scenes"), skinning_data->joint_order);
     model_cache->model_mesh = geometry_loader_extract_model_data(xml_node_get_child(collada_node, "library_geometries"), skinning_data->vertices_skin_data);
     model_cache->model_texture = malloc(sizeof(struct Texture));
-    texture_init(model_cache->model_texture, vulkan_renderer, texture_path);
+    texture_init(model_cache->model_texture, vulkan_instance, texture_path);
 
     model->model_raw = model_cache;
     model->root_joint = model_create_joints(model_cache->joints->head_joint);
@@ -116,41 +117,41 @@ int model_init(struct Model* model, struct VulkanRenderer* vulkan_renderer, char
     VkDeviceSize vertex_buffer_size = model_cache->model_mesh->vertices->memory_size * model_cache->model_mesh->vertices->size;
     VkBuffer vertex_staging_buffer = {0};
     VkDeviceMemory vertex_staging_buffer_memory = {0};
-    graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, vertex_buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &vertex_staging_buffer, &vertex_staging_buffer_memory);
+    graphics_utils_create_buffer(vulkan_instance->device, vulkan_instance->physical_device, vertex_buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &vertex_staging_buffer, &vertex_staging_buffer_memory);
 
     void* vertex_data;
-    vkMapMemory(vulkan_renderer->device, vertex_staging_buffer_memory, 0, vertex_buffer_size, 0, &vertex_data);
+    vkMapMemory(vulkan_instance->device, vertex_staging_buffer_memory, 0, vertex_buffer_size, 0, &vertex_data);
     memcpy(vertex_data, model_cache->model_mesh->vertices->items, vertex_buffer_size);
-    vkUnmapMemory(vulkan_renderer->device, vertex_staging_buffer_memory);
+    vkUnmapMemory(vulkan_instance->device, vertex_staging_buffer_memory);
 
-    graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, vertex_buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &model->vertex_buffer, &model->vertex_buffer_memory);
+    graphics_utils_create_buffer(vulkan_instance->device, vulkan_instance->physical_device, vertex_buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &model->vertex_buffer, &model->vertex_buffer_memory);
 
-    copy_buffer(vulkan_renderer, vertex_staging_buffer, model->vertex_buffer, vertex_buffer_size);
+    copy_buffer(vulkan_instance, vertex_staging_buffer, model->vertex_buffer, vertex_buffer_size);
 
-    vkDestroyBuffer(vulkan_renderer->device, vertex_staging_buffer, NULL);
-    vkFreeMemory(vulkan_renderer->device, vertex_staging_buffer_memory, NULL);
+    vkDestroyBuffer(vulkan_instance->device, vertex_staging_buffer, NULL);
+    vkFreeMemory(vulkan_instance->device, vertex_staging_buffer_memory, NULL);
 
     // Index buffer
     VkDeviceSize index_buffer_size = model_cache->model_mesh->indices->memory_size * model_cache->model_mesh->indices->size;
     VkBuffer index_staging_buffer = {0};
     VkDeviceMemory index_staging_buffer_memory = {0};
-    graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, index_buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &index_staging_buffer, &index_staging_buffer_memory);
+    graphics_utils_create_buffer(vulkan_instance->device, vulkan_instance->physical_device, index_buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &index_staging_buffer, &index_staging_buffer_memory);
 
     void* index_data;
-    vkMapMemory(vulkan_renderer->device, index_staging_buffer_memory, 0, index_buffer_size, 0, &index_data);
+    vkMapMemory(vulkan_instance->device, index_staging_buffer_memory, 0, index_buffer_size, 0, &index_data);
     memcpy(index_data, model_cache->model_mesh->indices->items, index_buffer_size);
-    vkUnmapMemory(vulkan_renderer->device, index_staging_buffer_memory);
+    vkUnmapMemory(vulkan_instance->device, index_staging_buffer_memory);
 
-    graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, index_buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &model->index_buffer, &model->index_buffer_memory);
+    graphics_utils_create_buffer(vulkan_instance->device, vulkan_instance->physical_device, index_buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &model->index_buffer, &model->index_buffer_memory);
 
-    copy_buffer(vulkan_renderer, index_staging_buffer, model->index_buffer, index_buffer_size);
+    copy_buffer(vulkan_instance, index_staging_buffer, model->index_buffer, index_buffer_size);
 
-    vkDestroyBuffer(vulkan_renderer->device, index_staging_buffer, NULL);
-    vkFreeMemory(vulkan_renderer->device, index_staging_buffer_memory, NULL);
+    vkDestroyBuffer(vulkan_instance->device, index_staging_buffer, NULL);
+    vkFreeMemory(vulkan_instance->device, index_staging_buffer_memory, NULL);
 
     // Uniform buffer
     VkDeviceSize uniform_buffer_size = sizeof(struct ModelUniformBufferObject);
-    graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, uniform_buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &model->uniform_buffer, &model->uniform_buffers_memory);
+    graphics_utils_create_buffer(vulkan_instance->device, vulkan_instance->physical_device, uniform_buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &model->uniform_buffer, &model->uniform_buffers_memory);
 
     // Descriptor sets
     VkDescriptorSetLayout layout = {0};
@@ -162,7 +163,7 @@ int model_init(struct Model* model, struct VulkanRenderer* vulkan_renderer, char
     alloc_info.descriptorSetCount = 1;
     alloc_info.pSetLayouts = &layout;
 
-    if (vkAllocateDescriptorSets(vulkan_renderer->device, &alloc_info, &model->descriptor_set) != VK_SUCCESS) {
+    if (vkAllocateDescriptorSets(vulkan_instance->device, &alloc_info, &model->descriptor_set) != VK_SUCCESS) {
       fprintf(stderr, "failed to allocate descriptor sets!\n");
       return 0;
     }
@@ -196,7 +197,7 @@ int model_init(struct Model* model, struct VulkanRenderer* vulkan_renderer, char
     dcs[1].descriptorCount = 1;
     dcs[1].pImageInfo = &image_info;
 
-    vkUpdateDescriptorSets(vulkan_renderer->device, 2, dcs, 0, NULL);
+    vkUpdateDescriptorSets(vulkan_instance->device, 2, dcs, 0, NULL);
 
     struct XmlNode* anim_node = xml_node_get_child(collada_node, "library_animations");
     struct XmlNode* joints_node = xml_node_get_child(collada_node, "library_visual_scenes");

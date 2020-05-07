@@ -18,6 +18,9 @@ static inline void graphics_utils_end_single_time_commands(struct VkDevice_T *de
 static inline int graphics_utils_create_sampler(struct VkDevice_T *device, VkSampler *texture_sampler, uint32_t mip_levels);
 static inline void graphics_utils_copy_buffer_to_image(struct VkDevice_T *device, struct VkQueue_T *graphics_queue, struct VkCommandPool_T *command_pool, VkBuffer *buffer, VkImage *image, uint32_t width, uint32_t height);
 static inline void graphics_utils_generate_mipmaps(struct VkDevice_T *device, VkPhysicalDevice physical_device, struct VkQueue_T *graphics_queue, struct VkCommandPool_T *command_pool, VkImage image, VkFormat format, int32_t tex_width, int32_t tex_height, uint32_t mip_levels);
+static inline VkFormat graphics_utils_find_depth_format(VkPhysicalDevice physical_device);
+static inline void graphics_utils_create_color_attachment(VkFormat image_format, struct VkAttachmentDescription *color_attachment);
+static inline void graphics_utils_create_depth_attachment(VkPhysicalDevice physical_device, struct VkAttachmentDescription *depth_attachment);
 
 static inline void graphics_utils_create_image_view(struct VkDevice_T *device, VkImage image, VkFormat format, VkImageAspectFlags aspect_flags, uint32_t mip_levels, VkImageView *image_view) {
   VkImageViewCreateInfo view_info = {0};
@@ -305,6 +308,49 @@ static inline void graphics_utils_generate_mipmaps(struct VkDevice_T *device, Vk
 
   vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, NULL, 0, NULL, 1, &barrier);
   graphics_utils_end_single_time_commands(device, graphics_queue, command_pool, command_buffer);
+}
+
+#define TOTAL_CANDIDIATES 3
+static inline VkFormat graphics_utils_find_depth_format(VkPhysicalDevice physical_device) {
+  VkFormat candidate[TOTAL_CANDIDIATES] = {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT};
+  VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
+  VkFormatFeatureFlags features = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
+
+  for (int loop_num = 0; loop_num < TOTAL_CANDIDIATES; loop_num++) {
+    VkFormatProperties props;
+    vkGetPhysicalDeviceFormatProperties(physical_device, candidate[loop_num], &props);
+
+    if (tiling == VK_IMAGE_TILING_LINEAR &&
+        (props.linearTilingFeatures & features) == features) {
+      return candidate[loop_num];
+    } else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) {
+      return candidate[loop_num];
+    }
+  }
+
+  return -1;
+}
+
+static inline void graphics_utils_create_color_attachment(VkFormat image_format, struct VkAttachmentDescription *color_attachment) {
+  color_attachment->format = image_format;
+  color_attachment->samples = VK_SAMPLE_COUNT_1_BIT;
+  color_attachment->loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+  color_attachment->storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+  color_attachment->stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+  color_attachment->stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+  color_attachment->initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  color_attachment->finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+}
+
+static inline void graphics_utils_create_depth_attachment(VkPhysicalDevice physical_device, struct VkAttachmentDescription *depth_attachment) {
+  depth_attachment->format = graphics_utils_find_depth_format(physical_device);
+  depth_attachment->samples = VK_SAMPLE_COUNT_1_BIT;
+  depth_attachment->loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+  depth_attachment->storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+  depth_attachment->stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+  depth_attachment->stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+  depth_attachment->initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  depth_attachment->finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 }
 
 #endif  // GRAPHICS_UTILS_H

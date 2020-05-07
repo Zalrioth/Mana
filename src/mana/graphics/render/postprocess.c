@@ -1,11 +1,11 @@
 #include "mana/graphics/render/postprocess.h"
 
-int post_process_init(struct PostProcess* post_process, struct VulkanRenderer* vulkan_renderer) {
+int post_process_init(struct PostProcess* post_process, struct VulkanState* vulkan_renderer) {
   post_process->ping_pong = false;
 
   enum VkFormat image_format = VK_FORMAT_R16G16B16A16_SFLOAT;
   struct VkAttachmentDescription color_attachment = {0};
-  create_color_attachment(vulkan_renderer, &color_attachment);
+  graphics_utils_create_color_attachment(vulkan_renderer->swap_chain->swap_chain_image_format, &color_attachment);
   color_attachment.format = image_format;
   color_attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
@@ -91,7 +91,7 @@ int post_process_init(struct PostProcess* post_process, struct VulkanRenderer* v
   return 1;
 }
 
-int post_process_delete(struct PostProcess* post_process, struct VulkanRenderer* vulkan_renderer) {
+int post_process_delete(struct PostProcess* post_process, struct VulkanState* vulkan_renderer) {
   blit_post_process_delete(post_process->blit_post_process, vulkan_renderer);
   free(post_process->blit_post_process);
 
@@ -110,7 +110,7 @@ int post_process_delete(struct PostProcess* post_process, struct VulkanRenderer*
   return 1;
 }
 
-int post_process_start(struct PostProcess* post_process, struct VulkanRenderer* vulkan_renderer) {
+int post_process_start(struct PostProcess* post_process, struct VulkanState* vulkan_renderer) {
   VkCommandBufferBeginInfo begin_info = {0};
   begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   begin_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
@@ -138,7 +138,7 @@ int post_process_start(struct PostProcess* post_process, struct VulkanRenderer* 
   return VULKAN_RENDERER_SUCCESS;
 }
 
-int post_process_stop(struct PostProcess* post_process, struct VulkanRenderer* vulkan_renderer) {
+int post_process_stop(struct PostProcess* post_process, struct VulkanState* vulkan_renderer) {
   vkCmdEndRenderPass(post_process->post_process_command_buffers[post_process->ping_pong]);
 
   if (vkEndCommandBuffer(post_process->post_process_command_buffers[post_process->ping_pong]) != VK_SUCCESS)
@@ -171,7 +171,7 @@ int post_process_stop(struct PostProcess* post_process, struct VulkanRenderer* v
 
 /////////////////////////////////////////////////
 
-int blit_post_process_init(struct BlitPostProcess* blit_post_process, struct VulkanRenderer* vulkan_renderer) {
+int blit_post_process_init(struct BlitPostProcess* blit_post_process, struct VulkanState* vulkan_renderer) {
   blit_post_process->blit_shader = calloc(1, sizeof(struct BlitShader));
   blit_shader_init(blit_post_process->blit_shader, vulkan_renderer, vulkan_renderer->post_process->render_pass, 1);
 
@@ -215,14 +215,14 @@ int blit_post_process_init(struct BlitPostProcess* blit_post_process, struct Vul
   return 1;
 }
 
-void blit_post_process_delete(struct BlitPostProcess* blit_post_process, struct VulkanRenderer* vulkan_renderer) {
+void blit_post_process_delete(struct BlitPostProcess* blit_post_process, struct VulkanState* vulkan_renderer) {
   fullscreen_quad_delete(blit_post_process->fullscreen_quad, vulkan_renderer);
   free(blit_post_process->fullscreen_quad);
   blit_shader_delete(blit_post_process->blit_shader, vulkan_renderer);
   free(blit_post_process->blit_shader);
 }
 
-int blit_post_process_render(struct BlitPostProcess* blit_post_process, struct VulkanRenderer* vulkan_renderer) {
+int blit_post_process_render(struct BlitPostProcess* blit_post_process, struct VulkanState* vulkan_renderer) {
   // Custom for intial blitting to post process image
   struct PostProcess* post_process = vulkan_renderer->post_process;
 

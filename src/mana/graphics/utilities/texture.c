@@ -2,7 +2,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-int texture_init(struct Texture *texture, struct VulkanRenderer *vulkan_renderer, char *path) {
+int texture_init(struct Texture *texture, struct VulkanState *vulkan_renderer, char *path) {
   // Note: Extra 0 needed to ensure end of string
   int path_length = strlen(path);
   texture->path = malloc(path_length + 1);
@@ -70,7 +70,7 @@ int texture_init(struct Texture *texture, struct VulkanRenderer *vulkan_renderer
   return 0;
 }
 
-void texture_delete(struct VulkanRenderer *vulkan_renderer, struct Texture *texture) {
+void texture_delete(struct VulkanState *vulkan_renderer, struct Texture *texture) {
   vkDestroySampler(vulkan_renderer->device, texture->texture_sampler, NULL);
   vkDestroyImageView(vulkan_renderer->device, texture->texture_image_view, NULL);
 

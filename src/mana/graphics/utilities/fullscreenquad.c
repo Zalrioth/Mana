@@ -1,6 +1,6 @@
 #include "mana/graphics/utilities/fullscreenquad.h"
 
-void fullscreen_quad_init(struct FullscreenQuad* fullscreen_quad, struct VulkanRenderer* vulkan_renderer) {
+void fullscreen_quad_init(struct FullscreenQuad* fullscreen_quad, struct VulkanState* vulkan_renderer) {
   fullscreen_quad->mesh = calloc(1, sizeof(struct Mesh));
   mesh_quad_init(fullscreen_quad->mesh);
 
@@ -41,7 +41,7 @@ void fullscreen_quad_init(struct FullscreenQuad* fullscreen_quad, struct VulkanR
   vkFreeMemory(vulkan_renderer->device, staging_buffer_memory, NULL);
 }
 
-void fullscreen_quad_delete(struct FullscreenQuad* fullscreen_quad, struct VulkanRenderer* vulkan_renderer) {
+void fullscreen_quad_delete(struct FullscreenQuad* fullscreen_quad, struct VulkanState* vulkan_renderer) {
   vkDestroyBuffer(vulkan_renderer->device, fullscreen_quad->index_buffer, NULL);
   vkFreeMemory(vulkan_renderer->device, fullscreen_quad->index_buffer_memory, NULL);
 

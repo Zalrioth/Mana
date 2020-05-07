@@ -1,6 +1,6 @@
 #include "mana/graphics/shaders/shader.h"
 
-int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, char* vertex_shader, char* fragment_shader, char* geometry_shader, VkPipelineVertexInputStateCreateInfo vertex_input_info, VkRenderPass render_pass, VkPipelineColorBlendStateCreateInfo color_blending, VkFrontFace direction, bool depth_test, VkSampleCountFlagBits num_samples, bool supersampled) {
+int shader_init(struct Shader* shader, struct VulkanState* vulkan_renderer, char* vertex_shader, char* fragment_shader, char* geometry_shader, VkPipelineVertexInputStateCreateInfo vertex_input_info, VkRenderPass render_pass, VkPipelineColorBlendStateCreateInfo color_blending, VkFrontFace direction, bool depth_test, VkSampleCountFlagBits num_samples, bool supersampled) {
   int vertex_length = 0;
   int fragment_length = 0;
 
@@ -119,13 +119,13 @@ int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, c
   return VULKAN_RENDERER_SUCCESS;
 }
 
-void shader_delete(struct Shader* shader, struct VulkanRenderer* vulkan_renderer) {
+void shader_delete(struct Shader* shader, struct VulkanState* vulkan_renderer) {
   vkDestroyPipeline(vulkan_renderer->device, shader->graphics_pipeline, NULL);
   vkDestroyPipelineLayout(vulkan_renderer->device, shader->pipeline_layout, NULL);
   vkDestroyDescriptorSetLayout(vulkan_renderer->device, shader->descriptor_set_layout, NULL);
 }
 
-VkShaderModule shader_create_shader_module(struct VulkanRenderer* vulkan_renderer, const char* code, int length) {
+VkShaderModule shader_create_shader_module(struct VulkanState* vulkan_renderer, const char* code, int length) {
   VkShaderModuleCreateInfo create_info = {0};
   create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
   create_info.codeSize = length;

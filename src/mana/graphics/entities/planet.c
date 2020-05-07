@@ -1,16 +1,16 @@
 #include "mana/graphics/entities/planet.h"
 
-void planet_init(struct Planet* planet, struct VulkanRenderer* vulkan_renderer, size_t octree_size, struct Shader* shader, struct Vector* noises, float (*density_func_single)(struct Vector*, float, float, float), float* (*density_func_set)(struct Vector*, float, float, float, int, int, int)) {
+void planet_init(struct Planet* planet, struct VulkanState* vulkan_renderer, size_t octree_size, struct Shader* shader, struct Vector* noises, float (*density_func_single)(struct Vector*, float, float, float), float* (*density_func_set)(struct Vector*, float, float, float, int, int, int)) {
   planet->planet_type = ROUND_PLANET;
   planet->terrain_shader = shader;
   dual_contouring_init(&planet->dual_contouring, vulkan_renderer, octree_size, shader, noises, density_func_single, density_func_set);
 }
 
-void planet_delete(struct Planet* planet, struct VulkanRenderer* vulkan_renderer) {
+void planet_delete(struct Planet* planet, struct VulkanState* vulkan_renderer) {
   dual_contouring_delete(&planet->dual_contouring, vulkan_renderer);
 }
 
-void planet_render(struct Planet* planet, struct VulkanRenderer* vulkan_renderer) {
+void planet_render(struct Planet* planet, struct VulkanState* vulkan_renderer) {
   vkCmdBindPipeline(vulkan_renderer->gbuffer->gbuffer_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, planet->terrain_shader->graphics_pipeline);
   VkBuffer vertex_buffers[] = {planet->dual_contouring.vertex_buffer};
   VkDeviceSize offsets[] = {0};
@@ -21,7 +21,7 @@ void planet_render(struct Planet* planet, struct VulkanRenderer* vulkan_renderer
 }
 
 // TODO: Pass lights and sun position?
-void planet_update_uniforms(struct Planet* planet, struct VulkanRenderer* vulkan_renderer, struct Camera* camera, vec3 light_pos) {
+void planet_update_uniforms(struct Planet* planet, struct VulkanState* vulkan_renderer, struct Camera* camera, vec3 light_pos) {
   struct DualContouringUniformBufferObject dcubo = {{{0}}};
   glm_mat4_copy(vulkan_renderer->gbuffer->projection_matrix, dcubo.proj);
   glm_mat4_copy(vulkan_renderer->gbuffer->view_matrix, dcubo.view);

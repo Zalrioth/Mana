@@ -1,6 +1,6 @@
 #include "mana/graphics/shaders/fxaashader.h"
 
-int fxaa_shader_init(struct FXAAShader* fxaa_shader, struct VulkanRenderer* vulkan_renderer) {
+int fxaa_shader_init(struct FXAAShader* fxaa_shader, struct VulkanState* vulkan_renderer) {
   fxaa_shader->shader = calloc(1, sizeof(struct Shader));
 
   VkDescriptorSetLayoutBinding sampler_layout_binding = {0};
@@ -103,7 +103,7 @@ int fxaa_shader_init(struct FXAAShader* fxaa_shader, struct VulkanRenderer* vulk
   return 0;
 }
 
-void fxaa_shader_delete(struct FXAAShader* fxaa_shader, struct VulkanRenderer* vulkan_renderer) {
+void fxaa_shader_delete(struct FXAAShader* fxaa_shader, struct VulkanState* vulkan_renderer) {
   fullscreen_quad_delete(fxaa_shader->fullscreen_quad, vulkan_renderer);
   free(fxaa_shader->fullscreen_quad);
   vkDestroyDescriptorPool(vulkan_renderer->device, fxaa_shader->shader->descriptor_pool, NULL);
@@ -111,7 +111,7 @@ void fxaa_shader_delete(struct FXAAShader* fxaa_shader, struct VulkanRenderer* v
   free(fxaa_shader->shader);
 }
 
-void fxaa_shader_render(struct FXAAShader* fxaa_shader, struct VulkanRenderer* vulkan_renderer) {
+void fxaa_shader_render(struct FXAAShader* fxaa_shader, struct VulkanState* vulkan_renderer) {
   post_process_start(vulkan_renderer->post_process, vulkan_renderer);
 
   vkCmdBindPipeline(vulkan_renderer->post_process->post_process_command_buffers[vulkan_renderer->post_process->ping_pong], VK_PIPELINE_BIND_POINT_GRAPHICS, fxaa_shader->shader->graphics_pipeline);

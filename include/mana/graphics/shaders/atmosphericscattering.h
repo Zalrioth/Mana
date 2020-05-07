@@ -36,8 +36,8 @@ struct AtmosphericScatteringShader {
   VkDeviceMemory uniform_buffer_settings_memory;
 };
 
-int atmospheric_scattering_shader_init(struct AtmosphericScatteringShader* atmospheric_scattering_shader, struct VulkanRenderer* vulkan_renderer);
-void atmospheric_scattering_shader_delete(struct AtmosphericScatteringShader* atmospheric_scattering_shader, struct VulkanRenderer* vulkan_renderer);
-void atmospheric_scattering_shader_render(struct AtmosphericScatteringShader* atmospheric_scattering_shader, struct VulkanRenderer* vulkan_renderer);
+int atmospheric_scattering_shader_init(struct AtmosphericScatteringShader* atmospheric_scattering_shader, struct VulkanState* vulkan_renderer);
+void atmospheric_scattering_shader_delete(struct AtmosphericScatteringShader* atmospheric_scattering_shader, struct VulkanState* vulkan_renderer);
+void atmospheric_scattering_shader_render(struct AtmosphericScatteringShader* atmospheric_scattering_shader, struct VulkanState* vulkan_renderer);
 
 #endif  // ATMOSPHERIC_SCATTERING_H

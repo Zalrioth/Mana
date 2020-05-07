@@ -2,9 +2,14 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
+#include "mana/core/memoryallocator.h"
+//
 #include <time.h>
-#include "mana/graphics/render/window.h"
 
+#include "mana/core/gpuapi.h"
+#include "mana/core/graphicslibrary.h"
+#include "mana/core/vulkancore.h"
+#include "mana/graphics/render/window.h"
 #define FPS_COUNT 10
 
 struct FPSCounter {
@@ -28,9 +33,16 @@ struct FPSCounter {
   int second_updates;
 };
 
+struct EngineSettings {
+  enum GraphicsLibraryType graphics_library_type;
+  enum APIType gpu_api_type;
+};
+
 struct Engine {
-  struct Window window;
+  struct EngineSettings engine_settings;
   struct FPSCounter fps_counter;
+  struct GraphicsLibrary graphics_library;
+  struct GPUAPI gpu_api;
 };
 
 enum EngineStatus {
@@ -39,8 +51,8 @@ enum EngineStatus {
   ENGINE_VULKAN_SUPPORT_ERROR = 2
 };
 
-int engine_init(struct Engine* engine);
+int engine_init(struct Engine* engine, struct EngineSettings engine_settings);
 void engine_delete(struct Engine* engine);
-double get_time();
+double engine_get_time();
 
 #endif  // ENGINE_H

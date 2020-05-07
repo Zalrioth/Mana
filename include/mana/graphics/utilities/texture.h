@@ -10,7 +10,7 @@
 #include "mana/graphics/render/vulkanrenderer.h"
 #include "mana/graphics/utilities/graphicsutils.h"
 
-struct VulkanRenderer;
+struct VulkanState;
 
 struct Texture {
   // TODO: Will probably need to use this later, maybe global static int that increments after each texture creation
@@ -23,8 +23,8 @@ struct Texture {
   VkSampler texture_sampler;            // Image sampling settings
 };
 
-int texture_init(struct Texture *texture, struct VulkanRenderer *vulkan_renderer, char *path);
-void texture_delete(struct VulkanRenderer *vulkan_renderer, struct Texture *texture);
-void texture_copy_buffer_to_image(struct VulkanRenderer *vulkan_renderer, VkBuffer *buffer, VkImage *image, uint32_t width, uint32_t height);
+int texture_init(struct Texture *texture, struct VulkanState *vulkan_renderer, char *path);
+void texture_delete(struct VulkanState *vulkan_renderer, struct Texture *texture);
+void texture_copy_buffer_to_image(struct VulkanState *vulkan_renderer, VkBuffer *buffer, VkImage *image, uint32_t width, uint32_t height);
 
 #endif  // TEXTURE_H

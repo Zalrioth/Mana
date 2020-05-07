@@ -1,7 +1,8 @@
 #include "mana/mana.h"
 
-int mana_init(struct Mana* mana) {
-  int engine_error = engine_init(&mana->engine);
+int mana_init(struct Mana* mana, struct EngineSettings engine_settings) {
+  mana->engine.engine_settings = engine_settings;
+  int engine_error = engine_init(&mana->engine, engine_settings);
   switch (engine_error) {
     default:
       break;
@@ -14,17 +15,6 @@ int mana_init(struct Mana* mana) {
   }
 
   return MANA_SUCCESS;
-}
-
-int mana_new_window(struct Mana* mana, int width, int height) {
-  if (window_init(&mana->engine.window, width, height) != MANA_SUCCESS)
-    return MANA_WINDOW_ERROR;
-
-  return MANA_SUCCESS;
-}
-
-void mana_close_window(struct Mana* mana) {
-  window_delete(&mana->engine.window);
 }
 
 void mana_cleanup(struct Mana* mana) {

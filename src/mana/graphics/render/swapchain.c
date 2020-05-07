@@ -1,6 +1,6 @@
 #include "mana/graphics/render/swapchain.h"
 
-int swap_chain_init(struct SwapChain* swap_chain, struct VulkanRenderer* vulkan_renderer, int width, int height) {
+int swap_chain_init(struct SwapChain* swap_chain, struct VulkanState* vulkan_renderer, int width, int height) {
   // TODO: Load this from options and maybe move later
   swap_chain->supersample_scale = 1.0f;
   swap_chain->current_frame = 0;
@@ -130,7 +130,7 @@ int swap_chain_init(struct SwapChain* swap_chain, struct VulkanRenderer* vulkan_
   }
 
   struct VkAttachmentDescription color_attachment = {0};
-  create_color_attachment(vulkan_renderer, &color_attachment);
+  graphics_utils_create_color_attachment(vulkan_renderer->swap_chain->swap_chain_image_format, &color_attachment);
   color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 
   VkAttachmentReference color_attachment_ref = {0};
@@ -207,7 +207,7 @@ int swap_chain_init(struct SwapChain* swap_chain, struct VulkanRenderer* vulkan_
   //return VULKAN_RENDERER_SUCCESS;
 }
 
-void swap_chain_delete(struct SwapChain* swap_chain, struct VulkanRenderer* vulkan_renderer) {
+void swap_chain_delete(struct SwapChain* swap_chain, struct VulkanState* vulkan_renderer) {
   blit_swap_chain_delete(swap_chain->blit_swap_chain, vulkan_renderer);
   free(swap_chain->blit_swap_chain);
 
@@ -231,7 +231,7 @@ void swap_chain_delete(struct SwapChain* swap_chain, struct VulkanRenderer* vulk
   }
 }
 
-int swap_chain_start(struct SwapChain* swap_chain, struct VulkanRenderer* vulkan_renderer, int swap_chain_num) {
+int swap_chain_start(struct SwapChain* swap_chain, struct VulkanState* vulkan_renderer, int swap_chain_num) {
   VkCommandBufferBeginInfo begin_info = {0};
   begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   begin_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
@@ -259,7 +259,7 @@ int swap_chain_start(struct SwapChain* swap_chain, struct VulkanRenderer* vulkan
   return VULKAN_RENDERER_SUCCESS;
 }
 
-int swap_chain_stop(struct SwapChain* swap_chain, struct VulkanRenderer* vulkan_renderer, int swap_chain_num) {
+int swap_chain_stop(struct SwapChain* swap_chain, struct VulkanState* vulkan_renderer, int swap_chain_num) {
   vkCmdEndRenderPass(swap_chain->swap_chain_command_buffers[swap_chain_num]);
 
   if (vkEndCommandBuffer(swap_chain->swap_chain_command_buffers[swap_chain_num]) != VK_SUCCESS)
@@ -270,7 +270,7 @@ int swap_chain_stop(struct SwapChain* swap_chain, struct VulkanRenderer* vulkan_
 
 /////////////////////////////////////////////////
 
-int blit_swap_chain_init(struct BlitSwapChain* blit_swap_chain, struct VulkanRenderer* vulkan_renderer) {
+int blit_swap_chain_init(struct BlitSwapChain* blit_swap_chain, struct VulkanState* vulkan_renderer) {
   blit_swap_chain->blit_shader = calloc(1, sizeof(struct BlitShader));
   blit_shader_init(blit_swap_chain->blit_shader, vulkan_renderer, vulkan_renderer->swap_chain->render_pass, 2);
 
@@ -318,14 +318,14 @@ int blit_swap_chain_init(struct BlitSwapChain* blit_swap_chain, struct VulkanRen
   return 1;
 }
 
-void blit_swap_chain_delete(struct BlitSwapChain* blit_swap_chain, struct VulkanRenderer* vulkan_renderer) {
+void blit_swap_chain_delete(struct BlitSwapChain* blit_swap_chain, struct VulkanState* vulkan_renderer) {
   fullscreen_quad_delete(blit_swap_chain->fullscreen_quad, vulkan_renderer);
   free(blit_swap_chain->fullscreen_quad);
   blit_shader_delete(blit_swap_chain->blit_shader, vulkan_renderer);
   free(blit_swap_chain->blit_shader);
 }
 
-void blit_swap_chain_render(struct BlitSwapChain* blit_swap_chain, struct VulkanRenderer* vulkan_renderer) {
+void blit_swap_chain_render(struct BlitSwapChain* blit_swap_chain, struct VulkanState* vulkan_renderer) {
   for (size_t swapchain_num = 0; swapchain_num < MAX_SWAP_CHAIN_FRAMES; swapchain_num++) {
     swap_chain_start(vulkan_renderer->swap_chain, vulkan_renderer, swapchain_num);
 

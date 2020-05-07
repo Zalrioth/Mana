@@ -7,7 +7,7 @@ int HelloThread(void* aArg) {
   return 0;
 }
 
-int dual_contouring_init(struct DualContouring* dual_contouring, struct VulkanRenderer* vulkan_renderer, int octree_size, struct Shader* shader, struct Vector* noises, float (*density_func_single)(struct Vector*, float, float, float), float* (*density_func_set)(struct Vector*, float, float, float, int, int, int)) {
+int dual_contouring_init(struct DualContouring* dual_contouring, struct VulkanState* vulkan_renderer, int octree_size, struct Shader* shader, struct Vector* noises, float (*density_func_single)(struct Vector*, float, float, float), float* (*density_func_set)(struct Vector*, float, float, float, int, int, int)) {
   dual_contouring->noises = noises;
   dual_contouring->density_func_single = density_func_single;
   dual_contouring->density_func_set = density_func_set;
@@ -140,7 +140,7 @@ int dual_contouring_init(struct DualContouring* dual_contouring, struct VulkanRe
   return 0;
 }
 
-void dual_contouring_delete(struct DualContouring* dual_contouring, struct VulkanRenderer* vulkan_renderer) {
+void dual_contouring_delete(struct DualContouring* dual_contouring, struct VulkanState* vulkan_renderer) {
   vkDestroyBuffer(vulkan_renderer->device, dual_contouring->index_buffer, NULL);
   vkFreeMemory(vulkan_renderer->device, dual_contouring->index_buffer_memory, NULL);
 

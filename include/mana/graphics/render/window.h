@@ -4,24 +4,23 @@
 
 #include "mana/core/memoryallocator.h"
 //
+#include "mana/core/engine.h"
+#include "mana/core/gpuapi.h"
+#include "mana/core/graphicslibrary.h"
 #include "mana/core/inputmanager.h"
+#include "mana/core/vulkancore.h"
 #include "mana/graphics/render/vulkanrenderer.h"
 
-#define VULKAN_WAIT_SEMAPHORES 2
+struct Engine;
 
-enum RendererType { VULKAN };
-
-union Renderer {
-  struct VulkanRenderer vulkan_renderer;
-};
+GLFWwindow* glfw_window;
 
 struct Window {
   int width;
   int height;
-  enum RendererType renderer_type;
-  union Renderer renderer;
   struct InputManager* input_manager;
   uint32_t image_index;
+  struct Engine* engine;
 };
 
 enum {
@@ -29,10 +28,12 @@ enum {
   WINDOW_SUCCESS = 1
 };
 
-int window_init(struct Window* window, int width, int height);
-void window_delete(struct Window* game_window);
+int window_init(struct Window* window, struct Engine* engine, int width, int height);
+void window_delete(struct Window* window);
+void window_set_title(struct Window* window, char* title);
 bool window_should_close(struct Window* window);
 void window_prepare_frame(struct Window* window);
 void window_end_frame(struct Window* window);
+int window_glfw_window_init(struct Window* window, struct Engine* engine, int width, int height);
 
 #endif  // WINDOW_H

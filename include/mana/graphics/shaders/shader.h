@@ -8,7 +8,7 @@
 #include "mana/core/fileio.h"
 #include "mana/graphics/render/vulkanrenderer.h"
 
-struct VulkanRenderer;
+struct VulkanState;
 
 struct Shader {
   struct VkPipelineLayout_T* pipeline_layout;
@@ -18,9 +18,9 @@ struct Shader {
 };
 
 // TODO: Create struct for settings to reduce parameters
-int shader_init(struct Shader* shader, struct VulkanRenderer* vulkan_renderer, char* vertex_shader, char* fragment_shader, char* geometry_shader, VkPipelineVertexInputStateCreateInfo vertex_input_info, VkRenderPass render_pass, VkPipelineColorBlendStateCreateInfo color_blending, VkFrontFace direction, bool depth_test, VkSampleCountFlagBits num_samples, bool supersampled);
-void shader_delete(struct Shader* shader, struct VulkanRenderer* vulkan_renderer);
-VkShaderModule shader_create_shader_module(struct VulkanRenderer* vulkan_renderer, const char* code, int length);
-int sprite_create_sprite_descriptor_pool(struct Shader* shader, struct VulkanRenderer* vulkan_renderer);
+int shader_init(struct Shader* shader, struct VulkanState* vulkan_renderer, char* vertex_shader, char* fragment_shader, char* geometry_shader, VkPipelineVertexInputStateCreateInfo vertex_input_info, VkRenderPass render_pass, VkPipelineColorBlendStateCreateInfo color_blending, VkFrontFace direction, bool depth_test, VkSampleCountFlagBits num_samples, bool supersampled);
+void shader_delete(struct Shader* shader, struct VulkanState* vulkan_renderer);
+VkShaderModule shader_create_shader_module(struct VulkanState* vulkan_renderer, const char* code, int length);
+int sprite_create_sprite_descriptor_pool(struct Shader* shader, struct VulkanState* vulkan_renderer);
 
 #endif

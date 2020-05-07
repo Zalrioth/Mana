@@ -1,10 +1,10 @@
 #include "mana/graphics/render/gbuffer.h"
 
-int gbuffer_init(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer) {
+int gbuffer_init(struct GBuffer* gbuffer, struct VulkanState* vulkan_renderer) {
   //VK_FORMAT_A2B10G10R10_UNORM_PACK32
   VkFormat image_format = VK_FORMAT_R16G16B16A16_SFLOAT;
   VkImageUsageFlags image_usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-  VkFormat depth_format = find_depth_format(vulkan_renderer);
+  VkFormat depth_format = graphics_utils_find_depth_format(vulkan_renderer->physical_device);
 
   uint32_t gbuffer_width = vulkan_renderer->swap_chain->swap_chain_extent.width * vulkan_renderer->swap_chain->supersample_scale;
   uint32_t gbuffer_height = vulkan_renderer->swap_chain->swap_chain_extent.height * vulkan_renderer->swap_chain->supersample_scale;
@@ -24,20 +24,20 @@ int gbuffer_init(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer
   graphics_utils_create_image_view(vulkan_renderer->device, gbuffer->multisample_depth_image, depth_format, VK_IMAGE_ASPECT_DEPTH_BIT, 1, &gbuffer->multisample_depth_image_view);
 
   VkAttachmentDescription multisample_color_attachment = {0};
-  create_color_attachment(vulkan_renderer, &multisample_color_attachment);
+  graphics_utils_create_color_attachment(vulkan_renderer->swap_chain->swap_chain_image_format, &multisample_color_attachment);
   multisample_color_attachment.format = image_format;
   multisample_color_attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   multisample_color_attachment.samples = vulkan_renderer->msaa_samples;
   //multisample_color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 
   VkAttachmentDescription multisample_normal_attachment = {0};
-  create_color_attachment(vulkan_renderer, &multisample_normal_attachment);
+  graphics_utils_create_color_attachment(vulkan_renderer->swap_chain->swap_chain_image_format, &multisample_normal_attachment);
   multisample_normal_attachment.format = image_format;
   multisample_normal_attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   multisample_normal_attachment.samples = vulkan_renderer->msaa_samples;
 
   VkAttachmentDescription multisample_depth_attachment = {0};
-  create_depth_attachment(vulkan_renderer, &multisample_depth_attachment);
+  graphics_utils_create_depth_attachment(vulkan_renderer->physical_device, &multisample_depth_attachment);
   multisample_depth_attachment.samples = vulkan_renderer->msaa_samples;
 
   VkAttachmentReference multisample_color_attachment_ref = {0};
@@ -60,13 +60,13 @@ int gbuffer_init(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer
   graphics_utils_create_image_view(vulkan_renderer->device, gbuffer->normal_image, image_format, VK_IMAGE_ASPECT_COLOR_BIT, 1, &vulkan_renderer->gbuffer->normal_image_view);
 
   VkAttachmentDescription color_attachment = {0};
-  create_color_attachment(vulkan_renderer, &color_attachment);
+  graphics_utils_create_color_attachment(vulkan_renderer->swap_chain->swap_chain_image_format, &color_attachment);
   color_attachment.format = image_format;
   color_attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   //color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 
   VkAttachmentDescription normal_attachment = {0};
-  create_color_attachment(vulkan_renderer, &normal_attachment);
+  graphics_utils_create_color_attachment(vulkan_renderer->swap_chain->swap_chain_image_format, &normal_attachment);
   normal_attachment.format = image_format;
   normal_attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
@@ -156,7 +156,7 @@ int gbuffer_init(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer
   //return VULKAN_RENDERER_SUCCESS;
 }
 
-void gbuffer_delete(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer) {
+void gbuffer_delete(struct GBuffer* gbuffer, struct VulkanState* vulkan_renderer) {
   vkDestroySemaphore(vulkan_renderer->device, gbuffer->gbuffer_semaphore, NULL);
   vkDestroySampler(vulkan_renderer->device, gbuffer->texture_sampler, NULL);
   vkDestroyFramebuffer(vulkan_renderer->device, gbuffer->gbuffer_framebuffer, NULL);
@@ -185,7 +185,7 @@ void gbuffer_delete(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_rende
   vkFreeMemory(vulkan_renderer->device, gbuffer->multisample_depth_image_memory, NULL);
 }
 
-int gbuffer_start(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer) {
+int gbuffer_start(struct GBuffer* gbuffer, struct VulkanState* vulkan_renderer) {
   VkCommandBufferBeginInfo begin_info = {0};
   begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   begin_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
@@ -230,7 +230,7 @@ int gbuffer_start(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_rendere
   return VULKAN_RENDERER_SUCCESS;
 }
 
-int gbuffer_stop(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer) {
+int gbuffer_stop(struct GBuffer* gbuffer, struct VulkanState* vulkan_renderer) {
   vkCmdEndRenderPass(gbuffer->gbuffer_command_buffer);
 
   if (vkEndCommandBuffer(gbuffer->gbuffer_command_buffer) != VK_SUCCESS)

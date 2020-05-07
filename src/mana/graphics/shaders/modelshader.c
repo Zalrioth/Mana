@@ -1,6 +1,6 @@
 #include "mana/graphics/shaders/modelshader.h"
 
-int model_shader_init(struct ModelShader* model_shader, struct VulkanRenderer* vulkan_renderer) {
+int model_shader_init(struct ModelShader* model_shader, struct VulkanState* vulkan_renderer) {
   VkDescriptorSetLayoutBinding ubo_layout_binding = {0};
   ubo_layout_binding.binding = 0;
   ubo_layout_binding.descriptorCount = 1;
@@ -86,7 +86,7 @@ int model_shader_init(struct ModelShader* model_shader, struct VulkanRenderer* v
   return 1;
 }
 
-void model_shader_delete(struct ModelShader* model_shader, struct VulkanRenderer* vulkan_renderer) {
+void model_shader_delete(struct ModelShader* model_shader, struct VulkanState* vulkan_renderer) {
   shader_delete(&model_shader->shader, vulkan_renderer);
 
   vkDestroyDescriptorPool(vulkan_renderer->device, model_shader->shader.descriptor_pool, NULL);

@@ -14,7 +14,7 @@ struct FullscreenQuad {
   VkDeviceMemory index_buffer_memory;
 };
 
-void fullscreen_quad_init(struct FullscreenQuad* fullscreen_quad, struct VulkanRenderer* vulkan_renderer);
-void fullscreen_quad_delete(struct FullscreenQuad* fullscreen_quad, struct VulkanRenderer* vulkan_renderer);
+void fullscreen_quad_init(struct FullscreenQuad* fullscreen_quad, struct VulkanState* vulkan_renderer);
+void fullscreen_quad_delete(struct FullscreenQuad* fullscreen_quad, struct VulkanState* vulkan_renderer);
 
 #endif  // FULLSCREEN_QUAD_H

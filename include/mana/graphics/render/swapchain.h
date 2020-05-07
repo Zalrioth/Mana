@@ -10,7 +10,7 @@
 #include "mana/graphics/shaders/shader.h"
 #include "mana/graphics/utilities/fullscreenquad.h"
 
-struct VulkanRenderer;
+struct VulkanState;
 
 struct SwapChainSupportDetails {
   struct VkSurfaceCapabilitiesKHR capabilities;
@@ -43,13 +43,13 @@ struct SwapChain {
   struct BlitSwapChain* blit_swap_chain;
 };
 
-int swap_chain_init(struct SwapChain* swap_chain, struct VulkanRenderer* vulkan_renderer, int width, int height);
-void swap_chain_delete(struct SwapChain* swap_chain, struct VulkanRenderer* vulkan_renderer);
-int swap_chain_start(struct SwapChain* swap_chain, struct VulkanRenderer* vulkan_renderer, int swap_chain_num);
-int swap_chain_stop(struct SwapChain* swap_chain, struct VulkanRenderer* vulkan_renderer, int swap_chain_num);
+int swap_chain_init(struct SwapChain* swap_chain, struct VulkanState* vulkan_renderer, int width, int height);
+void swap_chain_delete(struct SwapChain* swap_chain, struct VulkanState* vulkan_renderer);
+int swap_chain_start(struct SwapChain* swap_chain, struct VulkanState* vulkan_renderer, int swap_chain_num);
+int swap_chain_stop(struct SwapChain* swap_chain, struct VulkanState* vulkan_renderer, int swap_chain_num);
 
-int blit_swap_chain_init(struct BlitSwapChain* blit_swap_chain, struct VulkanRenderer* vulkan_renderer);
-void blit_swap_chain_delete(struct BlitSwapChain* blit_swap_chain, struct VulkanRenderer* vulkan_renderer);
-void blit_swap_chain_render(struct BlitSwapChain* blit_swap_chain, struct VulkanRenderer* vulkan_renderer);
+int blit_swap_chain_init(struct BlitSwapChain* blit_swap_chain, struct VulkanState* vulkan_renderer);
+void blit_swap_chain_delete(struct BlitSwapChain* blit_swap_chain, struct VulkanState* vulkan_renderer);
+void blit_swap_chain_render(struct BlitSwapChain* blit_swap_chain, struct VulkanState* vulkan_renderer);
 
 #endif  // SWAP_CHAIN_H

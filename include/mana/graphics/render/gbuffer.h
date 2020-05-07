@@ -10,7 +10,7 @@
 #define GBUFFER_TOTAL_DEPENDENCIES 2
 #define GBUFFER_TOTAL_ATTACHMENTS 5
 
-struct VulkanRenderer;
+struct VulkanState;
 
 struct GBuffer {
   VkCommandBuffer gbuffer_command_buffer;
@@ -42,9 +42,9 @@ struct GBuffer {
   mat4 view_matrix;
 };
 
-int gbuffer_init(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer);
-void gbuffer_delete(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer);
-int gbuffer_start(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer);
-int gbuffer_stop(struct GBuffer* gbuffer, struct VulkanRenderer* vulkan_renderer);
+int gbuffer_init(struct GBuffer* gbuffer, struct VulkanState* vulkan_renderer);
+void gbuffer_delete(struct GBuffer* gbuffer, struct VulkanState* vulkan_renderer);
+int gbuffer_start(struct GBuffer* gbuffer, struct VulkanState* vulkan_renderer);
+int gbuffer_stop(struct GBuffer* gbuffer, struct VulkanState* vulkan_renderer);
 
 #endif  // G_BUFFER_H

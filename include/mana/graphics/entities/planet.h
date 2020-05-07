@@ -17,9 +17,9 @@ struct Planet {
   struct Shader* terrain_shader;
 };
 
-void planet_init(struct Planet* planet, struct VulkanRenderer* vulkan_renderer, size_t octree_size, struct Shader* shader, struct Vector* noises, float (*density_func_single)(struct Vector*, float, float, float), float* (*density_func_set)(struct Vector*, float, float, float, int, int, int));
-void planet_delete(struct Planet* planet, struct VulkanRenderer* vulkan_renderer);
-void planet_render(struct Planet* planet, struct VulkanRenderer* vulkan_renderer);
-void planet_update_uniforms(struct Planet* planet, struct VulkanRenderer* vulkan_renderer, struct Camera* camera, vec3 light_pos);
+void planet_init(struct Planet* planet, struct VulkanState* vulkan_renderer, size_t octree_size, struct Shader* shader, struct Vector* noises, float (*density_func_single)(struct Vector*, float, float, float), float* (*density_func_set)(struct Vector*, float, float, float, int, int, int));
+void planet_delete(struct Planet* planet, struct VulkanState* vulkan_renderer);
+void planet_render(struct Planet* planet, struct VulkanState* vulkan_renderer);
+void planet_update_uniforms(struct Planet* planet, struct VulkanState* vulkan_renderer, struct Camera* camera, vec3 light_pos);
 
 #endif  // PLANET_H

@@ -1,6 +1,6 @@
 #include "mana/graphics/shaders/blitshader.h"
 
-int blit_shader_init(struct BlitShader* blit_shader, struct VulkanRenderer* vulkan_renderer, VkRenderPass render_pass, int descriptors) {
+int blit_shader_init(struct BlitShader* blit_shader, struct VulkanState* vulkan_renderer, VkRenderPass render_pass, int descriptors) {
   blit_shader->shader = calloc(1, sizeof(struct Shader));
 
   VkDescriptorSetLayoutBinding sampler_layout_binding = {0};
@@ -62,7 +62,7 @@ int blit_shader_init(struct BlitShader* blit_shader, struct VulkanRenderer* vulk
   return 1;
 }
 
-void blit_shader_delete(struct BlitShader* blit_shader, struct VulkanRenderer* vulkan_renderer) {
+void blit_shader_delete(struct BlitShader* blit_shader, struct VulkanState* vulkan_renderer) {
   vkDestroyDescriptorPool(vulkan_renderer->device, blit_shader->shader->descriptor_pool, NULL);
   shader_delete(blit_shader->shader, vulkan_renderer);
   free(blit_shader->shader);

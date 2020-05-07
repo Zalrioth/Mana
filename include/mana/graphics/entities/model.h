@@ -4,6 +4,7 @@
 
 #include "mana/core/memoryallocator.h"
 //
+#include "mana/core/vulkancore.h"
 #include "mana/core/xmlparser.h"
 #include "mana/graphics/graphicscommon.h"
 #include "mana/graphics/render/vulkanrenderer.h"
@@ -122,7 +123,7 @@ enum {
   MODEL_SUCCESS = 1
 };
 
-int model_init(struct Model* model, struct VulkanRenderer* vulkan_renderer, char* node_path, char* texture_path, int max_weights, struct Shader* shader);
+int model_init(struct Model* model, struct VulkanState* vulkan_instance, char* node_path, char* texture_path, int max_weights, struct Shader* shader);
 struct Joint* model_create_joints(struct JointData* root_joint_data);
 struct KeyFrame* model_create_key_frame(struct KeyFrameData* data);
 struct JointTransform* model_create_transform(struct JointTransformData* data);

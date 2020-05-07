@@ -1,6 +1,6 @@
 #include "mana/graphics/shaders/spriteshader.h"
 
-int sprite_shader_init(struct SpriteShader* sprite_shader, struct VulkanRenderer* vulkan_renderer) {
+int sprite_shader_init(struct SpriteShader* sprite_shader, struct VulkanState* vulkan_renderer) {
   VkDescriptorSetLayoutBinding ubo_layout_binding = {0};
   ubo_layout_binding.binding = 0;
   ubo_layout_binding.descriptorCount = 1;
@@ -86,7 +86,7 @@ int sprite_shader_init(struct SpriteShader* sprite_shader, struct VulkanRenderer
   return 1;
 }
 
-void sprite_shader_delete(struct SpriteShader* sprite_shader, struct VulkanRenderer* vulkan_renderer) {
+void sprite_shader_delete(struct SpriteShader* sprite_shader, struct VulkanState* vulkan_renderer) {
   shader_delete(&sprite_shader->shader, vulkan_renderer);
 
   vkDestroyDescriptorPool(vulkan_renderer->device, sprite_shader->shader.descriptor_pool, NULL);

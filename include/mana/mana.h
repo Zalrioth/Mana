@@ -14,9 +14,7 @@ enum {
   MANA_WINDOW_ERROR = 2
 };
 
-int mana_init(struct Mana* mana);
-int mana_new_window(struct Mana* mana, int width, int height);
-void mana_close_window(struct Mana* mana);
+int mana_init(struct Mana* mana, struct EngineSettings engine_settings);
 void mana_cleanup(struct Mana* mana);
 
 #endif  // MANA_H

@@ -10,7 +10,7 @@
 //  glm_vec3_crossn(v1, v2, dest);
 //}
 
-int sprite_init(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer, struct Shader* shader) {
+int sprite_init(struct Sprite* sprite, struct VulkanState* vulkan_renderer, struct Shader* shader) {
   sprite->image_mesh = calloc(1, sizeof(struct Mesh));
   mesh_sprite_init(sprite->image_mesh);
 
@@ -128,7 +128,7 @@ int sprite_init(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer, s
   return SPRITE_SUCCESS;
 }
 
-void sprite_delete(struct Sprite* sprite, struct VulkanRenderer* vulkan_renderer) {
+void sprite_delete(struct Sprite* sprite, struct VulkanState* vulkan_renderer) {
   vkDestroyBuffer(vulkan_renderer->device, sprite->index_buffer, NULL);
   vkFreeMemory(vulkan_renderer->device, sprite->index_buffer_memory, NULL);
 

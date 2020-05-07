@@ -4,7 +4,7 @@
 
 #include <cglm/cglm.h>
 
-#include "mana/core/engine.h"
+#include "mana//graphics/render/window.h"
 #include "mana/graphics/graphicscommon.h"
 
 #define YAW -90.0f
@@ -39,7 +39,7 @@ struct Camera {
 };
 
 void camera_init(struct Camera* camera);
-void camera_get_projection_matrix(struct Camera* camera, struct Engine* engine, mat4 dest);
+void camera_get_projection_matrix(struct Camera* camera, struct Window* window, mat4 dest);
 void camera_get_view_matrix(struct Camera* camera, mat4 dest);
 void camera_update_vectors(struct Camera* camera);
 

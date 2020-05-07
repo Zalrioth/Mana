@@ -1,6 +1,6 @@
 #include "mana/graphics/shaders/dualcontouringshader.h"
 
-int dual_contouring_shader_init(struct DualContouringShader* dual_countouring_shader, struct VulkanRenderer* vulkan_renderer) {
+int dual_contouring_shader_init(struct DualContouringShader* dual_countouring_shader, struct VulkanState* vulkan_renderer) {
   VkDescriptorSetLayoutBinding dcubo_layout_binding = {0};
   dcubo_layout_binding.binding = 0;
   dcubo_layout_binding.descriptorCount = 1;
@@ -85,7 +85,7 @@ int dual_contouring_shader_init(struct DualContouringShader* dual_countouring_sh
   return 1;
 }
 
-void dual_contouring_shader_delete(struct DualContouringShader* dual_countouring_shader, struct VulkanRenderer* vulkan_renderer) {
+void dual_contouring_shader_delete(struct DualContouringShader* dual_countouring_shader, struct VulkanState* vulkan_renderer) {
   shader_delete(&dual_countouring_shader->shader, vulkan_renderer);
 
   vkDestroyDescriptorPool(vulkan_renderer->device, dual_countouring_shader->shader.descriptor_pool, NULL);

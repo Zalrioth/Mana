@@ -17,8 +17,8 @@ struct FXAAShader {
   struct FullscreenQuad* fullscreen_quad;
 };
 
-int fxaa_shader_init(struct FXAAShader* fxaa_shader, struct VulkanRenderer* vulkan_renderer);
-void fxaa_shader_delete(struct FXAAShader* fxaa_shader, struct VulkanRenderer* vulkan_renderer);
-void fxaa_shader_render(struct FXAAShader* fxaa_shader, struct VulkanRenderer* vulkan_renderer);
+int fxaa_shader_init(struct FXAAShader* fxaa_shader, struct VulkanState* vulkan_renderer);
+void fxaa_shader_delete(struct FXAAShader* fxaa_shader, struct VulkanState* vulkan_renderer);
+void fxaa_shader_render(struct FXAAShader* fxaa_shader, struct VulkanState* vulkan_renderer);
 
 #endif  // FXAA_SHADER_H
