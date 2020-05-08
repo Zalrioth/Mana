@@ -11,6 +11,12 @@
 
 struct GraphicsLibrary;
 
+enum GPU_API_STATUS {
+  GPU_API_SUCCESS = 0,
+  GPU_API_VULKAN_ERROR,
+  GPU_API_LAST_ERROR
+};
+
 enum APIType { VULKAN_API = 0 };
 
 struct GPUAPI {

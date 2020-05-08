@@ -12,6 +12,13 @@
 #include "mana/graphics/render/window.h"
 #define FPS_COUNT 10
 
+enum ENGINE_STATUS {
+  ENGINE_SUCCESS = 0,
+  ENGINE_GRAPHICS_LIBRARY_ERROR,
+  ENGINE_GPU_API_ERROR,
+  ENGINE_LAST_ERROR
+};
+
 struct FPSCounter {
   int fps_past[FPS_COUNT];
   double limit_update_fps;
@@ -43,12 +50,6 @@ struct Engine {
   struct FPSCounter fps_counter;
   struct GraphicsLibrary graphics_library;
   struct GPUAPI gpu_api;
-};
-
-enum EngineStatus {
-  ENGINE_GLFW_ERROR = 0,
-  ENGINE_SUCCESS = 1,
-  ENGINE_VULKAN_SUPPORT_ERROR = 2
 };
 
 int engine_init(struct Engine* engine, struct EngineSettings engine_settings);

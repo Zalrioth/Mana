@@ -9,9 +9,23 @@
 
 #include "mana/core/gpuapi.h"
 
-enum GraphicsLibraryType { NO_LIBRARY = 0,
-                           GLFW_LIBRARY = 1,
-                           MOLTENVK_LIBRARY = 2
+enum GRAPHICS_LIBRARY_STATUS {
+  GRAPHICS_LIBRARY_SUCCESS = 0,
+  GRAPHICS_LIBRARY_GLFW_ERROR,
+  GRAPHICS_LIBRARY_LAST_ERROR
+};
+
+enum GLFW_LIBRARY_STATUS {
+  GLFW_SUCCESS = 0,
+  GLFW_INIT_ERROR,
+  GLFW_VULKAN_SUPPORT_ERROR,
+  GLFW_LAST_ERROR
+};
+
+enum GraphicsLibraryType {
+  NO_LIBRARY = 0,
+  GLFW_LIBRARY = 1,
+  MOLTENVK_LIBRARY = 2
 };
 
 struct GLFWLibrary {
@@ -26,7 +40,8 @@ struct GraphicsLibrary {
 };
 
 int graphics_library_init(struct GraphicsLibrary* graphics_library, enum GraphicsLibraryType graphics_library_type);
-int glfw_init();
-int glfw_delete();
+
+static int glfw_library_init();
+static void glfw_delete();
 
 #endif  // WINDOW_LIBRARY_H

@@ -45,10 +45,12 @@ int vulken_renderer_glfw_init(struct VulkanState* vulkan_state);
 bool vulken_renderer_check_validation_layer_support();
 void vulken_renderer_recreate_swap_chain(struct VulkanState* vulkan_state);
 int vulken_renderer_create_surface(struct VulkanState* vulkan_state);
+static bool vulkan_renderer_can_device_present(struct VulkanState* vulkan_state, VkPhysicalDevice device);
 
 void vulken_renderer_create_color_attachment(struct VulkanState* vulkan_state, struct VkAttachmentDescription* color_attachment);
 void vulken_renderer_create_depth_attachment(struct VulkanState* vulkan_state, struct VkAttachmentDescription* depth_attachment);
 
 void copy_buffer(struct VulkanState* vulkan_state, VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size);
+static VkSampleCountFlagBits vulkan_renderer_get_max_usable_sample_count(struct VulkanState* vulkan_state);
 
 #endif  // VULKAN_RENDERER_H

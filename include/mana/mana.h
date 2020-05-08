@@ -9,9 +9,9 @@ struct Mana {
 };
 
 enum {
-  MANA_ENGINE_ERROR = 0,
-  MANA_SUCCESS = 1,
-  MANA_WINDOW_ERROR = 2
+  MANA_SUCCESS = 0,
+  MANA_ENGINE_ERROR,
+  MANA_LAST_ERROR
 };
 
 int mana_init(struct Mana* mana, struct EngineSettings engine_settings);

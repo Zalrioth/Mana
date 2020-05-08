@@ -1,6 +1,25 @@
 #include "mana/graphics/render/vulkanrenderer.h"
 
-bool vulkan_renderer_can_device_present(struct VulkanState* vulkan_state, VkPhysicalDevice device) {
+int vulkan_renderer_init(struct VulkanState* vulkan_state, int width, int height) {
+  vulkan_state->swap_chain = malloc(sizeof(struct SwapChain));
+  vulkan_state->gbuffer = malloc(sizeof(struct GBuffer));
+  vulkan_state->post_process = malloc(sizeof(struct PostProcess));
+  vulkan_state->msaa_samples = vulkan_renderer_get_max_usable_sample_count(vulkan_state);
+
+  vulkan_renderer_can_device_present(vulkan_state, vulkan_state->physical_device);
+
+  swap_chain_init(vulkan_state->swap_chain, vulkan_state, width, height);
+  post_process_init(vulkan_state->post_process, vulkan_state);
+  gbuffer_init(vulkan_state->gbuffer, vulkan_state);
+
+  // Maybe move this
+  blit_swap_chain_init(vulkan_state->swap_chain->blit_swap_chain, vulkan_state);
+  blit_post_process_init(vulkan_state->post_process->blit_post_process, vulkan_state);
+
+  return VULKAN_RENDERER_SUCCESS;
+}
+
+static bool vulkan_renderer_can_device_present(struct VulkanState* vulkan_state, VkPhysicalDevice device) {
   uint32_t queue_family_count = 0;
   vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, NULL);
 
@@ -34,25 +53,6 @@ bool vulkan_renderer_can_device_present(struct VulkanState* vulkan_state, VkPhys
 
   return true;
   // TODO: Should check for extension support
-}
-
-int vulkan_renderer_init(struct VulkanState* vulkan_state, int width, int height) {
-  vulkan_state->swap_chain = malloc(sizeof(struct SwapChain));
-  vulkan_state->gbuffer = malloc(sizeof(struct GBuffer));
-  vulkan_state->post_process = malloc(sizeof(struct PostProcess));
-  vulkan_state->msaa_samples = vulkan_core_get_max_usable_sample_count(vulkan_state);
-
-  vulkan_renderer_can_device_present(vulkan_state, vulkan_state->physical_device);
-
-  swap_chain_init(vulkan_state->swap_chain, vulkan_state, width, height);
-  post_process_init(vulkan_state->post_process, vulkan_state);
-  gbuffer_init(vulkan_state->gbuffer, vulkan_state);
-
-  // Maybe move this
-  blit_swap_chain_init(vulkan_state->swap_chain->blit_swap_chain, vulkan_state);
-  blit_post_process_init(vulkan_state->post_process->blit_post_process, vulkan_state);
-
-  return VULKAN_RENDERER_SUCCESS;
 }
 
 void copy_buffer(struct VulkanState* vulkan_state, VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size) {
@@ -114,4 +114,26 @@ void recreate_swap_chain(struct VulkanState* vulkan_state) {
   //create_depth_resources(vulkan_state);
   //create_framebuffers(vulkan_state);
   //create_command_buffers(vulkan_state);
+}
+
+static VkSampleCountFlagBits vulkan_renderer_get_max_usable_sample_count(struct VulkanState* vulkan_state) {
+  return VK_SAMPLE_COUNT_1_BIT;
+  VkPhysicalDeviceProperties physical_device_properties;
+  vkGetPhysicalDeviceProperties(vulkan_state->physical_device, &physical_device_properties);
+
+  VkSampleCountFlags counts = physical_device_properties.limits.framebufferColorSampleCounts & physical_device_properties.limits.framebufferDepthSampleCounts;
+  if (counts & VK_SAMPLE_COUNT_64_BIT)
+    return VK_SAMPLE_COUNT_64_BIT;
+  if (counts & VK_SAMPLE_COUNT_32_BIT)
+    return VK_SAMPLE_COUNT_32_BIT;
+  if (counts & VK_SAMPLE_COUNT_16_BIT)
+    return VK_SAMPLE_COUNT_16_BIT;
+  if (counts & VK_SAMPLE_COUNT_8_BIT)
+    return VK_SAMPLE_COUNT_8_BIT;
+  if (counts & VK_SAMPLE_COUNT_4_BIT)
+    return VK_SAMPLE_COUNT_4_BIT;
+  if (counts & VK_SAMPLE_COUNT_2_BIT)
+    return VK_SAMPLE_COUNT_2_BIT;
+
+  return VK_SAMPLE_COUNT_1_BIT;
 }

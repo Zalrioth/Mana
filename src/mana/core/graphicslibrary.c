@@ -6,27 +6,36 @@ int graphics_library_init(struct GraphicsLibrary* graphics_library, enum Graphic
     case (NO_LIBRARY):
       break;
     case (GLFW_LIBRARY):
-      glfw_init();
+      int glfw_library_error_code = glfw_library_init();
+      switch (glfw_library_error_code) {
+        case (GLFW_SUCCESS):
+          break;
+        case (GLFW_INIT_ERROR):
+          fprintf(stderr, "Failed to init glfw!\n");
+          return GRAPHICS_LIBRARY_GLFW_ERROR;
+        case (GLFW_VULKAN_SUPPORT_ERROR):
+          fprintf(stderr, "Failed to find Vulkan support!\n");
+          return GRAPHICS_LIBRARY_GLFW_ERROR;
+      }
       break;
     case (MOLTENVK_LIBRARY):
       break;
   }
 
-  return 1;
+  return GRAPHICS_LIBRARY_SUCCESS;
 }
 
-int glfw_init() {
+static int glfw_library_init() {
   if (!glfwInit())
-    return -1;
+    return GLFW_INIT_ERROR;
+  if (!glfwVulkanSupported()) {
+    glfw_delete();
+    return GLFW_VULKAN_SUPPORT_ERROR;
+  }
 
-  if (!glfwVulkanSupported())
-    return -1;
-
-  return 1;
+  return GRAPHICS_LIBRARY_SUCCESS;
 }
 
-int glfw_delete() {
+static void glfw_delete() {
   glfwTerminate();
-
-  return 1;
 }

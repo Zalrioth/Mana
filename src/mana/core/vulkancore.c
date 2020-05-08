@@ -1,12 +1,21 @@
 #include "mana/core/vulkancore.h"
 
+static void vulkan_command_pool_cleanup(struct VulkanState* vulkan_state);
+static int vulkan_core_create_instance(struct VulkanState* vulkan_state);
+static int vulkan_core_setup_debug_messenger(struct VulkanState* vulkan_state);
+static int vulkan_core_pick_physical_device(struct VulkanState* vulkan_state);
+static bool vulkan_core_device_can_render(struct VulkanState* vulkan_state, VkPhysicalDevice device);
+static int vulkan_core_create_logical_device(struct VulkanState* vulkan_state);
+static int vulkan_core_create_command_pool(struct VulkanState* vulkan_state);
+static bool vulkan_core_check_validation_layer_support(struct VulkanState* vulkan_state);
+
 int vulkan_core_init(struct VulkanState* vulkan_state) {
   vulkan_state->framebuffer_resized = false;
   vulkan_state->physical_device = VK_NULL_HANDLE;
 
   int error_code;
   if ((error_code = vulkan_core_create_instance(vulkan_state)) != VULKAN_CORE_SUCCESS)
-    return -1;
+    goto vulkan_core_create_instance_cleanup;
   if ((error_code = vulkan_core_setup_debug_messenger(vulkan_state)) != VULKAN_CORE_SUCCESS)
     goto vulkan_debug_error;
   if ((error_code = vulkan_core_pick_physical_device(vulkan_state)) != VULKAN_CORE_SUCCESS)
@@ -16,19 +25,21 @@ int vulkan_core_init(struct VulkanState* vulkan_state) {
   if ((error_code = vulkan_core_create_command_pool(vulkan_state)) != VULKAN_CORE_SUCCESS)
     goto vulkan_command_pool_error;
 
+  return error_code;
+
 vulkan_command_pool_error:
-//    vulkan_command_pool_cleanup(vulkan_state);
+  vulkan_command_pool_cleanup(vulkan_state);
 vulkan_device_error:
-//  vulkan_device_cleanup(vulkan_state);
+  vulkan_device_cleanup(vulkan_state);
 vulkan_surface_error:
-//  vulkan_surface_cleanup(vulkan_state);
 vulkan_debug_error:
-  //  vulkan_debug_cleanup(vulkan_state);
+  vulkan_debug_cleanup(vulkan_state);
+vulkan_core_create_instance_cleanup:
 
   return error_code;
 }
 
-void vulkan_command_pool_cleanup(struct VulkanState* vulkan_state) {
+static void vulkan_command_pool_cleanup(struct VulkanState* vulkan_state) {
   vkDestroyCommandPool(vulkan_state->device, vulkan_state->command_pool, NULL);
 }
 
@@ -38,7 +49,7 @@ static void vulkan_core_destroy_debug_utils_messenger_ext(VkInstance instance, V
     func(instance, debug_messenger, p_allocator);
 }
 
-int vulkan_core_create_instance(struct VulkanState* vulkan_state) {
+static int vulkan_core_create_instance(struct VulkanState* vulkan_state) {
   VkApplicationInfo appInfo = {0};
   appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
   appInfo.pApplicationName = "Grindstone";
@@ -94,7 +105,7 @@ static VkResult create_debug_utils_messenger_ext(VkInstance instance, const VkDe
     return VK_ERROR_EXTENSION_NOT_PRESENT;
 }
 
-int vulkan_core_setup_debug_messenger(struct VulkanState* vulkan_state) {
+static int vulkan_core_setup_debug_messenger(struct VulkanState* vulkan_state) {
   if (enable_validation_layers && !vulkan_core_check_validation_layer_support(vulkan_state))
     return VULKAN_CORE_SETUP_DEBUG_MESSENGER_ERROR;
 
@@ -112,30 +123,26 @@ int vulkan_core_setup_debug_messenger(struct VulkanState* vulkan_state) {
   return VULKAN_CORE_SUCCESS;
 }
 
-int vulkan_core_pick_physical_device(struct VulkanState* vulkan_state) {
+static int vulkan_core_pick_physical_device(struct VulkanState* vulkan_state) {
   uint32_t device_count = 0;
   vkEnumeratePhysicalDevices(vulkan_state->instance, &device_count, NULL);
 
   if (device_count == 0)
     return VULKAN_CORE_PICK_PHYSICAL_DEVICE_ERROR;
 
-  struct Vector devices;
-  memset(&devices, 0, sizeof(devices));
-  vector_init(&devices, sizeof(VkPhysicalDevice));
-  vector_resize(&devices, device_count);
-  vkEnumeratePhysicalDevices(vulkan_state->instance, &device_count, devices.items);
-  devices.size = device_count;
+  VkPhysicalDevice* devices = malloc(sizeof(VkPhysicalDevice) * device_count);
+  vkEnumeratePhysicalDevices(vulkan_state->instance, &device_count, devices);
 
   VkPhysicalDeviceProperties current_device_properties = {0};
   uint32_t current_largest_heap = 0;
   bool discrete_selected = false;
 
-  for (int loop_num = 0; loop_num < device_count; loop_num++) {
-    VkPhysicalDevice device = *((VkPhysicalDevice*)vector_get(&devices, loop_num));
+  for (int device_num = 0; device_num < device_count; device_num++) {
+    VkPhysicalDevice device = devices[device_num];
     VkPhysicalDeviceProperties device_properties;
     vkGetPhysicalDeviceProperties(device, &device_properties);
 
-    if (vulkan_core_can_device_render(vulkan_state, device)) {
+    if (vulkan_core_device_can_render(vulkan_state, device)) {
       if (device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
         VkPhysicalDeviceMemoryProperties device_memory_properties = {0};
         vkGetPhysicalDeviceMemoryProperties(device, &device_memory_properties);
@@ -160,30 +167,26 @@ int vulkan_core_pick_physical_device(struct VulkanState* vulkan_state) {
 
   printf("Selected device: %s\n", current_device_properties.deviceName);
 
+  free(devices);
+
   if (vulkan_state->physical_device == VK_NULL_HANDLE)
     return VULKAN_CORE_PICK_PHYSICAL_DEVICE_ERROR;
-
-  vector_delete(&devices);
 
   return VULKAN_CORE_SUCCESS;
 }
 
-bool vulkan_core_can_device_render(struct VulkanState* vulkan_state, VkPhysicalDevice device) {
+static bool vulkan_core_device_can_render(struct VulkanState* vulkan_state, VkPhysicalDevice device) {
   uint32_t queue_family_count = 0;
   vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, NULL);
 
-  struct Vector queue_families = {0};
-  memset(&queue_families, 0, sizeof(queue_families));
-  vector_init(&queue_families, sizeof(VkQueueFamilyProperties));
-  vector_resize(&queue_families, queue_family_count);
-  vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families.items);
-  queue_families.size = queue_family_count;
+  VkQueueFamilyProperties* queue_families = malloc(sizeof(VkQueueFamilyProperties) * queue_family_count);
+  vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families);
 
   bool graphics_family_found = false;
 
   int index_num = 0;
-  for (int loop_num = 0; loop_num < queue_family_count; loop_num++) {
-    if (((VkQueueFamilyProperties*)vector_get(&queue_families, loop_num))->queueCount > 0 && ((VkQueueFamilyProperties*)vector_get(&queue_families, loop_num))->queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+  for (int queue_family_num = 0; queue_family_num < queue_family_count; queue_family_num++) {
+    if (queue_families[queue_family_num].queueCount > 0 && queue_families[queue_family_num].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
       (&vulkan_state->indices)->graphics_family = index_num;
       graphics_family_found = true;
     }
@@ -194,6 +197,8 @@ bool vulkan_core_can_device_render(struct VulkanState* vulkan_state, VkPhysicalD
     index_num++;
   }
 
+  free(queue_families);
+
   if (!graphics_family_found)
     return false;
 
@@ -201,35 +206,19 @@ bool vulkan_core_can_device_render(struct VulkanState* vulkan_state, VkPhysicalD
   // TODO: Should check for extension support
 }
 
-int vulkan_core_create_logical_device(struct VulkanState* vulkan_state) {
-  // Note: Check this may cause problems later
-  // TODO: Redo below
-  struct Vector queue_create_infos;
-  memset(&queue_create_infos, 0, sizeof(queue_create_infos));
-  vector_init(&queue_create_infos, sizeof(struct VkDeviceQueueCreateInfo));
+static int vulkan_core_create_logical_device(struct VulkanState* vulkan_state) {
+  const uint32_t unique_queue_families[2] = {vulkan_state->indices.graphics_family, vulkan_state->indices.present_family};
+  const int unique_queue_family_count = (unique_queue_families[0] == unique_queue_families[1]) ? 1 : 2;
 
+  VkDeviceQueueCreateInfo queue_create_infos[2] = {0};
   float queue_priority = 1.0f;
-  if (vulkan_state->indices.graphics_family == vulkan_state->indices.present_family) {
-    VkDeviceQueueCreateInfo queue_create_infos_graphics = {0};
-    queue_create_infos_graphics.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    queue_create_infos_graphics.queueFamilyIndex = vulkan_state->indices.graphics_family;
-    queue_create_infos_graphics.queueCount = 1;
-    queue_create_infos_graphics.pQueuePriorities = &queue_priority;
-    vector_push_back(&queue_create_infos, &queue_create_infos_graphics);
-  } else {
-    VkDeviceQueueCreateInfo queue_create_infos_graphics = {0};
-    queue_create_infos_graphics.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    queue_create_infos_graphics.queueFamilyIndex = vulkan_state->indices.graphics_family;
-    queue_create_infos_graphics.queueCount = 1;
-    queue_create_infos_graphics.pQueuePriorities = &queue_priority;
-    vector_push_back(&queue_create_infos, &queue_create_infos_graphics);
-
-    VkDeviceQueueCreateInfo queue_create_infos_present = {0};
-    queue_create_infos_present.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    queue_create_infos_present.queueFamilyIndex = vulkan_state->indices.present_family;
-    queue_create_infos_present.queueCount = 1;
-    queue_create_infos_present.pQueuePriorities = &queue_priority;
-    vector_push_back(&queue_create_infos, &queue_create_infos_present);
+  for (int queue_num = 0; queue_num < unique_queue_family_count; queue_num++) {
+    VkDeviceQueueCreateInfo queue_create_info = {0};
+    queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    queue_create_info.queueFamilyIndex = queue_num;
+    queue_create_info.queueCount = 1;
+    queue_create_info.pQueuePriorities = &queue_priority;
+    queue_create_infos[queue_num] = queue_create_info;
   }
 
   struct VkPhysicalDeviceFeatures device_features = {0};
@@ -238,16 +227,16 @@ int vulkan_core_create_logical_device(struct VulkanState* vulkan_state) {
   struct VkDeviceCreateInfo device_info = {0};
   device_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 
-  device_info.queueCreateInfoCount = (uint32_t)queue_create_infos.size;
-  device_info.pQueueCreateInfos = queue_create_infos.items;
+  device_info.queueCreateInfoCount = (uint32_t)unique_queue_family_count;
+  device_info.pQueueCreateInfos = queue_create_infos;
 
   device_info.pEnabledFeatures = &device_features;
 
-  device_info.enabledExtensionCount = (uint32_t)DEVICE_EXTENSION_COUNT;
+  device_info.enabledExtensionCount = (uint32_t)VULKAN_DEVICE_EXTENSION_COUNT;
   device_info.ppEnabledExtensionNames = device_extensions;
 
   if (enable_validation_layers) {
-    device_info.enabledLayerCount = (uint32_t)VALIDATION_LAYER_COUNT;
+    device_info.enabledLayerCount = (uint32_t)VULKAN_VALIDATION_LAYER_COUNT;
     device_info.ppEnabledLayerNames = validation_layers;
   } else
     device_info.enabledLayerCount = 0;
@@ -258,34 +247,10 @@ int vulkan_core_create_logical_device(struct VulkanState* vulkan_state) {
   vkGetDeviceQueue(vulkan_state->device, vulkan_state->indices.graphics_family, 0, &vulkan_state->graphics_queue);
   vkGetDeviceQueue(vulkan_state->device, vulkan_state->indices.present_family, 0, &vulkan_state->present_queue);
 
-  vector_delete(&queue_create_infos);
-
   return VULKAN_CORE_SUCCESS;
 }
 
-VkSampleCountFlagBits vulkan_core_get_max_usable_sample_count(struct VulkanState* vulkan_state) {
-  return VK_SAMPLE_COUNT_1_BIT;
-  VkPhysicalDeviceProperties physical_device_properties;
-  vkGetPhysicalDeviceProperties(vulkan_state->physical_device, &physical_device_properties);
-
-  VkSampleCountFlags counts = physical_device_properties.limits.framebufferColorSampleCounts & physical_device_properties.limits.framebufferDepthSampleCounts;
-  if (counts & VK_SAMPLE_COUNT_64_BIT)
-    return VK_SAMPLE_COUNT_64_BIT;
-  if (counts & VK_SAMPLE_COUNT_32_BIT)
-    return VK_SAMPLE_COUNT_32_BIT;
-  if (counts & VK_SAMPLE_COUNT_16_BIT)
-    return VK_SAMPLE_COUNT_16_BIT;
-  if (counts & VK_SAMPLE_COUNT_8_BIT)
-    return VK_SAMPLE_COUNT_8_BIT;
-  if (counts & VK_SAMPLE_COUNT_4_BIT)
-    return VK_SAMPLE_COUNT_4_BIT;
-  if (counts & VK_SAMPLE_COUNT_2_BIT)
-    return VK_SAMPLE_COUNT_2_BIT;
-
-  return VK_SAMPLE_COUNT_1_BIT;
-}
-
-int vulkan_core_create_command_pool(struct VulkanState* vulkan_state) {
+static int vulkan_core_create_command_pool(struct VulkanState* vulkan_state) {
   VkCommandPoolCreateFlags command_pool_flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
   VkCommandPoolCreateInfo pool_info = {0};
@@ -299,27 +264,28 @@ int vulkan_core_create_command_pool(struct VulkanState* vulkan_state) {
   return VULKAN_CORE_SUCCESS;
 }
 
-bool vulkan_core_check_validation_layer_support(struct VulkanState* vulkan_state) {
+static bool vulkan_core_check_validation_layer_support(struct VulkanState* vulkan_state) {
   uint32_t layer_count;
   vkEnumerateInstanceLayerProperties(&layer_count, NULL);
 
-  struct Vector available_layers;
-  memset(&available_layers, 0, sizeof(available_layers));
-  vector_init(&available_layers, sizeof(VkLayerProperties));
-  vector_resize(&available_layers, layer_count);
-  vkEnumerateInstanceLayerProperties(&layer_count, available_layers.items);
-  available_layers.size = layer_count;
+  VkLayerProperties* available_layers = malloc(sizeof(VkLayerProperties) * layer_count);
+  vkEnumerateInstanceLayerProperties(&layer_count, available_layers);
 
-  bool layer_found = false;
+  for (int layer_name_num = 0; layer_name_num < VULKAN_VALIDATION_LAYER_COUNT; layer_name_num++) {
+    bool layer_found = false;
 
-  for (int loop_num = 0; loop_num < layer_count; loop_num++) {
-    if (strcmp(validation_layers[0], ((VkLayerProperties*)vector_get(&available_layers, loop_num))->layerName) == 0) {
-      layer_found = true;
-      break;
+    for (int layer_property_num = 0; layer_property_num < layer_count; layer_property_num++) {
+      if (strcmp(validation_layers[layer_name_num], available_layers[layer_property_num].layerName) == 0) {
+        layer_found = true;
+        break;
+      }
     }
+
+    if (layer_found == false)
+      return false;
   }
 
-  vector_delete(&available_layers);
+  free(available_layers);
 
-  return layer_found;
+  return true;
 }
