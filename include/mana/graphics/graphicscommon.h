@@ -12,10 +12,10 @@
 #include <stdalign.h>
 
 struct LightingUniformBufferObject {
-  alignas(16) vec3 direction;
-  alignas(16) vec3 ambient_color;
-  alignas(16) vec3 diffuse_colour;
-  alignas(16) vec3 specular_colour;
+  vec3 direction;
+  vec3 ambient_color;
+  vec3 diffuse_colour;
+  vec3 specular_colour;
 };
 
 #endif  // GRAPHICS_COMMON_H

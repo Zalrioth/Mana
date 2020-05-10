@@ -26,11 +26,11 @@ struct VertexQuad {
 };
 
 struct VertexModel {
-  alignas(16) vec3 position;
-  alignas(16) vec3 normal;
-  alignas(16) vec2 tex_coord;
-  alignas(16) ivec3 joints_ids;
-  alignas(16) vec3 weights;
+  vec3 position;
+  vec3 normal;
+  vec2 tex_coord;
+  ivec3 joints_ids;
+  vec3 weights;
 };
 
 struct VertexDualContouring {

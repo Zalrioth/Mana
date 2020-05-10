@@ -1,20 +1,23 @@
 #include "mana/core/vulkancore.h"
 
-static void vulkan_command_pool_cleanup(struct VulkanState* vulkan_state);
-static int vulkan_core_create_instance(struct VulkanState* vulkan_state);
+static int vulkan_core_create_instance(struct VulkanState* vulkan_state, const char** graphics_lbrary_extensions, uint32_t* graphics_library_extension_count);
 static int vulkan_core_setup_debug_messenger(struct VulkanState* vulkan_state);
 static int vulkan_core_pick_physical_device(struct VulkanState* vulkan_state);
 static bool vulkan_core_device_can_render(struct VulkanState* vulkan_state, VkPhysicalDevice device);
 static int vulkan_core_create_logical_device(struct VulkanState* vulkan_state);
 static int vulkan_core_create_command_pool(struct VulkanState* vulkan_state);
 static bool vulkan_core_check_validation_layer_support(struct VulkanState* vulkan_state);
+static void vulkan_command_pool_cleanup(struct VulkanState* vulkan_state);
+static void vulkan_device_cleanup(struct VulkanState* vulkan_state);
+static void vulkan_debug_cleanup(struct VulkanState* vulkan_state);
+static void vulkan_core_destroy_debug_utils_messenger_ext(VkInstance instance, VkDebugUtilsMessengerEXT debug_messenger, const VkAllocationCallbacks* p_allocator);
 
-int vulkan_core_init(struct VulkanState* vulkan_state) {
+int vulkan_core_init(struct VulkanState* vulkan_state, const char** graphics_lbrary_extensions, uint32_t* graphics_library_extension_count) {
   vulkan_state->framebuffer_resized = false;
   vulkan_state->physical_device = VK_NULL_HANDLE;
 
   int error_code;
-  if ((error_code = vulkan_core_create_instance(vulkan_state)) != VULKAN_CORE_SUCCESS)
+  if ((error_code = vulkan_core_create_instance(vulkan_state, graphics_lbrary_extensions, graphics_library_extension_count)) != VULKAN_CORE_SUCCESS)
     goto vulkan_core_create_instance_cleanup;
   if ((error_code = vulkan_core_setup_debug_messenger(vulkan_state)) != VULKAN_CORE_SUCCESS)
     goto vulkan_debug_error;
@@ -39,8 +42,17 @@ vulkan_core_create_instance_cleanup:
   return error_code;
 }
 
+static void vulkan_device_cleanup(struct VulkanState* vulkan_state) {
+  vkDestroyDevice(vulkan_state->device, NULL);
+}
+
 static void vulkan_command_pool_cleanup(struct VulkanState* vulkan_state) {
   vkDestroyCommandPool(vulkan_state->device, vulkan_state->command_pool, NULL);
+}
+
+static void vulkan_debug_cleanup(struct VulkanState* vulkan_state) {
+  if (enable_validation_layers)
+    vulkan_core_destroy_debug_utils_messenger_ext(vulkan_state->instance, vulkan_state->debug_messenger, NULL);
 }
 
 static void vulkan_core_destroy_debug_utils_messenger_ext(VkInstance instance, VkDebugUtilsMessengerEXT debug_messenger, const VkAllocationCallbacks* p_allocator) {
@@ -49,36 +61,27 @@ static void vulkan_core_destroy_debug_utils_messenger_ext(VkInstance instance, V
     func(instance, debug_messenger, p_allocator);
 }
 
-static int vulkan_core_create_instance(struct VulkanState* vulkan_state) {
-  VkApplicationInfo appInfo = {0};
-  appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-  appInfo.pApplicationName = "Grindstone";
-  appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-  appInfo.pEngineName = "Mana";
-  appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-  appInfo.apiVersion = VK_API_VERSION_1_0;
+static int vulkan_core_create_instance(struct VulkanState* vulkan_state, const char** graphics_lbrary_extensions, uint32_t* graphics_library_extension_count) {
+  VkApplicationInfo app_info = {0};
+  app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+  // TODO: Pull name and version from engine
+  app_info.pApplicationName = "Zeal";
+  app_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+  app_info.pEngineName = "Mana";
+  app_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+  app_info.apiVersion = VK_API_VERSION_1_0;
 
   VkInstanceCreateInfo create_info = {0};
   create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-  create_info.pApplicationInfo = &appInfo;
-
-  uint32_t glfw_extension_count = 0;
-  const char** glfw_extensions;
-  glfw_extensions = glfwGetRequiredInstanceExtensions(&glfw_extension_count);
-
-  const char* converted_extensions[32];
-  memset(converted_extensions, 0, sizeof(converted_extensions));
-
-  for (int loop_num = 0; loop_num < glfw_extension_count; loop_num++)
-    converted_extensions[loop_num] = glfw_extensions[loop_num];
+  create_info.pApplicationInfo = &app_info;
 
   if (enable_validation_layers) {
-    converted_extensions[glfw_extension_count] = VK_EXT_DEBUG_UTILS_EXTENSION_NAME;  //"VK_EXT_DEBUG_UTILS_EXTENSION_NAME\0";
-    glfw_extension_count++;
+    graphics_lbrary_extensions[*graphics_library_extension_count] = VK_EXT_DEBUG_UTILS_EXTENSION_NAME;  //"VK_EXT_DEBUG_UTILS_EXTENSION_NAME\0";
+    (*graphics_library_extension_count)++;
   }
 
-  create_info.enabledExtensionCount = glfw_extension_count;
-  create_info.ppEnabledExtensionNames = converted_extensions;
+  create_info.enabledExtensionCount = *graphics_library_extension_count;
+  create_info.ppEnabledExtensionNames = graphics_lbrary_extensions;
 
   if (enable_validation_layers) {
     create_info.enabledLayerCount = (uint32_t)1;

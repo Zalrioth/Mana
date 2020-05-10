@@ -31,14 +31,13 @@ int swap_chain_init(struct SwapChain* swap_chain, struct VulkanState* vulkan_ren
 
   VkSurfaceFormatKHR surface_format = {0};
 
-  //if (format_count == 1 && swap_chain_support.formats[0].format == VK_FORMAT_UNDEFINED) {
   if (format_count == 1 && ((struct VkSurfaceFormatKHR*)vector_get(&swap_chain_support.formats, 0))->format == VK_FORMAT_UNDEFINED) {
     surface_format.format = VK_FORMAT_B8G8R8A8_UNORM;
     surface_format.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
   } else {
-    for (int loop_num = 0; loop_num < vector_size(&swap_chain_support.formats); loop_num++) {
-      if (((struct VkSurfaceFormatKHR*)vector_get(&swap_chain_support.formats, loop_num))->format == VK_FORMAT_B8G8R8A8_UNORM && ((struct VkSurfaceFormatKHR*)vector_get(&swap_chain_support.formats, loop_num))->colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
-        surface_format = *(struct VkSurfaceFormatKHR*)vector_get(&swap_chain_support.formats, loop_num);
+    for (int swap_chain_format_num = 0; swap_chain_format_num < vector_size(&swap_chain_support.formats); swap_chain_format_num++) {
+      if (((struct VkSurfaceFormatKHR*)vector_get(&swap_chain_support.formats, swap_chain_format_num))->format == VK_FORMAT_B8G8R8A8_UNORM && ((struct VkSurfaceFormatKHR*)vector_get(&swap_chain_support.formats, swap_chain_format_num))->colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+        surface_format = *(struct VkSurfaceFormatKHR*)vector_get(&swap_chain_support.formats, swap_chain_format_num);
         break;
       } else
         surface_format = *(struct VkSurfaceFormatKHR*)vector_get(&swap_chain_support.formats, 0);
@@ -47,19 +46,21 @@ int swap_chain_init(struct SwapChain* swap_chain, struct VulkanState* vulkan_ren
 
   // Testing 10 bit swapchain output
   // Seems to work on Nvidia Studio Driver
+  // TODO: if 10_bit_enabled
   //surface_format.format = VK_FORMAT_A2B10G10R10_UNORM_PACK32;
 
   VkPresentModeKHR present_mode = {0};
 
-  for (int loop_num = 0; loop_num < vector_size(&swap_chain_support.present_modes); loop_num++) {
-    if ((enum VkPresentModeKHR)vector_get(&swap_chain_support.present_modes, loop_num) == VK_PRESENT_MODE_MAILBOX_KHR) {
-      present_mode = (enum VkPresentModeKHR)vector_get(&swap_chain_support.present_modes, loop_num);
+  for (int swap_chain_present_num = 0; swap_chain_present_num < vector_size(&swap_chain_support.present_modes); swap_chain_present_num++) {
+    if ((enum VkPresentModeKHR)vector_get(&swap_chain_support.present_modes, swap_chain_present_num) == VK_PRESENT_MODE_MAILBOX_KHR) {
+      present_mode = (enum VkPresentModeKHR)vector_get(&swap_chain_support.present_modes, swap_chain_present_num);
       break;
-    } else if ((enum VkPresentModeKHR)vector_get(&swap_chain_support.present_modes, loop_num) == VK_PRESENT_MODE_IMMEDIATE_KHR)
-      present_mode = (enum VkPresentModeKHR)vector_get(&swap_chain_support.present_modes, loop_num);
+    } else if ((enum VkPresentModeKHR)vector_get(&swap_chain_support.present_modes, swap_chain_present_num) == VK_PRESENT_MODE_IMMEDIATE_KHR)
+      present_mode = (enum VkPresentModeKHR)vector_get(&swap_chain_support.present_modes, swap_chain_present_num);
   }
 
   // Force Vsync
+  // TODO: if vsync_enabled
   present_mode = VK_PRESENT_MODE_FIFO_KHR;
 
   VkExtent2D extent = {width, height};

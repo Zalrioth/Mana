@@ -4,6 +4,8 @@
 
 #include "mana/core/memoryallocator.h"
 //
+#include <mana/core/gpuapi.h>
+
 #include "mana/core/vulkancore.h"
 #include "mana/graphics/graphicscommon.h"
 #include "mana/graphics/shaders/shader.h"
@@ -32,7 +34,7 @@ enum {
   SPRITE_SUCCESS = 1
 };
 
-int sprite_init(struct Sprite* sprite, struct VulkanState* vulkan_renderer, struct Shader* shader);
-void sprite_delete(struct Sprite* sprite, struct VulkanState* vulkan_renderer);
+int sprite_init(struct Sprite* sprite, struct GPUAPI* gpu_api, struct Shader* shader);
+void sprite_delete(struct Sprite* sprite, struct GPUAPI* gpu_api);
 
 #endif  // SPRITE_H

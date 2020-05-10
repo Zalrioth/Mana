@@ -4,6 +4,8 @@
 
 #include "mana/core/memoryallocator.h"
 //
+#include <mana/core/gpuapi.h>
+
 #include "mana/graphics/graphicscommon.h"
 #include "mana/graphics/render/vulkanrenderer.h"
 #include "mana/graphics/shaders/shader.h"
@@ -17,8 +19,8 @@ struct FXAAShader {
   struct FullscreenQuad* fullscreen_quad;
 };
 
-int fxaa_shader_init(struct FXAAShader* fxaa_shader, struct VulkanState* vulkan_renderer);
-void fxaa_shader_delete(struct FXAAShader* fxaa_shader, struct VulkanState* vulkan_renderer);
-void fxaa_shader_render(struct FXAAShader* fxaa_shader, struct VulkanState* vulkan_renderer);
+int fxaa_shader_init(struct FXAAShader* fxaa_shader, struct GPUAPI* gpu_api);
+void fxaa_shader_delete(struct FXAAShader* fxaa_shader, struct GPUAPI* gpu_api);
+void fxaa_shader_render(struct FXAAShader* fxaa_shader, struct GPUAPI* gpu_api);
 
 #endif  // FXAA_SHADER_H

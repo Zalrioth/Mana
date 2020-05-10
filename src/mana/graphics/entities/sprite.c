@@ -10,12 +10,12 @@
 //  glm_vec3_crossn(v1, v2, dest);
 //}
 
-int sprite_init(struct Sprite* sprite, struct VulkanState* vulkan_renderer, struct Shader* shader) {
+int sprite_init(struct Sprite* sprite, struct GPUAPI* gpu_api, struct Shader* shader) {
   sprite->image_mesh = calloc(1, sizeof(struct Mesh));
   mesh_sprite_init(sprite->image_mesh);
 
   sprite->image_texture = calloc(1, sizeof(struct Texture));
-  texture_init(sprite->image_texture, vulkan_renderer, "./assets/textures/alpha.png");
+  texture_init(sprite->image_texture, gpu_api->vulkan_state, "./assets/textures/alpha.png");
 
   vec3 pos1 = {-0.5f, -0.5f, 0.0f};
   vec3 pos2 = {0.5f, -0.5f, 0.0f};
@@ -43,41 +43,41 @@ int sprite_init(struct Sprite* sprite, struct VulkanState* vulkan_renderer, stru
   VkDeviceSize vertex_buffer_size = sprite->image_mesh->vertices->memory_size * sprite->image_mesh->vertices->size;
   VkBuffer vertex_staging_buffer = {0};
   VkDeviceMemory vertex_staging_buffer_memory = {0};
-  graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, vertex_buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &vertex_staging_buffer, &vertex_staging_buffer_memory);
+  graphics_utils_create_buffer(gpu_api->vulkan_state->device, gpu_api->vulkan_state->physical_device, vertex_buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &vertex_staging_buffer, &vertex_staging_buffer_memory);
 
   void* vertex_data;
-  vkMapMemory(vulkan_renderer->device, vertex_staging_buffer_memory, 0, vertex_buffer_size, 0, &vertex_data);
+  vkMapMemory(gpu_api->vulkan_state->device, vertex_staging_buffer_memory, 0, vertex_buffer_size, 0, &vertex_data);
   memcpy(vertex_data, sprite->image_mesh->vertices->items, vertex_buffer_size);
-  vkUnmapMemory(vulkan_renderer->device, vertex_staging_buffer_memory);
+  vkUnmapMemory(gpu_api->vulkan_state->device, vertex_staging_buffer_memory);
 
-  graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, vertex_buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &sprite->vertex_buffer, &sprite->vertex_buffer_memory);
+  graphics_utils_create_buffer(gpu_api->vulkan_state->device, gpu_api->vulkan_state->physical_device, vertex_buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &sprite->vertex_buffer, &sprite->vertex_buffer_memory);
 
-  copy_buffer(vulkan_renderer, vertex_staging_buffer, sprite->vertex_buffer, vertex_buffer_size);
+  graphics_utisl_copy_buffer(gpu_api->vulkan_state, vertex_staging_buffer, sprite->vertex_buffer, vertex_buffer_size);
 
-  vkDestroyBuffer(vulkan_renderer->device, vertex_staging_buffer, NULL);
-  vkFreeMemory(vulkan_renderer->device, vertex_staging_buffer_memory, NULL);
+  vkDestroyBuffer(gpu_api->vulkan_state->device, vertex_staging_buffer, NULL);
+  vkFreeMemory(gpu_api->vulkan_state->device, vertex_staging_buffer_memory, NULL);
 
   // Index buffer
   VkDeviceSize index_buffer_size = sprite->image_mesh->indices->memory_size * sprite->image_mesh->indices->size;
   VkBuffer index_staging_buffer = {0};
   VkDeviceMemory index_staging_buffer_memory = {0};
-  graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, index_buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &index_staging_buffer, &index_staging_buffer_memory);
+  graphics_utils_create_buffer(gpu_api->vulkan_state->device, gpu_api->vulkan_state->physical_device, index_buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &index_staging_buffer, &index_staging_buffer_memory);
 
   void* index_data;
-  vkMapMemory(vulkan_renderer->device, index_staging_buffer_memory, 0, index_buffer_size, 0, &index_data);
+  vkMapMemory(gpu_api->vulkan_state->device, index_staging_buffer_memory, 0, index_buffer_size, 0, &index_data);
   memcpy(index_data, sprite->image_mesh->indices->items, index_buffer_size);
-  vkUnmapMemory(vulkan_renderer->device, index_staging_buffer_memory);
+  vkUnmapMemory(gpu_api->vulkan_state->device, index_staging_buffer_memory);
 
-  graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, index_buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &sprite->index_buffer, &sprite->index_buffer_memory);
+  graphics_utils_create_buffer(gpu_api->vulkan_state->device, gpu_api->vulkan_state->physical_device, index_buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &sprite->index_buffer, &sprite->index_buffer_memory);
 
-  copy_buffer(vulkan_renderer, index_staging_buffer, sprite->index_buffer, index_buffer_size);
+  graphics_utisl_copy_buffer(gpu_api->vulkan_state, index_staging_buffer, sprite->index_buffer, index_buffer_size);
 
-  vkDestroyBuffer(vulkan_renderer->device, index_staging_buffer, NULL);
-  vkFreeMemory(vulkan_renderer->device, index_staging_buffer_memory, NULL);
+  vkDestroyBuffer(gpu_api->vulkan_state->device, index_staging_buffer, NULL);
+  vkFreeMemory(gpu_api->vulkan_state->device, index_staging_buffer_memory, NULL);
 
   // Uniform buffer
   VkDeviceSize uniform_buffer_size = sizeof(struct SpriteUniformBufferObject);
-  graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, uniform_buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &sprite->uniform_buffer, &sprite->uniform_buffers_memory);
+  graphics_utils_create_buffer(gpu_api->vulkan_state->device, gpu_api->vulkan_state->physical_device, uniform_buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &sprite->uniform_buffer, &sprite->uniform_buffers_memory);
 
   // Descriptor sets
   VkDescriptorSetLayout layout = {0};
@@ -89,7 +89,7 @@ int sprite_init(struct Sprite* sprite, struct VulkanState* vulkan_renderer, stru
   alloc_info.descriptorSetCount = 1;
   alloc_info.pSetLayouts = &layout;
 
-  if (vkAllocateDescriptorSets(vulkan_renderer->device, &alloc_info, &sprite->descriptor_set) != VK_SUCCESS) {
+  if (vkAllocateDescriptorSets(gpu_api->vulkan_state->device, &alloc_info, &sprite->descriptor_set) != VK_SUCCESS) {
     fprintf(stderr, "failed to allocate descriptor sets!\n");
     return 0;
   }
@@ -123,24 +123,24 @@ int sprite_init(struct Sprite* sprite, struct VulkanState* vulkan_renderer, stru
   dcs[1].descriptorCount = 1;
   dcs[1].pImageInfo = &image_info;
 
-  vkUpdateDescriptorSets(vulkan_renderer->device, 2, dcs, 0, NULL);
+  vkUpdateDescriptorSets(gpu_api->vulkan_state->device, 2, dcs, 0, NULL);
 
   return SPRITE_SUCCESS;
 }
 
-void sprite_delete(struct Sprite* sprite, struct VulkanState* vulkan_renderer) {
-  vkDestroyBuffer(vulkan_renderer->device, sprite->index_buffer, NULL);
-  vkFreeMemory(vulkan_renderer->device, sprite->index_buffer_memory, NULL);
+void sprite_delete(struct Sprite* sprite, struct GPUAPI* gpu_api) {
+  vkDestroyBuffer(gpu_api->vulkan_state->device, sprite->index_buffer, NULL);
+  vkFreeMemory(gpu_api->vulkan_state->device, sprite->index_buffer_memory, NULL);
 
-  vkDestroyBuffer(vulkan_renderer->device, sprite->vertex_buffer, NULL);
-  vkFreeMemory(vulkan_renderer->device, sprite->vertex_buffer_memory, NULL);
+  vkDestroyBuffer(gpu_api->vulkan_state->device, sprite->vertex_buffer, NULL);
+  vkFreeMemory(gpu_api->vulkan_state->device, sprite->vertex_buffer_memory, NULL);
 
-  vkDestroyBuffer(vulkan_renderer->device, sprite->uniform_buffer, NULL);
-  vkFreeMemory(vulkan_renderer->device, sprite->uniform_buffers_memory, NULL);
+  vkDestroyBuffer(gpu_api->vulkan_state->device, sprite->uniform_buffer, NULL);
+  vkFreeMemory(gpu_api->vulkan_state->device, sprite->uniform_buffers_memory, NULL);
 
   mesh_delete(sprite->image_mesh);
   free(sprite->image_mesh);
 
-  texture_delete(vulkan_renderer, sprite->image_texture);
+  texture_delete(gpu_api->vulkan_state, sprite->image_texture);
   free(sprite->image_texture);
 }

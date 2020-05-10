@@ -13,7 +13,7 @@ struct ModelShader {
   struct Shader shader;
 };
 
-int model_shader_init(struct ModelShader* model_shader, struct VulkanState* vulkan_renderer);
-void model_shader_delete(struct ModelShader* model_shader, struct VulkanState* vulkan_renderer);
+int model_shader_init(struct ModelShader* model_shader, struct GPUAPI* gpu_api);
+void model_shader_delete(struct ModelShader* model_shader, struct GPUAPI* gpu_api);
 
 #endif  // MODEL_SHADER_H

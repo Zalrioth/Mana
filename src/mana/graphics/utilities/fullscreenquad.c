@@ -17,7 +17,7 @@ void fullscreen_quad_init(struct FullscreenQuad* fullscreen_quad, struct VulkanS
 
   graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, buffer_size_vertex, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &fullscreen_quad->vertex_buffer, &fullscreen_quad->vertex_buffer_memory);
 
-  copy_buffer(vulkan_renderer, staging_buffer_vertex, fullscreen_quad->vertex_buffer, buffer_size_vertex);
+  graphics_utisl_copy_buffer(vulkan_renderer, staging_buffer_vertex, fullscreen_quad->vertex_buffer, buffer_size_vertex);
 
   vkDestroyBuffer(vulkan_renderer->device, staging_buffer_vertex, NULL);
   vkFreeMemory(vulkan_renderer->device, staging_buffer_memory_index, NULL);
@@ -35,7 +35,7 @@ void fullscreen_quad_init(struct FullscreenQuad* fullscreen_quad, struct VulkanS
 
   graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, buffer_size_index, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &fullscreen_quad->index_buffer, &fullscreen_quad->index_buffer_memory);
 
-  copy_buffer(vulkan_renderer, staging_buffer_index_vertex, fullscreen_quad->index_buffer, buffer_size_index);
+  graphics_utisl_copy_buffer(vulkan_renderer, staging_buffer_index_vertex, fullscreen_quad->index_buffer, buffer_size_index);
 
   vkDestroyBuffer(vulkan_renderer->device, staging_buffer_index_vertex, NULL);
   vkFreeMemory(vulkan_renderer->device, staging_buffer_memory, NULL);

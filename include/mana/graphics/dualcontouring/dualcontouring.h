@@ -12,10 +12,10 @@
 #include "mana/graphics/utilities/mesh.h"
 
 struct DualContouringUniformBufferObject {
-  alignas(16) mat4 model;
+  mat4 model;
   alignas(16) mat4 view;
   alignas(16) mat4 proj;
-  alignas(16) vec3 camera_pos;
+  vec3 camera_pos;
 };
 
 struct DualContouring {

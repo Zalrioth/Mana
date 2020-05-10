@@ -13,16 +13,16 @@
 
 struct AtmosphericScatteringUniformBufferObject {
   alignas(16) mat4 model_from_view;
-  alignas(16) vec3 camera;
+  vec3 camera;
 };
 
 struct AtmosphericScatteringUniformBufferObjectSettings {
   alignas(16) mat4 view_from_clip;  // Based on window size, will need to update on resize
-  alignas(16) float exposure;
-  alignas(16) vec3 white_point;
-  alignas(16) vec3 earth_center;
-  alignas(16) vec3 sun_direction;
-  alignas(16) vec2 sun_size;
+  float exposure;
+  vec3 white_point;
+  vec3 earth_center;
+  vec3 sun_direction;
+  vec2 sun_size;
 };
 
 struct AtmosphericScatteringShader {

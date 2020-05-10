@@ -26,6 +26,6 @@ struct GPUAPI {
   enum APIType type;
 };
 
-int gpu_api_init(struct GPUAPI* gpu_api, enum APIType gpu_api_type, struct GraphicsLibrary* graphics_library);
+int gpu_api_init(struct GPUAPI* gpu_api, enum APIType gpu_api_type, struct GraphicsLibrary* graphics_library, const char** graphics_lbrary_extensions, uint32_t* graphics_library_extension_count);
 
 #endif  // GPU_API_H

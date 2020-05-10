@@ -4,6 +4,8 @@
 
 #include "mana/core/memoryallocator.h"
 //
+#include <mana/core/gpuapi.h>
+
 #include "mana/core/vulkancore.h"
 #include "mana/core/xmlparser.h"
 #include "mana/graphics/graphicscommon.h"
@@ -18,6 +20,7 @@
 
 #define MAX_JOINTS 50
 
+struct GPUAPI;
 struct Shader;
 struct KeyFrame;
 struct KeyFrameData;
@@ -64,7 +67,7 @@ struct ModelUniformBufferObject {
   alignas(16) mat4 view;
   alignas(16) mat4 proj;
   alignas(16) mat4 joint_transforms[MAX_JOINTS];
-  alignas(16) vec3 light_direction;
+  vec3 light_direction;
 };
 
 struct ModelCache {
@@ -123,7 +126,7 @@ enum {
   MODEL_SUCCESS = 1
 };
 
-int model_init(struct Model* model, struct VulkanState* vulkan_instance, char* node_path, char* texture_path, int max_weights, struct Shader* shader);
+int model_init(struct Model* model, struct GPUAPI* gpu_api, char* node_path, char* texture_path, int max_weights, struct Shader* shader);
 struct Joint* model_create_joints(struct JointData* root_joint_data);
 struct KeyFrame* model_create_key_frame(struct KeyFrameData* data);
 struct JointTransform* model_create_transform(struct JointTransformData* data);

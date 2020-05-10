@@ -39,9 +39,6 @@ struct GraphicsLibrary {
   enum GraphicsLibraryType type;
 };
 
-int graphics_library_init(struct GraphicsLibrary* graphics_library, enum GraphicsLibraryType graphics_library_type);
-
-static int glfw_library_init();
-static void glfw_delete();
+int graphics_library_init(struct GraphicsLibrary* graphics_library, enum GraphicsLibraryType graphics_library_type, const char** graphics_lbrary_extensions, uint32_t* graphics_library_extension_count);
 
 #endif  // WINDOW_LIBRARY_H

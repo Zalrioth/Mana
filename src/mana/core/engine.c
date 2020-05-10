@@ -3,7 +3,10 @@
 int engine_init(struct Engine* engine, struct EngineSettings engine_settings) {
   engine->engine_settings = engine_settings;
 
-  int graphics_library_error = graphics_library_init(&engine->graphics_library, engine_settings.graphics_library_type);
+  const char* graphics_lbrary_extensions[32] = {0};
+  uint32_t graphics_library_extension_count;
+
+  int graphics_library_error = graphics_library_init(&engine->graphics_library, engine_settings.graphics_library_type, graphics_lbrary_extensions, &graphics_library_extension_count);
   switch (graphics_library_error) {
     case (GRAPHICS_LIBRARY_SUCCESS):
       break;
@@ -15,7 +18,7 @@ int engine_init(struct Engine* engine, struct EngineSettings engine_settings) {
       return ENGINE_GRAPHICS_LIBRARY_ERROR;
   }
 
-  int gpu_api_error = gpu_api_init(&engine->gpu_api, engine_settings.gpu_api_type, &engine->graphics_library);
+  int gpu_api_error = gpu_api_init(&engine->gpu_api, engine_settings.gpu_api_type, &engine->graphics_library, graphics_lbrary_extensions, &graphics_library_extension_count);
   switch (gpu_api_error) {
     case (GPU_API_SUCCESS):
       break;

@@ -58,7 +58,7 @@ int dual_contouring_init(struct DualContouring* dual_contouring, struct VulkanSt
 
   graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, vertex_buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &dual_contouring->vertex_buffer, &dual_contouring->vertex_buffer_memory);
 
-  copy_buffer(vulkan_renderer, vertex_staging_buffer, dual_contouring->vertex_buffer, vertex_buffer_size);
+  graphics_utisl_copy_buffer(vulkan_renderer, vertex_staging_buffer, dual_contouring->vertex_buffer, vertex_buffer_size);
 
   vkDestroyBuffer(vulkan_renderer->device, vertex_staging_buffer, NULL);
   vkFreeMemory(vulkan_renderer->device, vertex_staging_buffer_memory, NULL);
@@ -76,7 +76,7 @@ int dual_contouring_init(struct DualContouring* dual_contouring, struct VulkanSt
 
   graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, index_buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &dual_contouring->index_buffer, &dual_contouring->index_buffer_memory);
 
-  copy_buffer(vulkan_renderer, index_staging_buffer, dual_contouring->index_buffer, index_buffer_size);
+  graphics_utisl_copy_buffer(vulkan_renderer, index_staging_buffer, dual_contouring->index_buffer, index_buffer_size);
 
   vkDestroyBuffer(vulkan_renderer->device, index_staging_buffer, NULL);
   vkFreeMemory(vulkan_renderer->device, index_staging_buffer_memory, NULL);

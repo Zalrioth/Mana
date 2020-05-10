@@ -21,6 +21,7 @@ static inline void graphics_utils_generate_mipmaps(struct VkDevice_T *device, Vk
 static inline VkFormat graphics_utils_find_depth_format(VkPhysicalDevice physical_device);
 static inline void graphics_utils_create_color_attachment(VkFormat image_format, struct VkAttachmentDescription *color_attachment);
 static inline void graphics_utils_create_depth_attachment(VkPhysicalDevice physical_device, struct VkAttachmentDescription *depth_attachment);
+static inline void graphics_utisl_copy_buffer(struct VulkanState *vulkan_state, VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size);
 
 static inline void graphics_utils_create_image_view(struct VkDevice_T *device, VkImage image, VkFormat format, VkImageAspectFlags aspect_flags, uint32_t mip_levels, VkImageView *image_view) {
   VkImageViewCreateInfo view_info = {0};
@@ -351,6 +352,16 @@ static inline void graphics_utils_create_depth_attachment(VkPhysicalDevice physi
   depth_attachment->stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
   depth_attachment->initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   depth_attachment->finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+}
+
+static inline void graphics_utisl_copy_buffer(struct VulkanState *vulkan_state, VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size) {
+  VkCommandBuffer command_buffer = graphics_utils_begin_single_time_commands(vulkan_state->device, vulkan_state->command_pool);
+
+  VkBufferCopy copy_region = {0};
+  copy_region.size = size;
+  vkCmdCopyBuffer(command_buffer, src_buffer, dst_buffer, 1, &copy_region);
+
+  graphics_utils_end_single_time_commands(vulkan_state->device, vulkan_state->graphics_queue, vulkan_state->command_pool, command_buffer);
 }
 
 #endif  // GRAPHICS_UTILS_H

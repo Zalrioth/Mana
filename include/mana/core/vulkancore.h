@@ -4,9 +4,6 @@
 
 #include "mana/core/memoryallocator.h"
 //
-#define _CRT_SECURE_NO_DEPRECATE
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
 #include <cglm/cglm.h>
 #include <cstorage/cstorage.h>
 #include <stdalign.h>
@@ -58,6 +55,6 @@ struct VulkanState {
   struct PostProcess* post_process;
 };
 
-int vulkan_core_init(struct VulkanState* vulkan_state);
+int vulkan_core_init(struct VulkanState* vulkan_state, const char** graphics_lbrary_extensions, uint32_t* graphics_library_extension_count);
 
 #endif  // VULKAN_CORE_H

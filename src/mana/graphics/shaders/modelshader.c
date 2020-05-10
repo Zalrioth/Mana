@@ -1,6 +1,6 @@
 #include "mana/graphics/shaders/modelshader.h"
 
-int model_shader_init(struct ModelShader* model_shader, struct VulkanState* vulkan_renderer) {
+int model_shader_init(struct ModelShader* model_shader, struct GPUAPI* gpu_api) {
   VkDescriptorSetLayoutBinding ubo_layout_binding = {0};
   ubo_layout_binding.binding = 0;
   ubo_layout_binding.descriptorCount = 1;
@@ -22,7 +22,7 @@ int model_shader_init(struct ModelShader* model_shader, struct VulkanState* vulk
   layout_info.bindingCount = 2;
   layout_info.pBindings = bindings;
 
-  if (vkCreateDescriptorSetLayout(vulkan_renderer->device, &layout_info, NULL, &model_shader->shader.descriptor_set_layout) != VK_SUCCESS)
+  if (vkCreateDescriptorSetLayout(gpu_api->vulkan_state->device, &layout_info, NULL, &model_shader->shader.descriptor_set_layout) != VK_SUCCESS)
     return 0;
 
   int model_descriptors = 64;
@@ -38,7 +38,7 @@ int model_shader_init(struct ModelShader* model_shader, struct VulkanState* vulk
   pool_info.pPoolSizes = pool_sizes;
   pool_info.maxSets = model_descriptors;  // Max number of sets made from this pool
 
-  if (vkCreateDescriptorPool(vulkan_renderer->device, &pool_info, NULL, &model_shader->shader.descriptor_pool) != VK_SUCCESS) {
+  if (vkCreateDescriptorPool(gpu_api->vulkan_state->device, &pool_info, NULL, &model_shader->shader.descriptor_pool) != VK_SUCCESS) {
     fprintf(stderr, "failed to create descriptor pool!\n");
     return 0;
   }
@@ -81,13 +81,13 @@ int model_shader_init(struct ModelShader* model_shader, struct VulkanState* vulk
   color_blending.blendConstants[2] = 0.0f;
   color_blending.blendConstants[3] = 0.0f;
 
-  shader_init(&model_shader->shader, vulkan_renderer, "./assets/shaders/spirv/model.vert.spv", "./assets/shaders/spirv/model.frag.spv", NULL, vertex_input_info, vulkan_renderer->gbuffer->render_pass, color_blending, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_TRUE, vulkan_renderer->msaa_samples, true);
+  shader_init(&model_shader->shader, gpu_api->vulkan_state, "./assets/shaders/spirv/model.vert.spv", "./assets/shaders/spirv/model.frag.spv", NULL, vertex_input_info, gpu_api->vulkan_state->gbuffer->render_pass, color_blending, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_TRUE, gpu_api->vulkan_state->msaa_samples, true);
 
   return 1;
 }
 
-void model_shader_delete(struct ModelShader* model_shader, struct VulkanState* vulkan_renderer) {
-  shader_delete(&model_shader->shader, vulkan_renderer);
+void model_shader_delete(struct ModelShader* model_shader, struct GPUAPI* gpu_api) {
+  shader_delete(&model_shader->shader, gpu_api->vulkan_state);
 
-  vkDestroyDescriptorPool(vulkan_renderer->device, model_shader->shader.descriptor_pool, NULL);
+  vkDestroyDescriptorPool(gpu_api->vulkan_state->device, model_shader->shader.descriptor_pool, NULL);
 }

@@ -1,6 +1,6 @@
 #include "mana/graphics/shaders/fxaashader.h"
 
-int fxaa_shader_init(struct FXAAShader* fxaa_shader, struct VulkanState* vulkan_renderer) {
+int fxaa_shader_init(struct FXAAShader* fxaa_shader, struct GPUAPI* gpu_api) {
   fxaa_shader->shader = calloc(1, sizeof(struct Shader));
 
   VkDescriptorSetLayoutBinding sampler_layout_binding = {0};
@@ -15,7 +15,7 @@ int fxaa_shader_init(struct FXAAShader* fxaa_shader, struct VulkanState* vulkan_
   layout_info.bindingCount = 1;
   layout_info.pBindings = &sampler_layout_binding;
 
-  if (vkCreateDescriptorSetLayout(vulkan_renderer->device, &layout_info, NULL, &fxaa_shader->shader->descriptor_set_layout) != VK_SUCCESS)
+  if (vkCreateDescriptorSetLayout(gpu_api->vulkan_state->device, &layout_info, NULL, &fxaa_shader->shader->descriptor_set_layout) != VK_SUCCESS)
     return 0;
 
   VkDescriptorPoolSize pool_size = {0};
@@ -28,7 +28,7 @@ int fxaa_shader_init(struct FXAAShader* fxaa_shader, struct VulkanState* vulkan_
   pool_info.pPoolSizes = &pool_size;
   pool_info.maxSets = 2;
 
-  if (vkCreateDescriptorPool(vulkan_renderer->device, &pool_info, NULL, &fxaa_shader->shader->descriptor_pool) != VK_SUCCESS) {
+  if (vkCreateDescriptorPool(gpu_api->vulkan_state->device, &pool_info, NULL, &fxaa_shader->shader->descriptor_pool) != VK_SUCCESS) {
     fprintf(stderr, "failed to create descriptor pool!\n");
     return 0;
   }
@@ -57,7 +57,7 @@ int fxaa_shader_init(struct FXAAShader* fxaa_shader, struct VulkanState* vulkan_
   color_blending.blendConstants[2] = 0.0f;
   color_blending.blendConstants[3] = 0.0f;
 
-  shader_init(fxaa_shader->shader, vulkan_renderer, "./assets/shaders/spirv/screenspace.vert.spv", "./assets/shaders/spirv/fxaa.frag.spv", NULL, vertex_input_info, vulkan_renderer->post_process->render_pass, color_blending, VK_FRONT_FACE_CLOCKWISE, VK_FALSE, VK_SAMPLE_COUNT_1_BIT, false);
+  shader_init(fxaa_shader->shader, gpu_api->vulkan_state, "./assets/shaders/spirv/screenspace.vert.spv", "./assets/shaders/spirv/fxaa.frag.spv", NULL, vertex_input_info, gpu_api->vulkan_state->post_process->render_pass, color_blending, VK_FRONT_FACE_CLOCKWISE, VK_FALSE, VK_SAMPLE_COUNT_1_BIT, false);
 
   //////////////////////////////////////////////////////////////////////
 
@@ -73,15 +73,15 @@ int fxaa_shader_init(struct FXAAShader* fxaa_shader, struct VulkanState* vulkan_
   memset(fxaa_shader->descriptor_sets, 0, sizeof(fxaa_shader->descriptor_sets));
 
   for (int ping_pong_target = 0; ping_pong_target <= 1; ping_pong_target++) {
-    if (vkAllocateDescriptorSets(vulkan_renderer->device, &alloc_info, &fxaa_shader->descriptor_sets[ping_pong_target]) != VK_SUCCESS) {
+    if (vkAllocateDescriptorSets(gpu_api->vulkan_state->device, &alloc_info, &fxaa_shader->descriptor_sets[ping_pong_target]) != VK_SUCCESS) {
       fprintf(stderr, "failed to allocate descriptor sets!\n");
       return 0;
     }
 
     VkDescriptorImageInfo image_info = {0};
     image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    image_info.imageView = vulkan_renderer->post_process->color_image_views[ping_pong_target];
-    image_info.sampler = vulkan_renderer->post_process->texture_sampler;
+    image_info.imageView = gpu_api->vulkan_state->post_process->color_image_views[ping_pong_target];
+    image_info.sampler = gpu_api->vulkan_state->post_process->texture_sampler;
 
     VkWriteDescriptorSet dc;
     memset(&dc, 0, sizeof(dc));
@@ -94,33 +94,33 @@ int fxaa_shader_init(struct FXAAShader* fxaa_shader, struct VulkanState* vulkan_
     dc.descriptorCount = 1;
     dc.pImageInfo = &image_info;
 
-    vkUpdateDescriptorSets(vulkan_renderer->device, 1, &dc, 0, NULL);
+    vkUpdateDescriptorSets(gpu_api->vulkan_state->device, 1, &dc, 0, NULL);
   }
 
   fxaa_shader->fullscreen_quad = calloc(1, sizeof(struct FullscreenQuad));
-  fullscreen_quad_init(fxaa_shader->fullscreen_quad, vulkan_renderer);
+  fullscreen_quad_init(fxaa_shader->fullscreen_quad, gpu_api->vulkan_state);
 
   return 0;
 }
 
-void fxaa_shader_delete(struct FXAAShader* fxaa_shader, struct VulkanState* vulkan_renderer) {
-  fullscreen_quad_delete(fxaa_shader->fullscreen_quad, vulkan_renderer);
+void fxaa_shader_delete(struct FXAAShader* fxaa_shader, struct GPUAPI* gpu_api) {
+  fullscreen_quad_delete(fxaa_shader->fullscreen_quad, gpu_api->vulkan_state);
   free(fxaa_shader->fullscreen_quad);
-  vkDestroyDescriptorPool(vulkan_renderer->device, fxaa_shader->shader->descriptor_pool, NULL);
-  shader_delete(fxaa_shader->shader, vulkan_renderer);
+  vkDestroyDescriptorPool(gpu_api->vulkan_state->device, fxaa_shader->shader->descriptor_pool, NULL);
+  shader_delete(fxaa_shader->shader, gpu_api->vulkan_state);
   free(fxaa_shader->shader);
 }
 
-void fxaa_shader_render(struct FXAAShader* fxaa_shader, struct VulkanState* vulkan_renderer) {
-  post_process_start(vulkan_renderer->post_process, vulkan_renderer);
+void fxaa_shader_render(struct FXAAShader* fxaa_shader, struct GPUAPI* gpu_api) {
+  post_process_start(gpu_api->vulkan_state->post_process, gpu_api->vulkan_state);
 
-  vkCmdBindPipeline(vulkan_renderer->post_process->post_process_command_buffers[vulkan_renderer->post_process->ping_pong], VK_PIPELINE_BIND_POINT_GRAPHICS, fxaa_shader->shader->graphics_pipeline);
+  vkCmdBindPipeline(gpu_api->vulkan_state->post_process->post_process_command_buffers[gpu_api->vulkan_state->post_process->ping_pong], VK_PIPELINE_BIND_POINT_GRAPHICS, fxaa_shader->shader->graphics_pipeline);
   VkBuffer vertex_buffers[] = {fxaa_shader->fullscreen_quad->vertex_buffer};
   VkDeviceSize offsets[] = {0};
-  vkCmdBindVertexBuffers(vulkan_renderer->post_process->post_process_command_buffers[vulkan_renderer->post_process->ping_pong], 0, 1, vertex_buffers, offsets);
-  vkCmdBindIndexBuffer(vulkan_renderer->post_process->post_process_command_buffers[vulkan_renderer->post_process->ping_pong], fxaa_shader->fullscreen_quad->index_buffer, 0, VK_INDEX_TYPE_UINT32);
-  vkCmdBindDescriptorSets(vulkan_renderer->post_process->post_process_command_buffers[vulkan_renderer->post_process->ping_pong], VK_PIPELINE_BIND_POINT_GRAPHICS, fxaa_shader->shader->pipeline_layout, 0, 1, &fxaa_shader->descriptor_sets[vulkan_renderer->post_process->ping_pong ^ true], 0, NULL);
-  vkCmdDrawIndexed(vulkan_renderer->post_process->post_process_command_buffers[vulkan_renderer->post_process->ping_pong], fxaa_shader->fullscreen_quad->mesh->indices->size, 1, 0, 0, 0);
+  vkCmdBindVertexBuffers(gpu_api->vulkan_state->post_process->post_process_command_buffers[gpu_api->vulkan_state->post_process->ping_pong], 0, 1, vertex_buffers, offsets);
+  vkCmdBindIndexBuffer(gpu_api->vulkan_state->post_process->post_process_command_buffers[gpu_api->vulkan_state->post_process->ping_pong], fxaa_shader->fullscreen_quad->index_buffer, 0, VK_INDEX_TYPE_UINT32);
+  vkCmdBindDescriptorSets(gpu_api->vulkan_state->post_process->post_process_command_buffers[gpu_api->vulkan_state->post_process->ping_pong], VK_PIPELINE_BIND_POINT_GRAPHICS, fxaa_shader->shader->pipeline_layout, 0, 1, &fxaa_shader->descriptor_sets[gpu_api->vulkan_state->post_process->ping_pong ^ true], 0, NULL);
+  vkCmdDrawIndexed(gpu_api->vulkan_state->post_process->post_process_command_buffers[gpu_api->vulkan_state->post_process->ping_pong], fxaa_shader->fullscreen_quad->mesh->indices->size, 1, 0, 0, 0);
 
-  post_process_stop(vulkan_renderer->post_process, vulkan_renderer);
+  post_process_stop(gpu_api->vulkan_state->post_process, gpu_api->vulkan_state);
 }

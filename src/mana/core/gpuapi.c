@@ -1,11 +1,11 @@
 #include "mana/core/gpuapi.h"
 
-int gpu_api_init(struct GPUAPI* gpu_api, enum APIType gpu_api_type, struct GraphicsLibrary* graphics_library) {
+int gpu_api_init(struct GPUAPI* gpu_api, enum APIType gpu_api_type, struct GraphicsLibrary* graphics_library, const char** graphics_lbrary_extensions, uint32_t* graphics_library_extension_count) {
   gpu_api->type = gpu_api_type;
   gpu_api->vulkan_state = calloc(1, sizeof(struct VulkanState));
   switch (gpu_api->type) {
     case (VULKAN_API):
-      int vulkan_core_error = vulkan_core_init(gpu_api->vulkan_state);
+      int vulkan_core_error = vulkan_core_init(gpu_api->vulkan_state, graphics_lbrary_extensions, graphics_library_extension_count);
       switch (vulkan_core_error) {
         case (VULKAN_CORE_SUCCESS):
           break;
