@@ -1,15 +1,18 @@
 #include "mana/graphics/render/vulkanrenderer.h"
 
-static bool vulkan_renderer_device_can_present(struct VulkanState* vulkan_state, VkPhysicalDevice device);
 static VkSampleCountFlagBits vulkan_renderer_get_max_usable_sample_count(struct VulkanState* vulkan_state);
+static bool vulkan_renderer_device_can_present(struct VulkanState* vulkan_state, VkPhysicalDevice device);
 
+// TODO: Ad error checking
 int vulkan_renderer_init(struct VulkanState* vulkan_state, int width, int height) {
   vulkan_state->swap_chain = malloc(sizeof(struct SwapChain));
   vulkan_state->gbuffer = malloc(sizeof(struct GBuffer));
   vulkan_state->post_process = malloc(sizeof(struct PostProcess));
   vulkan_state->msaa_samples = vulkan_renderer_get_max_usable_sample_count(vulkan_state);
 
-  vulkan_renderer_device_can_present(vulkan_state, vulkan_state->physical_device);
+  // TODO: If device cannot render, check for new device that can then recreate core?
+  if (!vulkan_renderer_device_can_present(vulkan_state, vulkan_state->physical_device))
+    return VULKAN_RENDERER_NO_PRESENTABLE_DEVICE_ERROR;
 
   swap_chain_init(vulkan_state->swap_chain, vulkan_state, width, height);
   post_process_init(vulkan_state->post_process, vulkan_state);
@@ -20,42 +23,6 @@ int vulkan_renderer_init(struct VulkanState* vulkan_state, int width, int height
   blit_post_process_init(vulkan_state->post_process->blit_post_process, vulkan_state);
 
   return VULKAN_RENDERER_SUCCESS;
-}
-
-static bool vulkan_renderer_device_can_present(struct VulkanState* vulkan_state, VkPhysicalDevice device) {
-  uint32_t queue_family_count = 0;
-  vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, NULL);
-
-  struct Vector queue_families = {0};
-  memset(&queue_families, 0, sizeof(queue_families));
-  vector_init(&queue_families, sizeof(VkQueueFamilyProperties));
-  vector_resize(&queue_families, queue_family_count);
-  vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families.items);
-  queue_families.size = queue_family_count;
-
-  bool present_family_found = false;
-
-  int index_num = 0;
-  for (int loop_num = 0; loop_num < queue_family_count; loop_num++) {
-    VkBool32 present_support = false;
-    vkGetPhysicalDeviceSurfaceSupportKHR(device, index_num, vulkan_state->surface, &present_support);
-
-    if (((VkQueueFamilyProperties*)vector_get(&queue_families, loop_num))->queueCount > 0 && present_support) {
-      (&vulkan_state->indices)->present_family = index_num;
-      present_family_found = true;
-    }
-
-    if (present_family_found)
-      break;
-
-    index_num++;
-  }
-
-  if (!present_family_found)
-    return false;
-
-  return true;
-  // TODO: Should check for extension support
 }
 
 void vulkan_surface_cleanup(struct VulkanState* vulkan_state) {
@@ -82,8 +49,35 @@ void recreate_swap_chain(struct VulkanState* vulkan_state) {
   //create_command_buffers(vulkan_state);
 }
 
+static bool vulkan_renderer_device_can_present(struct VulkanState* vulkan_state, VkPhysicalDevice device) {
+  uint32_t queue_family_count = 0;
+  vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, NULL);
+
+  VkQueueFamilyProperties* queue_families = malloc(sizeof(VkQueueFamilyProperties) * queue_family_count);
+  vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families);
+
+  bool present_family_found = false;
+  for (int queue_family_num = 0; queue_family_num < queue_family_count; queue_family_num++) {
+    VkBool32 present_support = false;
+    vkGetPhysicalDeviceSurfaceSupportKHR(device, queue_family_num, vulkan_state->surface, &present_support);
+
+    if (queue_families[queue_family_num].queueCount > 0 && present_support) {
+      (&vulkan_state->indices)->present_family = queue_family_num;
+      present_family_found = true;
+      break;
+    }
+  }
+
+  free(queue_families);
+
+  if (!present_family_found)
+    return false;
+
+  return true;
+}
+
 static VkSampleCountFlagBits vulkan_renderer_get_max_usable_sample_count(struct VulkanState* vulkan_state) {
-  return VK_SAMPLE_COUNT_1_BIT;
+  //return VK_SAMPLE_COUNT_1_BIT;
   VkPhysicalDeviceProperties physical_device_properties;
   vkGetPhysicalDeviceProperties(vulkan_state->physical_device, &physical_device_properties);
 

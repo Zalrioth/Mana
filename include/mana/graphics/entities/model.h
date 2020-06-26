@@ -64,9 +64,16 @@ static inline void mat4_to_collada_quaternion(mat4 matrix, versor dest) {
 
 struct ModelUniformBufferObject {
   alignas(16) mat4 model;
-  alignas(16) mat4 view;
-  alignas(16) mat4 proj;
-  alignas(16) mat4 joint_transforms[MAX_JOINTS];
+  mat4 view;
+  mat4 proj;
+  mat4 joint_transforms[MAX_JOINTS];
+  vec3 light_direction;
+};
+
+struct ModelStaticUniformBufferObject {
+  alignas(16) mat4 model;
+  mat4 view;
+  mat4 proj;
   vec3 light_direction;
 };
 

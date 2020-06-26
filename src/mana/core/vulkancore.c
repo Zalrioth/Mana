@@ -2,7 +2,7 @@
 
 static int vulkan_core_create_instance(struct VulkanState* vulkan_state, const char** graphics_lbrary_extensions, uint32_t* graphics_library_extension_count);
 static int vulkan_core_setup_debug_messenger(struct VulkanState* vulkan_state);
-static int vulkan_core_pick_physical_device(struct VulkanState* vulkan_state);
+static int vulkan_core_pick_physical_device(struct VulkanState* vulkan_state, const char** graphics_lbrary_extensions);
 static bool vulkan_core_device_can_render(struct VulkanState* vulkan_state, VkPhysicalDevice device);
 static int vulkan_core_create_logical_device(struct VulkanState* vulkan_state);
 static int vulkan_core_create_command_pool(struct VulkanState* vulkan_state);
@@ -16,30 +16,30 @@ int vulkan_core_init(struct VulkanState* vulkan_state, const char** graphics_lbr
   vulkan_state->framebuffer_resized = false;
   vulkan_state->physical_device = VK_NULL_HANDLE;
 
-  int error_code;
-  if ((error_code = vulkan_core_create_instance(vulkan_state, graphics_lbrary_extensions, graphics_library_extension_count)) != VULKAN_CORE_SUCCESS)
+  int vulkan_error_code;
+  if ((vulkan_error_code = vulkan_core_create_instance(vulkan_state, graphics_lbrary_extensions, graphics_library_extension_count)) != VULKAN_CORE_SUCCESS)
     goto vulkan_core_create_instance_cleanup;
-  if ((error_code = vulkan_core_setup_debug_messenger(vulkan_state)) != VULKAN_CORE_SUCCESS)
+  if ((vulkan_error_code = vulkan_core_setup_debug_messenger(vulkan_state)) != VULKAN_CORE_SUCCESS)
     goto vulkan_debug_error;
-  if ((error_code = vulkan_core_pick_physical_device(vulkan_state)) != VULKAN_CORE_SUCCESS)
-    goto vulkan_surface_error;
-  if ((error_code = vulkan_core_create_logical_device(vulkan_state)) != VULKAN_CORE_SUCCESS)
+  if ((vulkan_error_code = vulkan_core_pick_physical_device(vulkan_state, graphics_lbrary_extensions)) != VULKAN_CORE_SUCCESS)
+    goto vulkan_pick_device_error;
+  if ((vulkan_error_code = vulkan_core_create_logical_device(vulkan_state)) != VULKAN_CORE_SUCCESS)
     goto vulkan_device_error;
-  if ((error_code = vulkan_core_create_command_pool(vulkan_state)) != VULKAN_CORE_SUCCESS)
+  if ((vulkan_error_code = vulkan_core_create_command_pool(vulkan_state)) != VULKAN_CORE_SUCCESS)
     goto vulkan_command_pool_error;
 
-  return error_code;
+  return vulkan_error_code;
 
 vulkan_command_pool_error:
   vulkan_command_pool_cleanup(vulkan_state);
 vulkan_device_error:
   vulkan_device_cleanup(vulkan_state);
-vulkan_surface_error:
+vulkan_pick_device_error:
 vulkan_debug_error:
   vulkan_debug_cleanup(vulkan_state);
 vulkan_core_create_instance_cleanup:
 
-  return error_code;
+  return vulkan_error_code;
 }
 
 static void vulkan_device_cleanup(struct VulkanState* vulkan_state) {
@@ -126,7 +126,7 @@ static int vulkan_core_setup_debug_messenger(struct VulkanState* vulkan_state) {
   return VULKAN_CORE_SUCCESS;
 }
 
-static int vulkan_core_pick_physical_device(struct VulkanState* vulkan_state) {
+static int vulkan_core_pick_physical_device(struct VulkanState* vulkan_state, const char** graphics_lbrary_extensions) {
   uint32_t device_count = 0;
   vkEnumeratePhysicalDevices(vulkan_state->instance, &device_count, NULL);
 
@@ -146,11 +146,18 @@ static int vulkan_core_pick_physical_device(struct VulkanState* vulkan_state) {
     vkGetPhysicalDeviceProperties(device, &device_properties);
 
     if (vulkan_core_device_can_render(vulkan_state, device)) {
+      //if (graphics_lbrary_extensions != NULL && !vulkan_core_device_can_present(vulkan_state, device))
+      //  continue;
+
+      // Check extension support function call
+
       if (device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
         VkPhysicalDeviceMemoryProperties device_memory_properties = {0};
         vkGetPhysicalDeviceMemoryProperties(device, &device_memory_properties);
+
         for (int heap_num = 0; heap_num < device_memory_properties.memoryHeapCount; heap_num++) {
           VkMemoryHeap device_heap = device_memory_properties.memoryHeaps[heap_num];
+
           if (device_heap.flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT && device_heap.size > current_largest_heap) {
             discrete_selected = true;
             current_largest_heap = device_heap.size;
@@ -186,18 +193,12 @@ static bool vulkan_core_device_can_render(struct VulkanState* vulkan_state, VkPh
   vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families);
 
   bool graphics_family_found = false;
-
-  int index_num = 0;
   for (int queue_family_num = 0; queue_family_num < queue_family_count; queue_family_num++) {
     if (queue_families[queue_family_num].queueCount > 0 && queue_families[queue_family_num].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-      (&vulkan_state->indices)->graphics_family = index_num;
+      (&vulkan_state->indices)->graphics_family = queue_family_num;
       graphics_family_found = true;
-    }
-
-    if (graphics_family_found)
       break;
-
-    index_num++;
+    }
   }
 
   free(queue_families);
@@ -206,7 +207,6 @@ static bool vulkan_core_device_can_render(struct VulkanState* vulkan_state, VkPh
     return false;
 
   return true;
-  // TODO: Should check for extension support
 }
 
 static int vulkan_core_create_logical_device(struct VulkanState* vulkan_state) {

@@ -7,7 +7,7 @@
 // Effect for blitting model to gbuffer
 
 #define MODEL_SHADER_COLOR_ATTACHEMENTS 2
-#define MODEL_SHADER_VERTEX_ATTRIBUTES 5
+#define MODEL_SHADER_VERTEX_ATTRIBUTES 6
 
 struct ModelShader {
   struct Shader shader;

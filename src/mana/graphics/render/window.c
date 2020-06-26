@@ -36,6 +36,9 @@ int window_init(struct Window *window, struct Engine *engine, int width, int hei
         default:
           return WINDOW_SUCCESS;
           break;
+        case (VULKAN_RENDERER_NO_PRESENTABLE_DEVICE_ERROR):
+          printf("Error graphics device cannot present to surface!\n");
+          return WINDOW_ERROR;
         case (VULKAN_RENDERER_CREATE_WINDOW_ERROR):
           printf("Error creating GLFW window!\n");
           return WINDOW_ERROR;

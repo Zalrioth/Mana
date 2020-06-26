@@ -15,8 +15,9 @@ layout(binding = 0) uniform ModelUniformBufferObject {
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 tex_coord;
-layout(location = 3) in ivec3 joints_ids;
-layout(location = 4) in vec3 weights;
+layout(location = 3) in vec3 color;
+layout(location = 4) in ivec3 joints_ids;
+layout(location = 5) in vec3 weights;
 
 layout(location = 0) out vec2 textureCoords;
 layout(location = 1) out vec3 outNormal;
@@ -34,8 +35,9 @@ void main(void){
 		totalNormal += worldNormal * weights[i];
 	}
 	
-	//gl_Position = ubo.proj * ubo.view * ubo.model * totalLocalPos;
-  gl_Position = ubo.proj * ubo.view * ubo.model * vec4(position, 1.0);
+	// TODO: Make shader for static objects
+	gl_Position = ubo.proj * ubo.view * ubo.model * totalLocalPos;
+  //gl_Position = ubo.proj * ubo.view * ubo.model * vec4(position, 1.0);
 	outNormal = totalNormal.xyz;
 	textureCoords = tex_coord;
 }

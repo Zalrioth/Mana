@@ -6,9 +6,9 @@ int model_init(struct Model* model, struct GPUAPI* gpu_api, char* node_path, cha
   // If texture is null, attempt to load raw colors
   struct XmlNode* library_controllers_node = xml_node_get_child(collada_node, "library_controllers");
   // Static model
-  if (library_controllers_node == NULL) {
+  if (library_controllers_node == NULL || library_controllers_node->child_nodes == NULL || library_controllers_node->child_nodes->num_buckets == 0) {
     struct ModelCache* model_cache = malloc(sizeof(struct ModelCache));
-    model_cache->model_mesh = geometry_loader_extract_model_data(xml_node_get_child(collada_node, "library_geometries"), NULL);
+    model_cache->model_mesh = geometry_loader_extract_model_data(xml_node_get_child(collada_node, "library_geometries"), NULL, false);
     model_cache->model_texture = malloc(sizeof(struct Texture));
     texture_init(model_cache->model_texture, gpu_api->vulkan_state, texture_path);
 
@@ -51,7 +51,7 @@ int model_init(struct Model* model, struct GPUAPI* gpu_api, char* node_path, cha
     vkFreeMemory(gpu_api->vulkan_state->device, index_staging_buffer_memory, NULL);
 
     // Uniform buffer
-    VkDeviceSize uniform_buffer_size = sizeof(struct ModelUniformBufferObject);
+    VkDeviceSize uniform_buffer_size = sizeof(struct ModelStaticUniformBufferObject);
     graphics_utils_create_buffer(gpu_api->vulkan_state->device, gpu_api->vulkan_state->physical_device, uniform_buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &model->uniform_buffer, &model->uniform_buffers_memory);
 
     // Descriptor sets
@@ -72,7 +72,7 @@ int model_init(struct Model* model, struct GPUAPI* gpu_api, char* node_path, cha
     VkDescriptorBufferInfo buffer_info = {0};
     buffer_info.buffer = model->uniform_buffer;
     buffer_info.offset = 0;
-    buffer_info.range = sizeof(struct ModelUniformBufferObject);
+    buffer_info.range = sizeof(struct ModelStaticUniformBufferObject);
 
     VkDescriptorImageInfo image_info = {0};
     image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -103,7 +103,7 @@ int model_init(struct Model* model, struct GPUAPI* gpu_api, char* node_path, cha
     struct SkinningData* skinning_data = skin_loader_extract_skin_data(library_controllers_node, max_weights);
     struct ModelCache* model_cache = malloc(sizeof(struct ModelCache));
     model_cache->joints = skeleton_loader_extract_bone_data(xml_node_get_child(collada_node, "library_visual_scenes"), skinning_data->joint_order);
-    model_cache->model_mesh = geometry_loader_extract_model_data(xml_node_get_child(collada_node, "library_geometries"), skinning_data->vertices_skin_data);
+    model_cache->model_mesh = geometry_loader_extract_model_data(xml_node_get_child(collada_node, "library_geometries"), skinning_data->vertices_skin_data, true);
     model_cache->model_texture = malloc(sizeof(struct Texture));
     texture_init(model_cache->model_texture, gpu_api->vulkan_state, texture_path);
 
