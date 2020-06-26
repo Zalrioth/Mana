@@ -25,3 +25,6 @@
 [submodule "lib/stb"]
 	path = lib/stb
 	url = https://github.com/nothings/stb
+[submodule "lib/uber-math"]
+	path = lib/uber-math
+	url = https://github.com/Zalrioth/uber-math
