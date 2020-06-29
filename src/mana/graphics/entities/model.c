@@ -1,204 +1,74 @@
 #include "mana/graphics/entities/model.h"
 
-int model_init(struct Model* model, struct GPUAPI* gpu_api, char* node_path, char* texture_path, int max_weights, struct Shader* shader) {
+int model_init(struct Model* model, struct GPUAPI* gpu_api, char* node_path, char* texture_path, int max_weights, struct Shader* shader, enum FilterType filter_type) {
+  VkFilter filter = (filter_type == FILTER_NEAREST) ? VK_FILTER_NEAREST : VK_FILTER_LINEAR;
   struct XmlNode* collada_node = xml_parser_load_xml_file(node_path);
+  struct XmlNode* library_controllers_node = xml_node_get_child(collada_node, "library_controllers");  // If texture is null, use custom 8x8 ubo color palette
+  bool animated = !(library_controllers_node == NULL || library_controllers_node->child_nodes == NULL || library_controllers_node->child_nodes->num_buckets == 0);
+  size_t ubo_buffer_size = animated ? sizeof(struct ModelStaticUniformBufferObject) : sizeof(struct ModelStaticUniformBufferObject);
 
-  // If texture is null, attempt to load raw colors
-  struct XmlNode* library_controllers_node = xml_node_get_child(collada_node, "library_controllers");
-  // Static model
-  if (library_controllers_node == NULL || library_controllers_node->child_nodes == NULL || library_controllers_node->child_nodes->num_buckets == 0) {
-    struct ModelCache* model_cache = malloc(sizeof(struct ModelCache));
-    model_cache->model_mesh = geometry_loader_extract_model_data(xml_node_get_child(collada_node, "library_geometries"), NULL, false);
-    model_cache->model_texture = malloc(sizeof(struct Texture));
-    texture_init(model_cache->model_texture, gpu_api->vulkan_state, texture_path);
+  struct ModelCache* model_cache = malloc(sizeof(struct ModelCache));
+  model_cache->model_mesh = geometry_loader_extract_model_data(xml_node_get_child(collada_node, "library_geometries"), NULL, false);
+  model_cache->model_texture = malloc(sizeof(struct Texture));
+  texture_init(model_cache->model_texture, gpu_api->vulkan_state, texture_path, filter);
 
-    model->model_raw = model_cache;
+  model->model_raw = model_cache;
 
-    // Vertex buffer
-    VkDeviceSize vertex_buffer_size = model_cache->model_mesh->vertices->memory_size * model_cache->model_mesh->vertices->size;
-    VkBuffer vertex_staging_buffer = {0};
-    VkDeviceMemory vertex_staging_buffer_memory = {0};
-    graphics_utils_create_buffer(gpu_api->vulkan_state->device, gpu_api->vulkan_state->physical_device, vertex_buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &vertex_staging_buffer, &vertex_staging_buffer_memory);
+  graphics_utils_setup_vertex_buffer(gpu_api->vulkan_state, model->model_raw->model_mesh->vertices, &model->vertex_buffer, &model->vertex_buffer_memory);
+  graphics_utils_setup_index_buffer(gpu_api->vulkan_state, model->model_raw->model_mesh->indices, &model->index_buffer, &model->index_buffer_memory);
+  graphics_utils_setup_uniform_buffer(gpu_api->vulkan_state, ubo_buffer_size, &model->uniform_buffer, &model->uniform_buffers_memory);
+  graphics_utils_setup_uniform_buffer(gpu_api->vulkan_state, sizeof(struct LightingUniformBufferObject), &model->lighting_uniform_buffer, &model->lighting_uniform_buffers_memory);
+  graphics_utils_setup_descriptor(gpu_api->vulkan_state, shader->descriptor_set_layout, shader->descriptor_pool, &model->descriptor_set);
 
-    void* vertex_data;
-    vkMapMemory(gpu_api->vulkan_state->device, vertex_staging_buffer_memory, 0, vertex_buffer_size, 0, &vertex_data);
-    memcpy(vertex_data, model_cache->model_mesh->vertices->items, vertex_buffer_size);
-    vkUnmapMemory(gpu_api->vulkan_state->device, vertex_staging_buffer_memory);
+  VkDescriptorBufferInfo buffer_info = {0};
+  buffer_info.buffer = model->uniform_buffer;
+  buffer_info.offset = 0;
+  buffer_info.range = ubo_buffer_size;
 
-    graphics_utils_create_buffer(gpu_api->vulkan_state->device, gpu_api->vulkan_state->physical_device, vertex_buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &model->vertex_buffer, &model->vertex_buffer_memory);
+  VkDescriptorImageInfo image_info = {0};
+  image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  image_info.imageView = model_cache->model_texture->texture_image_view;
+  image_info.sampler = model_cache->model_texture->texture_sampler;
 
-    graphics_utisl_copy_buffer(gpu_api->vulkan_state, vertex_staging_buffer, model->vertex_buffer, vertex_buffer_size);
+  VkDescriptorBufferInfo lighting_buffer_info = {0};
+  lighting_buffer_info.buffer = model->lighting_uniform_buffer;
+  lighting_buffer_info.offset = 0;
+  lighting_buffer_info.range = sizeof(struct LightingUniformBufferObject);
 
-    vkDestroyBuffer(gpu_api->vulkan_state->device, vertex_staging_buffer, NULL);
-    vkFreeMemory(gpu_api->vulkan_state->device, vertex_staging_buffer_memory, NULL);
+  VkWriteDescriptorSet dcs[3];
+  memset(dcs, 0, sizeof(dcs));
 
-    // Index buffer
-    VkDeviceSize index_buffer_size = model_cache->model_mesh->indices->memory_size * model_cache->model_mesh->indices->size;
-    VkBuffer index_staging_buffer = {0};
-    VkDeviceMemory index_staging_buffer_memory = {0};
-    graphics_utils_create_buffer(gpu_api->vulkan_state->device, gpu_api->vulkan_state->physical_device, index_buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &index_staging_buffer, &index_staging_buffer_memory);
+  dcs[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  dcs[0].dstSet = model->descriptor_set;
+  dcs[0].dstBinding = 0;
+  dcs[0].dstArrayElement = 0;
+  dcs[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  dcs[0].descriptorCount = 1;
+  dcs[0].pBufferInfo = &buffer_info;
 
-    void* index_data;
-    vkMapMemory(gpu_api->vulkan_state->device, index_staging_buffer_memory, 0, index_buffer_size, 0, &index_data);
-    memcpy(index_data, model_cache->model_mesh->indices->items, index_buffer_size);
-    vkUnmapMemory(gpu_api->vulkan_state->device, index_staging_buffer_memory);
+  dcs[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  dcs[1].dstSet = model->descriptor_set;
+  dcs[1].dstBinding = 1;
+  dcs[1].dstArrayElement = 0;
+  dcs[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  dcs[1].descriptorCount = 1;
+  dcs[1].pBufferInfo = &lighting_buffer_info;
 
-    graphics_utils_create_buffer(gpu_api->vulkan_state->device, gpu_api->vulkan_state->physical_device, index_buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &model->index_buffer, &model->index_buffer_memory);
+  dcs[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  dcs[2].dstSet = model->descriptor_set;
+  dcs[2].dstBinding = 2;
+  dcs[2].dstArrayElement = 0;
+  dcs[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  dcs[2].descriptorCount = 1;
+  dcs[2].pImageInfo = &image_info;
 
-    graphics_utisl_copy_buffer(gpu_api->vulkan_state, index_staging_buffer, model->index_buffer, index_buffer_size);
+  vkUpdateDescriptorSets(gpu_api->vulkan_state->device, 3, dcs, 0, NULL);
 
-    vkDestroyBuffer(gpu_api->vulkan_state->device, index_staging_buffer, NULL);
-    vkFreeMemory(gpu_api->vulkan_state->device, index_staging_buffer_memory, NULL);
-
-    // Uniform buffer
-    VkDeviceSize uniform_buffer_size = sizeof(struct ModelStaticUniformBufferObject);
-    graphics_utils_create_buffer(gpu_api->vulkan_state->device, gpu_api->vulkan_state->physical_device, uniform_buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &model->uniform_buffer, &model->uniform_buffers_memory);
-
-    // Descriptor sets
-    VkDescriptorSetLayout layout = {0};
-    layout = shader->descriptor_set_layout;
-
-    VkDescriptorSetAllocateInfo alloc_info = {0};
-    alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    alloc_info.descriptorPool = shader->descriptor_pool;
-    alloc_info.descriptorSetCount = 1;
-    alloc_info.pSetLayouts = &layout;
-
-    if (vkAllocateDescriptorSets(gpu_api->vulkan_state->device, &alloc_info, &model->descriptor_set) != VK_SUCCESS) {
-      fprintf(stderr, "failed to allocate descriptor sets!\n");
-      return 0;
-    }
-
-    VkDescriptorBufferInfo buffer_info = {0};
-    buffer_info.buffer = model->uniform_buffer;
-    buffer_info.offset = 0;
-    buffer_info.range = sizeof(struct ModelStaticUniformBufferObject);
-
-    VkDescriptorImageInfo image_info = {0};
-    image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    image_info.imageView = model_cache->model_texture->texture_image_view;
-    image_info.sampler = model_cache->model_texture->texture_sampler;
-
-    VkWriteDescriptorSet dcs[2];
-    memset(dcs, 0, sizeof(dcs));
-
-    dcs[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    dcs[0].dstSet = model->descriptor_set;
-    dcs[0].dstBinding = 0;
-    dcs[0].dstArrayElement = 0;
-    dcs[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    dcs[0].descriptorCount = 1;
-    dcs[0].pBufferInfo = &buffer_info;
-
-    dcs[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    dcs[1].dstSet = model->descriptor_set;
-    dcs[1].dstBinding = 1;
-    dcs[1].dstArrayElement = 0;
-    dcs[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    dcs[1].descriptorCount = 1;
-    dcs[1].pImageInfo = &image_info;
-
-    vkUpdateDescriptorSets(gpu_api->vulkan_state->device, 2, dcs, 0, NULL);
-  } else {
-    struct SkinningData* skinning_data = skin_loader_extract_skin_data(library_controllers_node, max_weights);
-    struct ModelCache* model_cache = malloc(sizeof(struct ModelCache));
-    model_cache->joints = skeleton_loader_extract_bone_data(xml_node_get_child(collada_node, "library_visual_scenes"), skinning_data->joint_order);
-    model_cache->model_mesh = geometry_loader_extract_model_data(xml_node_get_child(collada_node, "library_geometries"), skinning_data->vertices_skin_data, true);
-    model_cache->model_texture = malloc(sizeof(struct Texture));
-    texture_init(model_cache->model_texture, gpu_api->vulkan_state, texture_path);
-
-    model->model_raw = model_cache;
+  if (animated) {
     model->root_joint = model_create_joints(model_cache->joints->head_joint);
     model->animator = malloc(sizeof(struct Animator));
     animator_init(model->animator, model);
     joint_calc_inverse_bind_transform(model->root_joint, GLM_MAT4_IDENTITY);
-
-    // Vertex buffer
-    VkDeviceSize vertex_buffer_size = model_cache->model_mesh->vertices->memory_size * model_cache->model_mesh->vertices->size;
-    VkBuffer vertex_staging_buffer = {0};
-    VkDeviceMemory vertex_staging_buffer_memory = {0};
-    graphics_utils_create_buffer(gpu_api->vulkan_state->device, gpu_api->vulkan_state->physical_device, vertex_buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &vertex_staging_buffer, &vertex_staging_buffer_memory);
-
-    void* vertex_data;
-    vkMapMemory(gpu_api->vulkan_state->device, vertex_staging_buffer_memory, 0, vertex_buffer_size, 0, &vertex_data);
-    memcpy(vertex_data, model_cache->model_mesh->vertices->items, vertex_buffer_size);
-    vkUnmapMemory(gpu_api->vulkan_state->device, vertex_staging_buffer_memory);
-
-    graphics_utils_create_buffer(gpu_api->vulkan_state->device, gpu_api->vulkan_state->physical_device, vertex_buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &model->vertex_buffer, &model->vertex_buffer_memory);
-
-    graphics_utisl_copy_buffer(gpu_api->vulkan_state, vertex_staging_buffer, model->vertex_buffer, vertex_buffer_size);
-
-    vkDestroyBuffer(gpu_api->vulkan_state->device, vertex_staging_buffer, NULL);
-    vkFreeMemory(gpu_api->vulkan_state->device, vertex_staging_buffer_memory, NULL);
-
-    // Index buffer
-    VkDeviceSize index_buffer_size = model_cache->model_mesh->indices->memory_size * model_cache->model_mesh->indices->size;
-    VkBuffer index_staging_buffer = {0};
-    VkDeviceMemory index_staging_buffer_memory = {0};
-    graphics_utils_create_buffer(gpu_api->vulkan_state->device, gpu_api->vulkan_state->physical_device, index_buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &index_staging_buffer, &index_staging_buffer_memory);
-
-    void* index_data;
-    vkMapMemory(gpu_api->vulkan_state->device, index_staging_buffer_memory, 0, index_buffer_size, 0, &index_data);
-    memcpy(index_data, model_cache->model_mesh->indices->items, index_buffer_size);
-    vkUnmapMemory(gpu_api->vulkan_state->device, index_staging_buffer_memory);
-
-    graphics_utils_create_buffer(gpu_api->vulkan_state->device, gpu_api->vulkan_state->physical_device, index_buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &model->index_buffer, &model->index_buffer_memory);
-
-    graphics_utisl_copy_buffer(gpu_api->vulkan_state, index_staging_buffer, model->index_buffer, index_buffer_size);
-
-    vkDestroyBuffer(gpu_api->vulkan_state->device, index_staging_buffer, NULL);
-    vkFreeMemory(gpu_api->vulkan_state->device, index_staging_buffer_memory, NULL);
-
-    // Uniform buffer
-    VkDeviceSize uniform_buffer_size = sizeof(struct ModelUniformBufferObject);
-    graphics_utils_create_buffer(gpu_api->vulkan_state->device, gpu_api->vulkan_state->physical_device, uniform_buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &model->uniform_buffer, &model->uniform_buffers_memory);
-
-    // Descriptor sets
-    VkDescriptorSetLayout layout = {0};
-    layout = shader->descriptor_set_layout;
-
-    VkDescriptorSetAllocateInfo alloc_info = {0};
-    alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    alloc_info.descriptorPool = shader->descriptor_pool;
-    alloc_info.descriptorSetCount = 1;
-    alloc_info.pSetLayouts = &layout;
-
-    if (vkAllocateDescriptorSets(gpu_api->vulkan_state->device, &alloc_info, &model->descriptor_set) != VK_SUCCESS) {
-      fprintf(stderr, "failed to allocate descriptor sets!\n");
-      return 0;
-    }
-
-    VkDescriptorBufferInfo buffer_info = {0};
-    buffer_info.buffer = model->uniform_buffer;
-    buffer_info.offset = 0;
-    buffer_info.range = sizeof(struct ModelUniformBufferObject);
-
-    VkDescriptorImageInfo image_info = {0};
-    image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    image_info.imageView = model_cache->model_texture->texture_image_view;
-    image_info.sampler = model_cache->model_texture->texture_sampler;
-
-    VkWriteDescriptorSet dcs[2];
-    memset(dcs, 0, sizeof(dcs));
-
-    dcs[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    dcs[0].dstSet = model->descriptor_set;
-    dcs[0].dstBinding = 0;
-    dcs[0].dstArrayElement = 0;
-    dcs[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    dcs[0].descriptorCount = 1;
-    dcs[0].pBufferInfo = &buffer_info;
-
-    dcs[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    dcs[1].dstSet = model->descriptor_set;
-    dcs[1].dstBinding = 1;
-    dcs[1].dstArrayElement = 0;
-    dcs[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    dcs[1].descriptorCount = 1;
-    dcs[1].pImageInfo = &image_info;
-
-    vkUpdateDescriptorSets(gpu_api->vulkan_state->device, 2, dcs, 0, NULL);
-
     struct XmlNode* anim_node = xml_node_get_child(collada_node, "library_animations");
     struct XmlNode* joints_node = xml_node_get_child(collada_node, "library_visual_scenes");
     struct AnimationData* animation_data = animation_extract_animation(anim_node, joints_node);
@@ -216,6 +86,9 @@ int model_init(struct Model* model, struct GPUAPI* gpu_api, char* node_path, cha
   }
 
   return MODEL_SUCCESS;
+}
+
+void model_delete(struct Model* model) {
 }
 
 struct Joint* model_create_joints(struct JointData* root_joint_data) {

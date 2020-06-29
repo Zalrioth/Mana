@@ -23,7 +23,7 @@ struct Texture {
   VkSampler texture_sampler;            // Image sampling settings
 };
 
-int texture_init(struct Texture *texture, struct VulkanState *vulkan_renderer, char *path);
+int texture_init(struct Texture *texture, struct VulkanState *vulkan_renderer, char *path, VkFilter filter);
 void texture_delete(struct VulkanState *vulkan_renderer, struct Texture *texture);
 void texture_copy_buffer_to_image(struct VulkanState *vulkan_renderer, VkBuffer *buffer, VkImage *image, uint32_t width, uint32_t height);
 

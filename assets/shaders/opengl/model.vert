@@ -9,7 +9,6 @@ layout(binding = 0) uniform ModelUniformBufferObject {
   mat4 view;
   mat4 proj;
 	mat4 jointTransforms[MAX_JOINTS];
-	vec3 lightDirection;
 } ubo;
 
 layout(location = 0) in vec3 position;

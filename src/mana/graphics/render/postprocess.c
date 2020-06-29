@@ -74,7 +74,7 @@ int post_process_init(struct PostProcess* post_process, struct VulkanState* vulk
     vkCreateSemaphore(vulkan_renderer->device, &semaphore_info, NULL, &post_process->post_process_semaphores[ping_pong_target]);
   }
 
-  graphics_utils_create_sampler(vulkan_renderer->device, &post_process->texture_sampler, 0);
+  graphics_utils_create_sampler(vulkan_renderer->device, &post_process->texture_sampler, 0, VK_FILTER_LINEAR);
 
   // Post process command buffer
   VkCommandBufferAllocateInfo alloc_info_post_process = {0};

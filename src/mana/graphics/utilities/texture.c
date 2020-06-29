@@ -2,7 +2,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-int texture_init(struct Texture *texture, struct VulkanState *vulkan_renderer, char *path) {
+int texture_init(struct Texture *texture, struct VulkanState *vulkan_renderer, char *path, VkFilter filter) {
   // Note: Extra 0 needed to ensure end of string
   int path_length = strlen(path);
   texture->path = malloc(path_length + 1);
@@ -65,7 +65,7 @@ int texture_init(struct Texture *texture, struct VulkanState *vulkan_renderer, c
   graphics_utils_generate_mipmaps(vulkan_renderer->device, vulkan_renderer->physical_device, vulkan_renderer->graphics_queue, vulkan_renderer->command_pool, texture->texture_image, VK_FORMAT_R16G16B16A16_UNORM, tex_width, tex_height, mip_levels);
 
   graphics_utils_create_image_view(vulkan_renderer->device, texture->texture_image, VK_FORMAT_R16G16B16A16_UNORM, VK_IMAGE_ASPECT_COLOR_BIT, mip_levels, &texture->texture_image_view);
-  graphics_utils_create_sampler(vulkan_renderer->device, &texture->texture_sampler, mip_levels);
+  graphics_utils_create_sampler(vulkan_renderer->device, &texture->texture_sampler, mip_levels, filter);
 
   return 0;
 }

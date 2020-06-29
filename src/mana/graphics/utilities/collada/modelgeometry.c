@@ -126,7 +126,7 @@ void geometry_loader_read_colors(struct ModelData* model_data, struct XmlNode* m
   char* raw_data = strdup(xml_node_get_data(colors_data));
   char* raw_part = strtok(raw_data, " ");
   while (raw_part != NULL) {
-    int r = 0.0f, g = 0.0f, b = 0.0f, a = 0.0f;
+    float r = 0.0f, g = 0.0f, b = 0.0f, a = 0.0f;
 
     for (int type_num = 0; type_num < stride; type_num++) {
       switch (type_num) {
@@ -152,6 +152,8 @@ void geometry_loader_read_colors(struct ModelData* model_data, struct XmlNode* m
   free(raw_data);
 }
 
+// Note: All collada models must follow this format and can only be 1 object
+// Maybe add error checking to ignore any extras
 void geometry_loader_assemble_vertices(struct ModelData* model_data, struct XmlNode* mesh_data) {
   struct XmlNode* poly = xml_node_get_child(mesh_data, "polylist");
   if (poly == NULL)
@@ -216,7 +218,7 @@ float geometry_loader_convert_data_to_arrays(struct ModelData* model_data, struc
     glm_vec3_copy(*(vec3*)vector_get(model_data->colors, current_vertex->color_index), model_color);
 
     vec2 model_tex_coord = {0.0f, 0.0f};
-    memcpy(model_tex_coord, (vec2*)vector_get(model_data->tex_coords, current_vertex->color_index), sizeof(vec2));
+    memcpy(model_tex_coord, (vec2*)vector_get(model_data->tex_coords, current_vertex->texture_index), sizeof(vec2));
     model_tex_coord[1] = 1.0f - model_tex_coord[1];
 
     ivec3 joint_ids = {0, 0, 0};

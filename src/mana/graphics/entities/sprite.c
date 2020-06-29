@@ -15,7 +15,7 @@ int sprite_init(struct Sprite* sprite, struct GPUAPI* gpu_api, struct Shader* sh
   mesh_sprite_init(sprite->image_mesh);
 
   sprite->image_texture = calloc(1, sizeof(struct Texture));
-  texture_init(sprite->image_texture, gpu_api->vulkan_state, "./assets/textures/alpha.png");
+  texture_init(sprite->image_texture, gpu_api->vulkan_state, "./assets/textures/alpha.png", VK_FILTER_LINEAR);
 
   vec3 pos1 = {-0.5f, -0.5f, 0.0f};
   vec3 pos2 = {0.5f, -0.5f, 0.0f};
@@ -39,60 +39,10 @@ int sprite_init(struct Sprite* sprite, struct GPUAPI* gpu_api, struct Shader* sh
   mesh_assign_indice(sprite->image_mesh->indices, 3);
   mesh_assign_indice(sprite->image_mesh->indices, 0);
 
-  // Vertex buffer
-  VkDeviceSize vertex_buffer_size = sprite->image_mesh->vertices->memory_size * sprite->image_mesh->vertices->size;
-  VkBuffer vertex_staging_buffer = {0};
-  VkDeviceMemory vertex_staging_buffer_memory = {0};
-  graphics_utils_create_buffer(gpu_api->vulkan_state->device, gpu_api->vulkan_state->physical_device, vertex_buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &vertex_staging_buffer, &vertex_staging_buffer_memory);
-
-  void* vertex_data;
-  vkMapMemory(gpu_api->vulkan_state->device, vertex_staging_buffer_memory, 0, vertex_buffer_size, 0, &vertex_data);
-  memcpy(vertex_data, sprite->image_mesh->vertices->items, vertex_buffer_size);
-  vkUnmapMemory(gpu_api->vulkan_state->device, vertex_staging_buffer_memory);
-
-  graphics_utils_create_buffer(gpu_api->vulkan_state->device, gpu_api->vulkan_state->physical_device, vertex_buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &sprite->vertex_buffer, &sprite->vertex_buffer_memory);
-
-  graphics_utisl_copy_buffer(gpu_api->vulkan_state, vertex_staging_buffer, sprite->vertex_buffer, vertex_buffer_size);
-
-  vkDestroyBuffer(gpu_api->vulkan_state->device, vertex_staging_buffer, NULL);
-  vkFreeMemory(gpu_api->vulkan_state->device, vertex_staging_buffer_memory, NULL);
-
-  // Index buffer
-  VkDeviceSize index_buffer_size = sprite->image_mesh->indices->memory_size * sprite->image_mesh->indices->size;
-  VkBuffer index_staging_buffer = {0};
-  VkDeviceMemory index_staging_buffer_memory = {0};
-  graphics_utils_create_buffer(gpu_api->vulkan_state->device, gpu_api->vulkan_state->physical_device, index_buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &index_staging_buffer, &index_staging_buffer_memory);
-
-  void* index_data;
-  vkMapMemory(gpu_api->vulkan_state->device, index_staging_buffer_memory, 0, index_buffer_size, 0, &index_data);
-  memcpy(index_data, sprite->image_mesh->indices->items, index_buffer_size);
-  vkUnmapMemory(gpu_api->vulkan_state->device, index_staging_buffer_memory);
-
-  graphics_utils_create_buffer(gpu_api->vulkan_state->device, gpu_api->vulkan_state->physical_device, index_buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &sprite->index_buffer, &sprite->index_buffer_memory);
-
-  graphics_utisl_copy_buffer(gpu_api->vulkan_state, index_staging_buffer, sprite->index_buffer, index_buffer_size);
-
-  vkDestroyBuffer(gpu_api->vulkan_state->device, index_staging_buffer, NULL);
-  vkFreeMemory(gpu_api->vulkan_state->device, index_staging_buffer_memory, NULL);
-
-  // Uniform buffer
-  VkDeviceSize uniform_buffer_size = sizeof(struct SpriteUniformBufferObject);
-  graphics_utils_create_buffer(gpu_api->vulkan_state->device, gpu_api->vulkan_state->physical_device, uniform_buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &sprite->uniform_buffer, &sprite->uniform_buffers_memory);
-
-  // Descriptor sets
-  VkDescriptorSetLayout layout = {0};
-  layout = shader->descriptor_set_layout;
-
-  VkDescriptorSetAllocateInfo alloc_info = {0};
-  alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-  alloc_info.descriptorPool = shader->descriptor_pool;
-  alloc_info.descriptorSetCount = 1;
-  alloc_info.pSetLayouts = &layout;
-
-  if (vkAllocateDescriptorSets(gpu_api->vulkan_state->device, &alloc_info, &sprite->descriptor_set) != VK_SUCCESS) {
-    fprintf(stderr, "failed to allocate descriptor sets!\n");
-    return 0;
-  }
+  graphics_utils_setup_vertex_buffer(gpu_api->vulkan_state, sprite->image_mesh->vertices, &sprite->vertex_buffer, &sprite->vertex_buffer_memory);
+  graphics_utils_setup_index_buffer(gpu_api->vulkan_state, sprite->image_mesh->indices, &sprite->index_buffer, &sprite->index_buffer_memory);
+  graphics_utils_setup_uniform_buffer(gpu_api->vulkan_state, sizeof(struct SpriteUniformBufferObject), &sprite->uniform_buffer, &sprite->uniform_buffers_memory);
+  graphics_utils_setup_descriptor(gpu_api->vulkan_state, shader->descriptor_set_layout, shader->descriptor_pool, &sprite->descriptor_set);
 
   VkDescriptorBufferInfo buffer_info = {0};
   buffer_info.buffer = sprite->uniform_buffer;

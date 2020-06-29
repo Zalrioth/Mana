@@ -27,6 +27,12 @@ struct KeyFrameData;
 struct JointTransform;
 struct JointTransformData;
 
+enum FilterType {
+  FILTER_NEAREST = 0,
+  FILTER_LINEAR
+};
+
+// TODO: Move to math library
 static inline void mat4_to_collada_quaternion(mat4 matrix, versor dest) {
   float diagonal = matrix[0][0] + matrix[1][1] + matrix[2][2];
   if (diagonal > 0) {
@@ -67,14 +73,14 @@ struct ModelUniformBufferObject {
   mat4 view;
   mat4 proj;
   mat4 joint_transforms[MAX_JOINTS];
-  vec3 light_direction;
+  vec3 camera_pos;
 };
 
 struct ModelStaticUniformBufferObject {
   alignas(16) mat4 model;
   mat4 view;
   mat4 proj;
-  vec3 light_direction;
+  vec3 camera_pos;
 };
 
 struct ModelCache {
@@ -126,6 +132,8 @@ struct Model {
   VkDeviceMemory index_buffer_memory;
   VkBuffer uniform_buffer;
   VkDeviceMemory uniform_buffers_memory;
+  VkBuffer lighting_uniform_buffer;
+  VkDeviceMemory lighting_uniform_buffers_memory;
   VkDescriptorSet descriptor_set;
 };
 
@@ -133,7 +141,8 @@ enum {
   MODEL_SUCCESS = 1
 };
 
-int model_init(struct Model* model, struct GPUAPI* gpu_api, char* node_path, char* texture_path, int max_weights, struct Shader* shader);
+int model_init(struct Model* model, struct GPUAPI* gpu_api, char* node_path, char* texture_path, int max_weights, struct Shader* shader, enum FilterType filter_type);
+void model_delete(struct Model* model);
 struct Joint* model_create_joints(struct JointData* root_joint_data);
 struct KeyFrame* model_create_key_frame(struct KeyFrameData* data);
 struct JointTransform* model_create_transform(struct JointTransformData* data);

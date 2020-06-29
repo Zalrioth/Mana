@@ -9,32 +9,42 @@ int model_static_shader_init(struct ModelStaticShader* model_static_shader, stru
   //ubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
   ubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
+  VkDescriptorSetLayoutBinding ubo_layout_binding2 = {0};
+  ubo_layout_binding2.binding = 1;
+  ubo_layout_binding2.descriptorCount = 1;
+  ubo_layout_binding2.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  ubo_layout_binding2.pImmutableSamplers = NULL;
+  //ubo_layout_binding2.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+  ubo_layout_binding2.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
   VkDescriptorSetLayoutBinding sampler_layout_binding = {0};
-  sampler_layout_binding.binding = 1;
+  sampler_layout_binding.binding = 2;
   sampler_layout_binding.descriptorCount = 1;
   sampler_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
   sampler_layout_binding.pImmutableSamplers = NULL;
   sampler_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-  VkDescriptorSetLayoutBinding bindings[2] = {ubo_layout_binding, sampler_layout_binding};
+  VkDescriptorSetLayoutBinding bindings[3] = {ubo_layout_binding, ubo_layout_binding2, sampler_layout_binding};
   VkDescriptorSetLayoutCreateInfo layout_info = {0};
   layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-  layout_info.bindingCount = 2;
+  layout_info.bindingCount = 3;
   layout_info.pBindings = bindings;
 
   if (vkCreateDescriptorSetLayout(gpu_api->vulkan_state->device, &layout_info, NULL, &model_static_shader->shader.descriptor_set_layout) != VK_SUCCESS)
     return 0;
 
   int model_descriptors = 64;
-  VkDescriptorPoolSize pool_sizes[2] = {{0}};
+  VkDescriptorPoolSize pool_sizes[3] = {{0}};
   pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
   pool_sizes[0].descriptorCount = model_descriptors;  // Max number of uniform descriptors
-  pool_sizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  pool_sizes[1].descriptorCount = model_descriptors;  // Max number of image sampler descriptors
+  pool_sizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  pool_sizes[1].descriptorCount = model_descriptors;  // Max number of uniform descriptors
+  pool_sizes[2].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  pool_sizes[2].descriptorCount = model_descriptors;  // Max number of image sampler descriptors
 
   VkDescriptorPoolCreateInfo pool_info = {0};
   pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-  pool_info.poolSizeCount = 2;  // Number of things being passed to GPU
+  pool_info.poolSizeCount = 3;  // Number of things being passed to GPU
   pool_info.pPoolSizes = pool_sizes;
   pool_info.maxSets = model_descriptors;  // Max number of sets made from this pool
 

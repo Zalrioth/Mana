@@ -137,7 +137,7 @@ int gbuffer_init(struct GBuffer* gbuffer, struct VulkanState* vulkan_renderer) {
 
   vkCreateSemaphore(vulkan_renderer->device, &semaphore_info, NULL, &gbuffer->gbuffer_semaphore);
 
-  graphics_utils_create_sampler(vulkan_renderer->device, &gbuffer->texture_sampler, 0);
+  graphics_utils_create_sampler(vulkan_renderer->device, &gbuffer->texture_sampler, 0, VK_FILTER_LINEAR);
 
   glm_mat4_zero(gbuffer->projection_matrix);
   glm_mat4_zero(gbuffer->view_matrix);

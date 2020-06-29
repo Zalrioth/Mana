@@ -10,7 +10,6 @@ layout(binding = 0) uniform ModelUniformBufferObject {
   mat4 view;
   mat4 proj;
 	mat4 jointTransforms[MAX_JOINTS];
-	vec3 lightDirection;
 } ubo;
 layout(binding = 1) uniform sampler2D diffuseMap;
 
@@ -21,9 +20,6 @@ layout(location = 0) out vec4 outColor;
 layout(location = 1) out vec4 normalColor;
 
 void main(void){
-	vec4 diffuseColour = texture(diffuseMap, textureCoords);		
-	vec3 unitNormal = normalize(inNormal);
-	float diffuseLight = max(dot(-ubo.lightDirection, unitNormal), 0.0) * lightBias.x + lightBias.y;
-	outColor = diffuseColour;// * diffuseLight;
-	//outColor = vec4(1.0, 0.0, 0.0, 1.0);
+	outColor = texture(diffuseMap, textureCoords);		
+	normalColor = vec4(normalize(inNormal), 1.0);
 }
