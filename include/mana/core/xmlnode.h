@@ -10,7 +10,7 @@ struct XmlNode {
   char* name;
   struct Map* attributes;
   char* data;
-  struct Map* child_nodes;
+  struct Map* child_nodes;  // Children are stored in an arraylist due to repeated tags
 };
 
 static inline void xml_node_init(struct XmlNode* xml_node, char* name);
@@ -30,12 +30,26 @@ static inline void xml_node_init(struct XmlNode* xml_node, char* name) {
 
 static inline void xml_node_delete(struct XmlNode* xml_node) {
   free(xml_node->name);
-  map_delete(xml_node->attributes);
-  free(xml_node->attributes);
+  if (xml_node->attributes != NULL) {
+    const char* attributes_key;
+    struct MapIter attributes_iter = map_iter();
+    while ((attributes_key = map_next(xml_node->attributes, &attributes_iter)))
+      free(*((char**)map_get(xml_node->attributes, attributes_key)));
+    map_delete(xml_node->attributes);
+    free(xml_node->attributes);
+  }
   free(xml_node->data);
-
-  // TODO: Recursive delete nodes to prevent memory leak
-  // Only needs to be done from head node
+  if (xml_node->child_nodes != NULL) {
+    const char* child_node_key;
+    struct MapIter child_node_iter = map_iter();
+    while ((child_node_key = map_next(xml_node->child_nodes, &child_node_iter))) {
+      struct ArrayList** child_list_pointer = (struct ArrayList**)map_get(xml_node->child_nodes, child_node_key);
+      array_list_delete(*child_list_pointer);
+      free(*child_list_pointer);
+    }
+    map_delete(xml_node->child_nodes);
+  }
+  free(xml_node->child_nodes);
 }
 
 static inline char* xml_node_get_attribute(struct XmlNode* xml_node, char* attr) {

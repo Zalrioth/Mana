@@ -129,3 +129,19 @@ struct XmlNode* xml_parser_load_node(char** scanner) {
   free(tag);
   return xml_node;
 }
+
+void xml_parser_delete(struct XmlNode* xml_node) {
+  if (xml_node->child_nodes != NULL) {
+    const char* key;
+    struct MapIter iter = map_iter();
+    while ((key = map_next(xml_node->child_nodes, &iter))) {
+      struct ArrayList** child_list_pointer = (struct ArrayList**)map_get(xml_node->child_nodes, key);
+      if (child_list_pointer != NULL) {
+        for (int child_num = 0; child_num < array_list_size(*child_list_pointer); child_num++)
+          xml_parser_delete((struct XmlNode*)array_list_get(*child_list_pointer, child_num));
+      }
+    }
+  }
+  xml_node_delete(xml_node);
+  free(xml_node);
+}

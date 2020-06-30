@@ -13,5 +13,6 @@
 
 struct XmlNode* xml_parser_load_xml_file(char* xml_file_path);
 struct XmlNode* xml_parser_load_node(char** xml_file_data);
+void xml_parser_delete(struct XmlNode* xml_node);
 
 #endif  // XML_PARSER_H

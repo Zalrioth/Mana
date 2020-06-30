@@ -85,6 +85,8 @@ int model_init(struct Model* model, struct GPUAPI* gpu_api, char* node_path, cha
     animator_do_animation(model->animator, model->animation);
   }
 
+  xml_parser_delete(collada_node);
+
   return MODEL_SUCCESS;
 }
 
