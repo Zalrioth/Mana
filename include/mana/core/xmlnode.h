@@ -48,8 +48,8 @@ static inline void xml_node_delete(struct XmlNode* xml_node) {
       free(*child_list_pointer);
     }
     map_delete(xml_node->child_nodes);
+    free(xml_node->child_nodes);
   }
-  free(xml_node->child_nodes);
 }
 
 static inline char* xml_node_get_attribute(struct XmlNode* xml_node, char* attr) {

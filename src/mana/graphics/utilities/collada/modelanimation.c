@@ -5,6 +5,8 @@ struct AnimationData* animation_extract_animation(struct XmlNode* animation_data
   struct Vector* times = animation_get_key_times(animation_data);
   float duration = *(float*)vector_get(times, vector_size(times) - 1);
   struct ArrayList* key_frames = animation_init_key_frames(times);
+  vector_delete(times);
+  free(times);
   struct ArrayList* animation_node = xml_node_get_children(animation_data, "animation");
   for (int joint_node_num = 0; joint_node_num < array_list_size(animation_node); joint_node_num++)
     animation_load_joint_transform(key_frames, (struct XmlNode*)array_list_get(animation_node, joint_node_num), root_node);
@@ -53,6 +55,7 @@ void animation_load_joint_transform(struct ArrayList* frames, struct XmlNode* jo
     char* raw_data = xml_node_get_data(xml_node_get_child(transform_data, "float_array"));
     animation_process_transforms(joint_name_id, raw_data, frames, strcmp(joint_name_id, root_node_id) == 0);
   }
+  free(joint_name_id);
 }
 
 void animation_process_transforms(char* joint_name, char* raw_data, struct ArrayList* key_frames, bool root) {
@@ -70,7 +73,7 @@ void animation_process_transforms(char* joint_name, char* raw_data, struct Array
       glm_mat4_mul(correction, transform, transform);
     }
     struct JointTransformData* joint_transform_data = malloc(sizeof(struct JointTransformData));
-    joint_transform_data_init(joint_transform_data, joint_name, transform);
+    joint_transform_data_init(joint_transform_data, strdup(joint_name), transform);
     array_list_add(((struct KeyFrameData*)array_list_get(key_frames, key_frame_num))->joint_transforms, joint_transform_data);
   }
 }

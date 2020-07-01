@@ -4,15 +4,15 @@ int model_init(struct Model* model, struct GPUAPI* gpu_api, char* node_path, cha
   VkFilter filter = (filter_type == FILTER_NEAREST) ? VK_FILTER_NEAREST : VK_FILTER_LINEAR;
   struct XmlNode* collada_node = xml_parser_load_xml_file(node_path);
   struct XmlNode* library_controllers_node = xml_node_get_child(collada_node, "library_controllers");  // If texture is null, use custom 8x8 ubo color palette
-  bool animated = !(library_controllers_node == NULL || library_controllers_node->child_nodes == NULL || library_controllers_node->child_nodes->num_buckets == 0);
-  size_t ubo_buffer_size = animated ? sizeof(struct ModelUniformBufferObject) : sizeof(struct ModelStaticUniformBufferObject);
+  model->animated = !(library_controllers_node == NULL || library_controllers_node->child_nodes == NULL || library_controllers_node->child_nodes->num_buckets == 0);
+  size_t ubo_buffer_size = model->animated ? sizeof(struct ModelUniformBufferObject) : sizeof(struct ModelStaticUniformBufferObject);
 
   struct ModelCache* model_cache = malloc(sizeof(struct ModelCache));
   struct SkinningData* skinning_data = NULL;
-  if (animated) {
+  if (model->animated) {
     skinning_data = skin_loader_extract_skin_data(library_controllers_node, max_weights);
     model_cache->joints = skeleton_loader_extract_bone_data(xml_node_get_child(collada_node, "library_visual_scenes"), skinning_data->joint_order);
-    model_cache->model_mesh = geometry_loader_extract_model_data(xml_node_get_child(collada_node, "library_geometries"), skinning_data->vertices_skin_data, animated);
+    model_cache->model_mesh = geometry_loader_extract_model_data(xml_node_get_child(collada_node, "library_geometries"), skinning_data->vertices_skin_data, model->animated);
 
     model->root_joint = model_create_joints(model_cache->joints->head_joint);
     model->animator = malloc(sizeof(struct Animator));
@@ -32,9 +32,24 @@ int model_init(struct Model* model, struct GPUAPI* gpu_api, char* node_path, cha
     model->animation = malloc(sizeof(struct Animation));
     animation_init(model->animation, animation_data->length_seconds, frames);
 
+    for (int frame_num = 0; frame_num < array_list_size(animation_data->key_frames); frame_num++) {
+      struct KeyFrameData* key_frame_data = (struct KeyFrameData*)array_list_get(animation_data->key_frames, frame_num);
+      for (int transform_num = 0; transform_num < array_list_size(key_frame_data->joint_transforms); transform_num++) {
+        struct JointTransformData* joint_transform_data = (struct JointTransformData*)array_list_get(key_frame_data->joint_transforms, transform_num);
+        free(joint_transform_data->joint_name_id);
+        free(joint_transform_data);
+      }
+      array_list_delete(key_frame_data->joint_transforms);
+      free(key_frame_data->joint_transforms);
+      free(key_frame_data);
+    }
+    array_list_delete(animation_data->key_frames);
+    free(animation_data->key_frames);
+    free(animation_data);
+
     animator_do_animation(model->animator, model->animation);
   } else
-    model_cache->model_mesh = geometry_loader_extract_model_data(xml_node_get_child(collada_node, "library_geometries"), NULL, animated);
+    model_cache->model_mesh = geometry_loader_extract_model_data(xml_node_get_child(collada_node, "library_geometries"), NULL, model->animated);
 
   model->model_raw = model_cache;
 
@@ -60,7 +75,7 @@ int model_init(struct Model* model, struct GPUAPI* gpu_api, char* node_path, cha
   return MODEL_SUCCESS;
 }
 
-void model_delete(struct GPUAPI* gpu_api, struct Model* model) {
+void model_delete(struct Model* model, struct GPUAPI* gpu_api) {
   vkDestroyBuffer(gpu_api->vulkan_state->device, model->index_buffer, NULL);
   vkFreeMemory(gpu_api->vulkan_state->device, model->index_buffer_memory, NULL);
 
@@ -74,6 +89,13 @@ void model_delete(struct GPUAPI* gpu_api, struct Model* model) {
   vkFreeMemory(gpu_api->vulkan_state->device, model->lighting_uniform_buffers_memory, NULL);
 
   // TODO: Delete uniform colors if needed
+
+  if (model->animated) {
+    model_delete_joints(model->root_joint);
+    model_delete_animation(model->animation);
+    free(model->animation);
+    free(model->animator);
+  }
 }
 
 struct Joint* model_create_joints(struct JointData* root_joint_data) {
@@ -87,20 +109,44 @@ struct Joint* model_create_joints(struct JointData* root_joint_data) {
   return joint;
 }
 
+void model_delete_joints(struct Joint* joint) {
+  if (joint->children != NULL && !array_list_empty(joint->children)) {
+    for (int joint_num = 0; joint_num < array_list_size(joint->children); joint_num++)
+      model_delete_joints((struct Joint*)array_list_get(joint->children, joint_num));
+  }
+  free(joint->name);
+  array_list_delete(joint->children);
+  free(joint->children);
+  free(joint);
+}
+
+void model_delete_animation(struct Animation* animation) {
+  // Think memory bug is in here
+  for (int frame_num = 0; frame_num < array_list_size(animation->key_frames); frame_num++) {
+    struct KeyFrame* key_frame = (struct KeyFrame*)array_list_get(animation->key_frames, frame_num);
+    map_delete(key_frame->pose);
+    free(key_frame->pose);
+    free(key_frame);
+  }
+
+  array_list_delete(animation->key_frames);
+  free(animation->key_frames);
+}
+
 struct KeyFrame* model_create_key_frame(struct KeyFrameData* data) {
   struct Map* map = malloc(sizeof(struct Map));
   map_init(map, sizeof(struct JointTransform));
   for (int joint_num = 0; joint_num < array_list_size(data->joint_transforms); joint_num++) {
     struct JointTransformData* joint_data = (struct JointTransformData*)array_list_get(data->joint_transforms, joint_num);
-    struct JointTransform* joint_transform = model_create_transform(joint_data);
-    map_set(map, joint_data->joint_name_id, joint_transform);
+    struct JointTransform joint_transform = model_create_transform(joint_data);
+    map_set(map, joint_data->joint_name_id, &joint_transform);
   }
   struct KeyFrame* key_frame = malloc(sizeof(struct KeyFrame));
   key_frame_init(key_frame, data->time, map);
   return key_frame;
 }
 
-struct JointTransform* model_create_transform(struct JointTransformData* data) {
+struct JointTransform model_create_transform(struct JointTransformData* data) {
   mat4 mat = GLM_MAT4_ZERO_INIT;
   glm_mat4_copy(data->joint_local_transform, mat);
   vec3 translation = {mat[3][0], mat[3][1], mat[3][2]};
@@ -108,8 +154,8 @@ struct JointTransform* model_create_transform(struct JointTransformData* data) {
   //glm_mat4_quat(mat, rotation);
   mat4_to_collada_quaternion(mat, rotation);
 
-  struct JointTransform* joint_transform = malloc(sizeof(struct JointTransform));
-  joint_transform_init(joint_transform, translation, rotation);
+  struct JointTransform joint_transform = {0};
+  joint_transform_init(&joint_transform, translation, rotation);
   return joint_transform;
 }
 

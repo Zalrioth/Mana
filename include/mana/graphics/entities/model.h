@@ -121,6 +121,7 @@ static inline void joint_calc_inverse_bind_transform(struct Joint* joint, mat4 p
 
 struct Model {
   struct ModelCache* model_raw;
+  bool animated;
   struct Joint* root_joint;
   int joint_count;
   struct Animator* animator;
@@ -142,10 +143,12 @@ enum {
 };
 
 int model_init(struct Model* model, struct GPUAPI* gpu_api, char* node_path, char* texture_path, int max_weights, struct Shader* shader, enum FilterType filter_type);
-void model_delete(struct GPUAPI* gpu_api, struct Model* model);
+void model_delete(struct Model* model, struct GPUAPI* gpu_api);
 struct Joint* model_create_joints(struct JointData* root_joint_data);
 struct KeyFrame* model_create_key_frame(struct KeyFrameData* data);
-struct JointTransform* model_create_transform(struct JointTransformData* data);
+void model_delete_joints(struct Joint* joint);
+void model_delete_animation(struct Animation* animation);
+struct JointTransform model_create_transform(struct JointTransformData* data);
 void model_get_joint_transforms(struct Joint* head_joint, mat4 dest[MAX_JOINTS]);
 
 #endif  // MODEL_H

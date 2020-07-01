@@ -28,7 +28,11 @@ layout(location = 3) in vec3 FragPos;
 layout(location = 0) out vec4 outColor;
 layout(location = 1) out vec4 normalColor;
 
-void main(void){
-	outColor = texture(diffuseMap, textureCoords);		
-	normalColor = vec4(normalize(inNormal), 1.0);
+void main(void){	
+  vec4 diffuseColour = texture(diffuseMap, textureCoords);	
+  
+  // Normals not flipped
+  vec3 norm = normalize(inNormal);
+  outColor = calculate_pbr(diffuseColour, norm, FragPos, ubo.camera_pos, lighting.light);
+  normalColor = vec4(norm, 1.0);
 }
