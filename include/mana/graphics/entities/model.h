@@ -70,17 +70,17 @@ static inline void mat4_to_collada_quaternion(mat4 matrix, versor dest) {
 
 struct ModelUniformBufferObject {
   alignas(16) mat4 model;
-  mat4 view;
-  mat4 proj;
-  mat4 joint_transforms[MAX_JOINTS];
-  vec3 camera_pos;
+  alignas(16) mat4 view;
+  alignas(16) mat4 proj;
+  alignas(16) vec3 camera_pos;
+  alignas(16) mat4 joint_transforms[MAX_JOINTS];
 };
 
 struct ModelStaticUniformBufferObject {
   alignas(16) mat4 model;
-  mat4 view;
-  mat4 proj;
-  vec3 camera_pos;
+  alignas(16) mat4 view;
+  alignas(16) mat4 proj;
+  alignas(16) vec3 camera_pos;
 };
 
 struct ModelCache {
@@ -105,7 +105,7 @@ static inline void joint_init(struct Joint* joint, int index, char* name, mat4 b
   joint->children = malloc(sizeof(struct ArrayList));
   array_list_init(joint->children);
   joint->index = index;
-  joint->name = name;
+  joint->name = strdup(name);
   glm_mat4_copy(bind_local_transform, joint->local_bind_transform);
 }
 
@@ -142,7 +142,7 @@ enum {
 };
 
 int model_init(struct Model* model, struct GPUAPI* gpu_api, char* node_path, char* texture_path, int max_weights, struct Shader* shader, enum FilterType filter_type);
-void model_delete(struct Model* model);
+void model_delete(struct GPUAPI* gpu_api, struct Model* model);
 struct Joint* model_create_joints(struct JointData* root_joint_data);
 struct KeyFrame* model_create_key_frame(struct KeyFrameData* data);
 struct JointTransform* model_create_transform(struct JointTransformData* data);

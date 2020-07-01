@@ -75,15 +75,12 @@ struct Map* animator_interpolate_poses(struct KeyFrame* previous_frame, struct K
   const char* joint_name = NULL;
   struct MapIter iter = map_iter();
   while ((joint_name = map_next(previous_frame->pose, &iter))) {
-    // xyz quaternions have signs flipped for some reason on previous and next transforms
     struct JointTransform* previous_transform = (struct JointTransform*)map_get(previous_frame->pose, joint_name);
     struct JointTransform* next_transform = (struct JointTransform*)map_get(next_frame->pose, joint_name);
-    struct JointTransform* current_transform = joint_transform_interpolate(previous_transform, next_transform, progression);
+    struct JointTransform current_transform = joint_transform_interpolate(previous_transform, next_transform, progression);
     mat4 local_transform = GLM_MAT4_IDENTITY_INIT;
     joint_transform_get_local_transform(current_transform, local_transform);
     map_set(current_pose, joint_name, local_transform);
-    //printf("Joint name: %s\n", joint_name);
-    free(current_transform);
   }
   return current_pose;
 }

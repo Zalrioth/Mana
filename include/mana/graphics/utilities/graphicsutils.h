@@ -26,6 +26,10 @@ static inline void graphics_utils_setup_vertex_buffer(struct VulkanState *vulkan
 static inline void graphics_utils_setup_index_buffer(struct VulkanState *vulkan_state, struct Vector *indices, VkBuffer *index_buffer, VkDeviceMemory *index_buffer_memory);
 static inline void graphics_utils_setup_uniform_buffer(struct VulkanState *vulkan_state, size_t memory_size, VkBuffer *uniform_buffer, VkDeviceMemory *uniform_buffer_memory);
 static inline int graphics_utils_setup_descriptor(struct VulkanState *vulkan_state, struct VkDescriptorSetLayout_T *descriptor_set_layout, struct VkDescriptorPool_T *descriptor_pool, VkDescriptorSet *descriptor_set);
+static inline VkDescriptorBufferInfo graphics_utils_setup_descriptor_buffer_info(size_t memory_size, VkBuffer *uniform_buffer);
+static inline void graphics_utils_setup_descriptor_buffer(struct VulkanState *vulkan_state, VkWriteDescriptorSet *dcs, size_t index, VkDescriptorSet *descriptor_set, VkDescriptorBufferInfo *buffer_info);
+static inline VkDescriptorImageInfo graphics_utils_setup_descriptor_image_info(VkImageView *texture_image_view, VkSampler *texture_sampler);
+static inline void graphics_utils_setup_descriptor_image(struct VulkanState *vulkan_state, VkWriteDescriptorSet *dcs, size_t index, VkDescriptorSet *descriptor_set, VkDescriptorImageInfo *image_info);
 
 static inline void graphics_utils_create_image_view(struct VkDevice_T *device, VkImage image, VkFormat format, VkImageAspectFlags aspect_flags, uint32_t mip_levels, VkImageView *image_view) {
   VkImageViewCreateInfo view_info = {0};
@@ -419,6 +423,44 @@ static inline int graphics_utils_setup_descriptor(struct VulkanState *vulkan_sta
   }
 
   return 0;
+}
+
+static inline VkDescriptorBufferInfo graphics_utils_setup_descriptor_buffer_info(size_t memory_size, VkBuffer *uniform_buffer) {
+  VkDescriptorBufferInfo buffer_info = {0};
+  buffer_info.buffer = *uniform_buffer;
+  buffer_info.offset = 0;
+  buffer_info.range = memory_size;
+
+  return buffer_info;
+}
+
+static inline void graphics_utils_setup_descriptor_buffer(struct VulkanState *vulkan_state, VkWriteDescriptorSet *dcs, size_t index, VkDescriptorSet *descriptor_set, VkDescriptorBufferInfo *buffer_info) {
+  dcs[index].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  dcs[index].dstSet = *descriptor_set;
+  dcs[index].dstBinding = index;
+  dcs[index].dstArrayElement = 0;
+  dcs[index].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  dcs[index].descriptorCount = 1;
+  dcs[index].pBufferInfo = buffer_info;
+}
+
+static inline VkDescriptorImageInfo graphics_utils_setup_descriptor_image_info(VkImageView *texture_image_view, VkSampler *texture_sampler) {
+  VkDescriptorImageInfo image_info = {0};
+  image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  image_info.imageView = *texture_image_view;
+  image_info.sampler = *texture_sampler;
+
+  return image_info;
+}
+
+static inline void graphics_utils_setup_descriptor_image(struct VulkanState *vulkan_state, VkWriteDescriptorSet *dcs, size_t index, VkDescriptorSet *descriptor_set, VkDescriptorImageInfo *image_info) {
+  dcs[index].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  dcs[index].dstSet = *descriptor_set;
+  dcs[index].dstBinding = index;
+  dcs[index].dstArrayElement = 0;
+  dcs[index].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  dcs[index].descriptorCount = 1;
+  dcs[index].pImageInfo = image_info;
 }
 
 #endif  // GRAPHICS_UTILS_H

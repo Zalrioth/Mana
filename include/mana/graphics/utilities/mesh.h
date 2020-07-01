@@ -238,7 +238,7 @@ static inline void mesh_model_get_attribute_descriptions(VkVertexInputAttributeD
   attribute_descriptions[3].binding = 0;
   attribute_descriptions[3].location = 3;
   attribute_descriptions[3].format = VK_FORMAT_R32G32B32_SFLOAT;
-  attribute_descriptions[3].offset = offsetof(struct VertexModelStatic, color);
+  attribute_descriptions[3].offset = offsetof(struct VertexModel, color);
 
   attribute_descriptions[4].binding = 0;
   attribute_descriptions[4].location = 4;

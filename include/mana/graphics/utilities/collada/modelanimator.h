@@ -72,12 +72,10 @@ static inline void joint_transform_init(struct JointTransform* joint_transform, 
   glm_quat_copy(rotation, joint_transform->rotation);
 }
 
-static inline void joint_transform_get_local_transform(struct JointTransform* joint_transform, mat4 dest) {
-  glm_translate(dest, joint_transform->position);
+static inline void joint_transform_get_local_transform(struct JointTransform joint_transform, mat4 dest) {
+  glm_translate(dest, joint_transform.position);
   mat4 rotation_matrix = GLM_MAT4_ZERO_INIT;
-  collada_quaternion_to_mat4(joint_transform->rotation, rotation_matrix);
-  //glm_quat_mat4(joint_transform->rotation, rotation_matrix);
-
+  collada_quaternion_to_mat4(joint_transform.rotation, rotation_matrix);
   glm_mat4_mul(dest, rotation_matrix, dest);
 }
 
@@ -110,15 +108,15 @@ static inline void model_interpolate_vec3(vec3 start, vec3 end, float progressio
   dest[2] = start[2] + (end[2] - start[2]) * progression;
 }
 
-static inline struct JointTransform* joint_transform_interpolate(struct JointTransform* frame_a, struct JointTransform* frame_b, float progression) {
+static inline struct JointTransform joint_transform_interpolate(struct JointTransform* frame_a, struct JointTransform* frame_b, float progression) {
   vec3 pos = GLM_VEC3_ZERO_INIT;
   model_interpolate_vec3(frame_a->position, frame_b->position, progression, pos);
   //glm_vec3_lerp(frame_a->position, frame_b->position, progression, pos);
   versor rot = GLM_QUAT_IDENTITY_INIT;
   model_interpolate_quat(frame_a->rotation, frame_b->rotation, progression, rot);
   //glm_quat_lerp(frame_a->rotation, frame_b->rotation, progression, rot);
-  struct JointTransform* joint_transform = malloc(sizeof(struct JointTransform));
-  joint_transform_init(joint_transform, pos, rot);
+  struct JointTransform joint_transform = {0};
+  joint_transform_init(&joint_transform, pos, rot);
   return joint_transform;
 }
 

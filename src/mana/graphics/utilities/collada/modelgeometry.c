@@ -10,10 +10,7 @@ struct Mesh* geometry_loader_extract_model_data(struct XmlNode* geometry_node, s
   geometry_loader_remove_unused_vertices(model_data);
 
   struct Mesh* model_mesh = malloc(sizeof(struct Mesh));
-  if (animated)
-    mesh_model_init(model_mesh);
-  else
-    mesh_model_static_init(model_mesh);
+  animated ? mesh_model_init(model_mesh) : mesh_model_static_init(model_mesh);
 
   geometry_loader_convert_data_to_arrays(model_data, model_mesh, animated);
   model_mesh->indices = model_data->indices;
@@ -207,7 +204,6 @@ float geometry_loader_convert_data_to_arrays(struct ModelData* model_data, struc
     if (current_vertex->length > furthest_point)
       furthest_point = current_vertex->length;
 
-    struct VertexSkinData* model_weights = current_vertex->weights_data;
     vec3 model_position = GLM_VEC3_ZERO_INIT;
     glm_vec3_copy(current_vertex->position, model_position);
 
@@ -221,16 +217,19 @@ float geometry_loader_convert_data_to_arrays(struct ModelData* model_data, struc
     memcpy(model_tex_coord, (vec2*)vector_get(model_data->tex_coords, current_vertex->texture_index), sizeof(vec2));
     model_tex_coord[1] = 1.0f - model_tex_coord[1];
 
-    ivec3 joint_ids = {0, 0, 0};
-    vec3 joint_weights = GLM_VEC3_ZERO_INIT;
+    if (animated) {
+      struct VertexSkinData* model_weights = current_vertex->weights_data;
 
-    if (model_weights != NULL) {
-      memcpy(joint_ids, (ivec3*)vector_get(model_weights->joint_ids, 0), sizeof(ivec3));
-      memcpy(joint_weights, (vec3*)vector_get(model_weights->weights, 0), sizeof(vec3));
-    }
-    if (animated)
+      ivec3 joint_ids = {0, 0, 0};
+      memcpy(joint_ids, model_weights->joint_ids->items, sizeof(ivec3));
+      //memcpy(joint_ids, (ivec3*)vector_get(model_weights->joint_ids, 0), sizeof(ivec3));
+
+      vec3 joint_weights = GLM_VEC3_ZERO_INIT;
+      memcpy(joint_weights, model_weights->weights->items, sizeof(vec3));
+      //memcpy(joint_weights, (vec3*)vector_get(model_weights->weights, 0), sizeof(vec3));
+
       mesh_model_assign_vertex(model_mesh->vertices, model_position[0], model_position[1], model_position[2], model_normal[0], model_normal[1], model_normal[2], model_tex_coord[0], model_tex_coord[1], model_color[0], model_color[1], model_color[2], joint_ids[0], joint_ids[1], joint_ids[2], joint_weights[0], joint_weights[1], joint_weights[2]);
-    else
+    } else
       mesh_model_static_assign_vertex(model_mesh->vertices, model_position[0], model_position[1], model_position[2], model_normal[0], model_normal[1], model_normal[2], model_tex_coord[0], model_tex_coord[1], model_color[0], model_color[1], model_color[2]);
   }
 

@@ -8,6 +8,7 @@ layout(binding = 0) uniform ModelUniformBufferObject {
   mat4 model;
   mat4 view;
   mat4 proj;
+	vec3 camera_pos;
 	mat4 jointTransforms[MAX_JOINTS];
 } ubo;
 
@@ -20,6 +21,8 @@ layout(location = 5) in vec3 weights;
 
 layout(location = 0) out vec2 textureCoords;
 layout(location = 1) out vec3 outNormal;
+layout(location = 2) out vec3 outColor;
+layout(location = 3) out vec3 FragPos;
 
 void main(void){
 	vec4 totalLocalPos = vec4(0.0);
@@ -33,10 +36,11 @@ void main(void){
 		vec4 worldNormal = jointTransform * vec4(normal, 0.0);
 		totalNormal += worldNormal * weights[i];
 	}
-	
-	// TODO: Make shader for static objects
+
 	gl_Position = ubo.proj * ubo.view * ubo.model * totalLocalPos;
-  //gl_Position = ubo.proj * ubo.view * ubo.model * vec4(position, 1.0);
 	outNormal = totalNormal.xyz;
 	textureCoords = tex_coord;
+
+	outColor = color;
+	FragPos = vec3(ubo.model * vec4(position, 1.0));
 }
