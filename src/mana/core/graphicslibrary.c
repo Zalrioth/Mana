@@ -28,6 +28,16 @@ int graphics_library_init(struct GraphicsLibrary* graphics_library, enum Graphic
   return GRAPHICS_LIBRARY_SUCCESS;
 }
 
+void graphics_library_delete(struct GraphicsLibrary* graphics_library) {
+  switch (graphics_library->type) {
+    case (NO_LIBRARY):
+      break;
+    case (GLFW_LIBRARY):
+      glfw_delete();
+      break;
+  }
+}
+
 static int glfw_library_init(const char** graphics_lbrary_extensions, uint32_t* graphics_library_extension_count) {
   if (!glfwInit())
     return GLFW_INIT_ERROR;

@@ -56,5 +56,6 @@ struct VulkanState {
 };
 
 int vulkan_core_init(struct VulkanState* vulkan_state, const char** graphics_lbrary_extensions, uint32_t* graphics_library_extension_count);
+void vulkan_core_delete(struct VulkanState* vulkan_state);
 
 #endif  // VULKAN_CORE_H

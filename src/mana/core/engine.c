@@ -34,6 +34,8 @@ int engine_init(struct Engine* engine, struct EngineSettings engine_settings) {
 }
 
 void engine_delete(struct Engine* engine) {
+  gpu_api_delete(&engine->gpu_api);
+  graphics_library_delete(&engine->graphics_library);
 }
 
 void render(struct Engine* engine) {

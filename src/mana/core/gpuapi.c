@@ -33,3 +33,11 @@ int gpu_api_init(struct GPUAPI* gpu_api, enum APIType gpu_api_type, struct Graph
 
   return GPU_API_SUCCESS;
 }
+
+void gpu_api_delete(struct GPUAPI* gpu_api) {
+  switch (gpu_api->type) {
+    case (VULKAN_API):
+      vulkan_core_delete(gpu_api->vulkan_state);
+      break;
+  }
+}

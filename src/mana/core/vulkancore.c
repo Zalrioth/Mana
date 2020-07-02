@@ -42,6 +42,12 @@ vulkan_core_create_instance_cleanup:
   return vulkan_error_code;
 }
 
+void vulkan_core_delete(struct VulkanState* vulkan_state) {
+  vulkan_command_pool_cleanup(vulkan_state);
+  vulkan_device_cleanup(vulkan_state);
+  vulkan_debug_cleanup(vulkan_state);
+}
+
 static void vulkan_device_cleanup(struct VulkanState* vulkan_state) {
   vkDestroyDevice(vulkan_state->device, NULL);
 }

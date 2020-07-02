@@ -72,9 +72,14 @@ int window_init(struct Window *window, struct Engine *engine, int width, int hei
 }
 
 void window_delete(struct Window *window) {
+  switch (window->engine->gpu_api.type) {
+    case (VULKAN_API):
+      vulkan_renderer_delete(window->engine->gpu_api.vulkan_state);
+      break;
+  }
+
   glfwDestroyWindow(window->engine->graphics_library.glfw_library.glfw_window);
   free(window->input_manager);
-  //vulkan_renderer_delete(&window->renderer.vulkan_core);
 }
 
 void window_set_title(struct Window *window, char *title) {
@@ -155,7 +160,7 @@ void window_end_frame(struct Window *window) {
 
   if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || vulkan_core->framebuffer_resized) {
     vulkan_core->framebuffer_resized = false;
-    //recreate_swap_chain(vulkan_core);
+    vulkan_renderer_recreate_swap_chain(vulkan_core, &window->engine->graphics_library, &window->width, &window->height);
   } else if (result != VK_SUCCESS)
     fprintf(stderr, "failed to present swap chain image!\n");
 
@@ -169,7 +174,8 @@ static void glfw_framebuffer_resize_callback(GLFWwindow *window, int width, int 
 
 int window_glfw_window_init(struct Window *window, struct Engine *engine, int width, int height) {
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+  // TODO: Add setting to change window resizing
+  glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
   engine->graphics_library.glfw_library.glfw_window = glfwCreateWindow(width, height, "Grindstone", NULL, NULL);
 

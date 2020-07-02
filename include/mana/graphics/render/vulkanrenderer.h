@@ -13,6 +13,7 @@
 #include <vulkan/vulkan.h>
 
 #include "mana/core/corecommon.h"
+#include "mana/core/graphicslibrary.h"
 #include "mana/core/vulkancore.h"
 #include "mana/graphics/entities/model.h"
 #include "mana/graphics/graphicscommon.h"
@@ -44,5 +45,7 @@ enum VULKAN_RENDERER_STATUS {
 };
 
 int vulkan_renderer_init(struct VulkanState* vulkan_state, int width, int height);
+void vulkan_renderer_delete(struct VulkanState* vulkan_state);
+void vulkan_renderer_recreate_swap_chain(struct VulkanState* vulkan_state, struct GraphicsLibrary* graphics_library, int* width_handle, int* height_handle);
 
 #endif  // VULKAN_RENDERER_H

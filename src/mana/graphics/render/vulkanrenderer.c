@@ -1,9 +1,10 @@
 #include "mana/graphics/render/vulkanrenderer.h"
 
+static void vulkan_renderer_surface_cleanup(struct VulkanState* vulkan_state);
 static VkSampleCountFlagBits vulkan_renderer_get_max_usable_sample_count(struct VulkanState* vulkan_state);
 static bool vulkan_renderer_device_can_present(struct VulkanState* vulkan_state, VkPhysicalDevice device);
 
-// TODO: Ad error checking
+// TODO: Add error checking
 int vulkan_renderer_init(struct VulkanState* vulkan_state, int width, int height) {
   vulkan_state->swap_chain = malloc(sizeof(struct SwapChain));
   vulkan_state->gbuffer = malloc(sizeof(struct GBuffer));
@@ -25,20 +26,49 @@ int vulkan_renderer_init(struct VulkanState* vulkan_state, int width, int height
   return VULKAN_RENDERER_SUCCESS;
 }
 
-void vulkan_surface_cleanup(struct VulkanState* vulkan_state) {
-  vkDestroySurfaceKHR(vulkan_state->instance, vulkan_state->surface, NULL);
+void vulkan_renderer_delete(struct VulkanState* vulkan_state) {
+  post_process_delete(vulkan_state->post_process, vulkan_state);
+  free(vulkan_state->post_process);
+  gbuffer_delete(vulkan_state->gbuffer, vulkan_state);
+  free(vulkan_state->gbuffer);
+  swap_chain_delete(vulkan_state->swap_chain, vulkan_state);
+  free(vulkan_state->swap_chain);
+  vulkan_renderer_surface_cleanup(vulkan_state);
 }
 
-void recreate_swap_chain(struct VulkanState* vulkan_state) {
-  //int width = 0, height = 0;
-  //while (width == 0 || height == 0) {
-  //  glfwGetFramebufferSize(vulkan_state->glfw_window, &width, &height);
-  //  glfwWaitEvents();
-  //}
-  //
+static void vulkan_renderer_surface_cleanup(struct VulkanState* vulkan_state) {
+  vkDestroySurfaceKHR(vulkan_state->instance, vulkan_state->surface, NULL);
+}
+//window->engine->graphics_library.glfw_library
+void vulkan_renderer_recreate_swap_chain(struct VulkanState* vulkan_state, struct GraphicsLibrary* graphics_library, int* width_handle, int* height_handle) {
+  int width = 0, height = 0;
+  switch (graphics_library->type) {
+    case (NO_LIBRARY):
+      break;
+    case (GLFW_LIBRARY):
+      while (width == 0 || height == 0) {
+        glfwGetFramebufferSize(graphics_library->glfw_library.glfw_window, &width, &height);
+        glfwWaitEvents();
+      }
+    case (MOLTENVK_LIBRARY):
+      break;
+  }
+
+  *width_handle = width;
+  *height_handle = height;
+
+  // When window is minimized will pause thread and gpu
   vkDeviceWaitIdle(vulkan_state->device);
 
+  post_process_delete(vulkan_state->post_process, vulkan_state);
+  gbuffer_delete(vulkan_state->gbuffer, vulkan_state);
   swap_chain_delete(vulkan_state->swap_chain, vulkan_state);
+  swap_chain_init(vulkan_state->swap_chain, vulkan_state, width, height);
+  post_process_init(vulkan_state->post_process, vulkan_state);
+  gbuffer_init(vulkan_state->gbuffer, vulkan_state);
+
+  blit_swap_chain_init(vulkan_state->swap_chain->blit_swap_chain, vulkan_state);
+  blit_post_process_init(vulkan_state->post_process->blit_post_process, vulkan_state);
 
   //create_swap_chain(vulkan_state, width, height);
   //create_image_views(vulkan_state);
