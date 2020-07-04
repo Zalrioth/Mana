@@ -63,6 +63,7 @@ void vulkan_renderer_recreate_swap_chain(struct VulkanState* vulkan_state, struc
   post_process_delete(vulkan_state->post_process, vulkan_state);
   gbuffer_delete(vulkan_state->gbuffer, vulkan_state);
   swap_chain_delete(vulkan_state->swap_chain, vulkan_state);
+
   swap_chain_init(vulkan_state->swap_chain, vulkan_state, width, height);
   post_process_init(vulkan_state->post_process, vulkan_state);
   gbuffer_init(vulkan_state->gbuffer, vulkan_state);

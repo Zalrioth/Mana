@@ -40,4 +40,5 @@ void gpu_api_delete(struct GPUAPI* gpu_api) {
       vulkan_core_delete(gpu_api->vulkan_state);
       break;
   }
+  free(gpu_api->vulkan_state);
 }

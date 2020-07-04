@@ -96,6 +96,7 @@ struct XmlNode* xml_parser_load_node(char** scanner) {
       free(tag_equal_text);
     }
   }
+  array_list_delete(&tag_parts);
 
   // Add data
   char* data_start = strchr(line, '>') + 1;

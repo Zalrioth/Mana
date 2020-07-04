@@ -18,7 +18,7 @@ struct VertexSkinData {
 void vertex_skin_data_init(struct VertexSkinData* vertex_skin_data);
 void vertex_skin_data_delete(struct VertexSkinData* vertex_skin_data);
 void vertex_skin_data_add_joint_effect(struct VertexSkinData* vertex_skin_data, int joint_id, float weight);
-void vertex_skin_data_limit_joint_number(struct VertexSkinData* vertex_skin_data, int max);
+void vertex_skin_data_limit_joint_number(struct VertexSkinData* vertex_skin_data, const int max);
 void vertex_skin_data_fill_empty_weights(struct VertexSkinData* vertex_skin_data, int max);
 float vertex_skin_data_save_top_weights(struct VertexSkinData* vertex_skin_data, float* top_weights, int max);
 void vertex_skin_data_refill_weight_list(struct VertexSkinData* vertex_skin_data, float* top_weights, int max, float total);

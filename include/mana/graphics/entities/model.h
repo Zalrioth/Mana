@@ -147,6 +147,7 @@ void model_delete(struct Model* model, struct GPUAPI* gpu_api);
 struct Joint* model_create_joints(struct JointData* root_joint_data);
 struct KeyFrame* model_create_key_frame(struct KeyFrameData* data);
 void model_delete_joints(struct Joint* joint);
+void model_delete_joints_data(struct JointData* joint_data);
 void model_delete_animation(struct Animation* animation);
 struct JointTransform model_create_transform(struct JointTransformData* data);
 void model_get_joint_transforms(struct Joint* head_joint, mat4 dest[MAX_JOINTS]);

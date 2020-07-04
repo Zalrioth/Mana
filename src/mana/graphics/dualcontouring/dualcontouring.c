@@ -156,4 +156,5 @@ void dual_contouring_delete(struct DualContouring* dual_contouring, struct Vulka
   octree_destroy_octree(dual_contouring->head);
   mesh_delete(dual_contouring->mesh);
   free(dual_contouring->mesh);
+  noise_free(dual_contouring->noise_set);
 }

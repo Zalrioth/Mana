@@ -23,9 +23,9 @@ void vertex_skin_data_add_joint_effect(struct VertexSkinData* vertex_skin_data, 
   vector_push_back(vertex_skin_data->weights, &weight);
 }
 
-void vertex_skin_data_limit_joint_number(struct VertexSkinData* vertex_skin_data, int max) {
+void vertex_skin_data_limit_joint_number(struct VertexSkinData* vertex_skin_data, const int max) {
   if (vector_size(vertex_skin_data->joint_ids) > max) {
-    float* top_weights = malloc(sizeof(float) * max);
+    float top_weights[max];
     float total = vertex_skin_data_save_top_weights(vertex_skin_data, top_weights, max);
     vertex_skin_data_refill_weight_list(vertex_skin_data, top_weights, max, total);
     vertex_skin_data_remove_excess_joint_ids(vertex_skin_data, max);
@@ -73,6 +73,10 @@ struct SkinningData* skin_loader_extract_skin_data(struct XmlNode* skinning_data
   struct Vector* vertex_weights = skin_loader_get_skin_data(max_weights, weights_data_node, effector_joint_counts, weights);
   struct SkinningData* parsed_skinning_data = malloc(sizeof(struct SkinningData));
   skinning_data_init(parsed_skinning_data, joints_list, vertex_weights);
+  vector_delete(weights);
+  free(weights);
+  vector_delete(effector_joint_counts);
+  free(effector_joint_counts);
   return parsed_skinning_data;
 }
 
@@ -134,18 +138,18 @@ struct Vector* skin_loader_get_skin_data(int max_weights, struct XmlNode* weight
   vector_init(skinning_data, sizeof(struct VertexSkinData));
   char* raw_part = strtok(raw_data, " ");
   for (int count = 0; count < vector_size(counts); count++) {
-    struct VertexSkinData* skin_data = malloc(sizeof(struct VertexSkinData));
-    vertex_skin_data_init(skin_data);
+    struct VertexSkinData skin_data = {0};
+    vertex_skin_data_init(&skin_data);
     for (int loop_num = 0; loop_num < *(int*)vector_get(counts, count); loop_num++) {
       int joint_id = atoi(raw_part);
       raw_part = strtok(NULL, " ");
       int weight_id = atoi(raw_part);
       raw_part = strtok(NULL, " ");
       //printf("Count: %d\n", parsed_count);
-      vertex_skin_data_add_joint_effect(skin_data, joint_id, *(float*)vector_get(weights, weight_id));
+      vertex_skin_data_add_joint_effect(&skin_data, joint_id, *(float*)vector_get(weights, weight_id));
     }
-    vertex_skin_data_limit_joint_number(skin_data, max_weights);
-    vector_push_back(skinning_data, skin_data);
+    vertex_skin_data_limit_joint_number(&skin_data, max_weights);
+    vector_push_back(skinning_data, &skin_data);
   }
   free(raw_data);
   return skinning_data;

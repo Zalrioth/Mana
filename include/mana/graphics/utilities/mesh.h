@@ -361,7 +361,10 @@ static inline void mesh_dual_contouring_get_attribute_descriptions(VkVertexInput
 
 static inline void mesh_delete(struct Mesh* mesh) {
   vector_delete(mesh->vertices);
+  free(mesh->vertices);
+
   vector_delete(mesh->indices);
+  free(mesh->indices);
 }
 
 static inline void mesh_clear(struct Mesh* mesh) {

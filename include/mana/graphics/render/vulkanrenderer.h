@@ -24,6 +24,8 @@
 #include "mana/graphics/utilities/mesh.h"
 #include "mana/graphics/utilities/texture.h"
 
+struct GraphicsLibrary;
+
 enum VULKAN_RENDERER_STATUS {
   VULKAN_RENDERER_SUCCESS = 0,
   VULKAN_RENDERER_NO_PRESENTABLE_DEVICE_ERROR,

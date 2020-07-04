@@ -48,13 +48,33 @@ int model_init(struct Model* model, struct GPUAPI* gpu_api, char* node_path, cha
     free(animation_data);
 
     animator_do_animation(model->animator, model->animation);
+
+    for (int joint_num = 0; joint_num < vector_size(skinning_data->joint_order); joint_num++)
+      free(*((char**)vector_get(skinning_data->joint_order, joint_num)));
+
+    vector_delete(skinning_data->joint_order);
+    free(skinning_data->joint_order);
+
+    for (int vertice_num = 0; vertice_num < vector_size(skinning_data->vertices_skin_data); vertice_num++) {
+      struct VertexSkinData* vertex_skin_data = (struct VertexSkinData*)vector_get(skinning_data->vertices_skin_data, vertice_num);
+      vector_delete(vertex_skin_data->joint_ids);
+      free(vertex_skin_data->joint_ids);
+      vector_delete(vertex_skin_data->weights);
+      free(vertex_skin_data->weights);
+    }
+
+    vector_delete(skinning_data->vertices_skin_data);
+    free(skinning_data->vertices_skin_data);
+
+    free(skinning_data);
+
   } else
     model_cache->model_mesh = geometry_loader_extract_model_data(xml_node_get_child(collada_node, "library_geometries"), NULL, model->animated);
 
-  model->model_raw = model_cache;
-
   model_cache->model_texture = malloc(sizeof(struct Texture));
   texture_init(model_cache->model_texture, gpu_api->vulkan_state, texture_path, filter);
+
+  model->model_raw = model_cache;
 
   graphics_utils_setup_vertex_buffer(gpu_api->vulkan_state, model->model_raw->model_mesh->vertices, &model->vertex_buffer, &model->vertex_buffer_memory);
   graphics_utils_setup_index_buffer(gpu_api->vulkan_state, model->model_raw->model_mesh->indices, &model->index_buffer, &model->index_buffer_memory);
@@ -91,11 +111,19 @@ void model_delete(struct Model* model, struct GPUAPI* gpu_api) {
   // TODO: Delete uniform colors if needed
 
   if (model->animated) {
+    model_delete_joints_data(model->model_raw->joints->head_joint);
+    free(model->model_raw->joints);
     model_delete_joints(model->root_joint);
     model_delete_animation(model->animation);
     free(model->animation);
     free(model->animator);
   }
+
+  texture_delete(gpu_api->vulkan_state, model->model_raw->model_texture);
+  mesh_delete(model->model_raw->model_mesh);
+  free(model->model_raw->model_mesh);
+  free(model->model_raw->model_texture);
+  free(model->model_raw);
 }
 
 struct Joint* model_create_joints(struct JointData* root_joint_data) {
@@ -118,6 +146,17 @@ void model_delete_joints(struct Joint* joint) {
   array_list_delete(joint->children);
   free(joint->children);
   free(joint);
+}
+
+void model_delete_joints_data(struct JointData* joint_data) {
+  if (joint_data->children != NULL && !array_list_empty(joint_data->children)) {
+    for (int joint_num = 0; joint_num < array_list_size(joint_data->children); joint_num++)
+      model_delete_joints_data((struct JointData*)array_list_get(joint_data->children, joint_num));
+  }
+  free(joint_data->name_id);
+  array_list_delete(joint_data->children);
+  free(joint_data->children);
+  free(joint_data);
 }
 
 void model_delete_animation(struct Animation* animation) {

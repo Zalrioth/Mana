@@ -77,6 +77,29 @@ static inline void model_data_init(struct ModelData* model_data) {
   vector_init(model_data->vertex_weights, sizeof(vec3));
 }
 
+static inline void model_data_delete(struct ModelData* model_data) {
+  vector_delete(model_data->vertex_weights);
+  free(model_data->vertex_weights);
+
+  vector_delete(model_data->joint_ids);
+  free(model_data->joint_ids);
+
+  vector_delete(model_data->indices);
+  free(model_data->indices);
+
+  vector_delete(model_data->colors);
+  free(model_data->colors);
+
+  vector_delete(model_data->normals);
+  free(model_data->normals);
+
+  vector_delete(model_data->tex_coords);
+  free(model_data->tex_coords);
+
+  vector_delete(model_data->vertices);
+  free(model_data->vertices);
+}
+
 struct Mesh* geometry_loader_extract_model_data(struct XmlNode* geometry_node, struct Vector* vertex_weights, bool animated);
 void geometry_loader_read_raw_data(struct ModelData* model_data, struct XmlNode* mesh_data, struct Vector* vertex_weights);
 void geometry_loader_read_positions(struct ModelData* model_data, struct XmlNode* mesh_data, struct Vector* vertex_weights);
@@ -84,9 +107,9 @@ void geometry_loader_read_normals(struct ModelData* model_data, struct XmlNode* 
 void geometry_loader_read_colors(struct ModelData* model_data, struct XmlNode* mesh_data);
 void geometry_loader_read_texture_coordinates(struct ModelData* model_data, struct XmlNode* mesh_data);
 void geometry_loader_assemble_vertices(struct ModelData* model_data, struct XmlNode* mesh_data);
-struct RawVertexModel* geometry_loader_process_vertex(struct ModelData* model_data, int position_index, int normal_index, int tex_coord_index, int color_index);
+void geometry_loader_process_vertex(struct ModelData* model_data, int position_index, int normal_index, int tex_coord_index, int color_index);
 float geometry_loader_convert_data_to_arrays(struct ModelData* model_data, struct Mesh* model_mesh, bool animated);
-struct RawVertexModel* geometry_loader_deal_with_already_processed_vertex(struct ModelData* model_data, struct RawVertexModel* previous_vertex, int new_texture_index, int new_normal_index, int new_color_index);
+void geometry_loader_deal_with_already_processed_vertex(struct ModelData* model_data, struct RawVertexModel* previous_vertex, int new_texture_index, int new_normal_index, int new_color_index);
 void geometry_loader_remove_unused_vertices(struct ModelData* model_data);
 
 #endif  // MODEL_GEOMETRY_H

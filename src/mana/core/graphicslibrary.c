@@ -35,6 +35,8 @@ void graphics_library_delete(struct GraphicsLibrary* graphics_library) {
     case (GLFW_LIBRARY):
       glfw_delete();
       break;
+    case (MOLTENVK_LIBRARY):
+      break;
   }
 }
 

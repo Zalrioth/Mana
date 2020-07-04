@@ -13,7 +13,17 @@ struct Mesh* geometry_loader_extract_model_data(struct XmlNode* geometry_node, s
   animated ? mesh_model_init(model_mesh) : mesh_model_static_init(model_mesh);
 
   geometry_loader_convert_data_to_arrays(model_data, model_mesh, animated);
-  model_mesh->indices = model_data->indices;
+
+  // TODO: Create copy function and memiry size od items for vector
+  // Todo: Also this code is whack
+  free(model_mesh->indices->items);
+  *model_mesh->indices = *model_data->indices;
+  model_mesh->indices->items = malloc(model_mesh->indices->memory_size * model_mesh->indices->capacity);
+  memcpy(model_mesh->indices->items, model_data->indices->items, model_mesh->indices->memory_size * model_mesh->indices->capacity);
+  //model_mesh->indices = model_data->indices;
+
+  model_data_delete(model_data);
+  free(model_data);
 
   return model_mesh;
 }
@@ -45,12 +55,12 @@ void geometry_loader_read_positions(struct ModelData* model_data, struct XmlNode
     glm_rotate(correction, glm_rad(-90.0f), (vec3){1.0f, 0.0f, 0.0f});
     glm_mat4_mulv(correction, position, position);
     vec3 position_corrected = {position[0], position[1], position[2]};
-    struct RawVertexModel* raw_vertex = malloc(sizeof(struct RawVertexModel));
+    struct RawVertexModel raw_vertex = {0};
     if (vertex_weights != NULL)
-      raw_vertex_model_init(raw_vertex, vector_size(model_data->vertices), position_corrected, (struct VertexSkinData*)vector_get(vertex_weights, vector_size(model_data->vertices)));
+      raw_vertex_model_init(&raw_vertex, vector_size(model_data->vertices), position_corrected, (struct VertexSkinData*)vector_get(vertex_weights, vector_size(model_data->vertices)));
     else
-      raw_vertex_model_init(raw_vertex, vector_size(model_data->vertices), position_corrected, NULL);
-    vector_push_back(model_data->vertices, raw_vertex);
+      raw_vertex_model_init(&raw_vertex, vector_size(model_data->vertices), position_corrected, NULL);
+    vector_push_back(model_data->vertices, &raw_vertex);
   }
   free(raw_data);
 }
@@ -185,16 +195,15 @@ void geometry_loader_assemble_vertices(struct ModelData* model_data, struct XmlN
   free(raw_data);
 }
 
-struct RawVertexModel* geometry_loader_process_vertex(struct ModelData* model_data, int position_index, int normal_index, int tex_coord_index, int color_index) {
+void geometry_loader_process_vertex(struct ModelData* model_data, int position_index, int normal_index, int tex_coord_index, int color_index) {
   struct RawVertexModel* current_vertex = (struct RawVertexModel*)vector_get(model_data->vertices, position_index);
   if (raw_vertex_model_is_set(current_vertex) == false) {
     current_vertex->texture_index = tex_coord_index;
     current_vertex->normal_index = normal_index;
     current_vertex->color_index = color_index;
     vector_push_back(model_data->indices, &position_index);
-    return current_vertex;
   } else
-    return geometry_loader_deal_with_already_processed_vertex(model_data, current_vertex, tex_coord_index, normal_index, color_index);
+    geometry_loader_deal_with_already_processed_vertex(model_data, current_vertex, tex_coord_index, normal_index, color_index);
 }
 
 float geometry_loader_convert_data_to_arrays(struct ModelData* model_data, struct Mesh* model_mesh, bool animated) {
@@ -236,24 +245,23 @@ float geometry_loader_convert_data_to_arrays(struct ModelData* model_data, struc
   return furthest_point;
 }
 
-struct RawVertexModel* geometry_loader_deal_with_already_processed_vertex(struct ModelData* model_data, struct RawVertexModel* previous_vertex, int new_texture_index, int new_normal_index, int new_color_index) {
+void geometry_loader_deal_with_already_processed_vertex(struct ModelData* model_data, struct RawVertexModel* previous_vertex, int new_texture_index, int new_normal_index, int new_color_index) {
   if (raw_vertex_model_has_same_texture_and_normal(previous_vertex, new_texture_index, new_normal_index)) {
     vector_push_back(model_data->indices, &previous_vertex->index);
-    return previous_vertex;
   } else {
     struct RawVertexModel* another_vertex = previous_vertex->duplicate_vertex;
-    if (another_vertex != NULL)
-      return geometry_loader_deal_with_already_processed_vertex(model_data, another_vertex, new_texture_index, new_normal_index, new_color_index);
-    else {
-      struct RawVertexModel* duplicate_vertex = malloc(sizeof(struct RawVertexModel));
-      raw_vertex_model_init(duplicate_vertex, vector_size(model_data->vertices), previous_vertex->position, previous_vertex->weights_data);
-      duplicate_vertex->texture_index = new_texture_index;
-      duplicate_vertex->normal_index = new_normal_index;
-      duplicate_vertex->color_index = new_color_index;
-      previous_vertex->duplicate_vertex = duplicate_vertex;
-      vector_push_back(model_data->vertices, duplicate_vertex);
-      vector_push_back(model_data->indices, &duplicate_vertex->index);
-      return duplicate_vertex;
+    if (another_vertex != NULL) {
+      geometry_loader_deal_with_already_processed_vertex(model_data, another_vertex, new_texture_index, new_normal_index, new_color_index);
+    } else {
+      struct RawVertexModel duplicate_vertex = {0};
+      raw_vertex_model_init(&duplicate_vertex, vector_size(model_data->vertices), previous_vertex->position, previous_vertex->weights_data);
+      duplicate_vertex.texture_index = new_texture_index;
+      duplicate_vertex.normal_index = new_normal_index;
+      duplicate_vertex.color_index = new_color_index;
+      vector_push_back(model_data->vertices, &duplicate_vertex);
+      vector_push_back(model_data->indices, &duplicate_vertex.index);
+      // TODO: Watch could cause problems
+      previous_vertex->duplicate_vertex = (struct RawVertexModel*)vector_get(model_data->vertices, vector_size(model_data->vertices));
     }
   }
 }

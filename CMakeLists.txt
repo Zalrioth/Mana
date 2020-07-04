@@ -21,10 +21,12 @@ set_target_properties(mana
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx -mavx2")
 
+# /MDd
 if (WIN32)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Xclang -fopenmp")
 endif (WIN32)
 
+# -fsanitize=address
 if(APPLE)
         add_subdirectory(lib/MoltenVK buildmoltenvk)
         find_package(OpenMP)
