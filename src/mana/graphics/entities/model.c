@@ -1,7 +1,6 @@
 #include "mana/graphics/entities/model.h"
 
-int model_init(struct Model* model, struct GPUAPI* gpu_api, char* node_path, char* texture_path, int max_weights, struct Shader* shader, enum FilterType filter_type) {
-  VkFilter filter = (filter_type == FILTER_NEAREST) ? VK_FILTER_NEAREST : VK_FILTER_LINEAR;
+int model_init(struct Model* model, struct GPUAPI* gpu_api, char* node_path, int max_weights, struct Shader* shader, struct Texture* texture) {
   struct XmlNode* collada_node = xml_parser_load_xml_file(node_path);
   struct XmlNode* library_controllers_node = xml_node_get_child(collada_node, "library_controllers");  // If texture is null, use custom 8x8 ubo color palette
   model->animated = !(library_controllers_node == NULL || library_controllers_node->child_nodes == NULL || library_controllers_node->child_nodes->num_buckets == 0);
@@ -71,8 +70,9 @@ int model_init(struct Model* model, struct GPUAPI* gpu_api, char* node_path, cha
   } else
     model_cache->model_mesh = geometry_loader_extract_model_data(xml_node_get_child(collada_node, "library_geometries"), NULL, model->animated);
 
-  model_cache->model_texture = malloc(sizeof(struct Texture));
-  texture_init(model_cache->model_texture, gpu_api->vulkan_state, texture_path, filter);
+  model_cache->model_texture = texture;
+  //model_cache->model_texture = malloc(sizeof(struct Texture));
+  //texture_init(model_cache->model_texture, gpu_api->vulkan_state, texture_path, filter);
 
   model->model_raw = model_cache;
 
@@ -119,10 +119,8 @@ void model_delete(struct Model* model, struct GPUAPI* gpu_api) {
     free(model->animator);
   }
 
-  texture_delete(gpu_api->vulkan_state, model->model_raw->model_texture);
   mesh_delete(model->model_raw->model_mesh);
   free(model->model_raw->model_mesh);
-  free(model->model_raw->model_texture);
   free(model->model_raw);
 }
 

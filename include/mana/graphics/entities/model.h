@@ -17,6 +17,7 @@
 #include "mana/graphics/utilities/collada/modelskeleton.h"
 #include "mana/graphics/utilities/collada/modelskinning.h"
 #include "mana/graphics/utilities/mesh.h"
+#include "mana/graphics/utilities/texture.h"
 
 #define MAX_JOINTS 50
 
@@ -26,11 +27,6 @@ struct KeyFrame;
 struct KeyFrameData;
 struct JointTransform;
 struct JointTransformData;
-
-enum FilterType {
-  FILTER_NEAREST = 0,
-  FILTER_LINEAR
-};
 
 // TODO: Move to math library
 static inline void mat4_to_collada_quaternion(mat4 matrix, versor dest) {
@@ -142,7 +138,7 @@ enum {
   MODEL_SUCCESS = 1
 };
 
-int model_init(struct Model* model, struct GPUAPI* gpu_api, char* node_path, char* texture_path, int max_weights, struct Shader* shader, enum FilterType filter_type);
+int model_init(struct Model* model, struct GPUAPI* gpu_api, char* node_path, int max_weights, struct Shader* shader, struct Texture* texture);
 void model_delete(struct Model* model, struct GPUAPI* gpu_api);
 struct Joint* model_create_joints(struct JointData* root_joint_data);
 struct KeyFrame* model_create_key_frame(struct KeyFrameData* data);

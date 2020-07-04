@@ -2,18 +2,24 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-int texture_init(struct Texture *texture, struct VulkanState *vulkan_renderer, char *path, VkFilter filter) {
-  // Note: Extra 0 needed to ensure end of string
-  int path_length = strlen(path);
-  texture->path = malloc(path_length + 1);
-  memset(texture->path, 0, path_length);
-  strcpy(texture->path, path);
+int texture_init(struct Texture *texture, struct VulkanState *vulkan_renderer, char *path, enum FilterType filter_type) {
+  VkFilter filter = (filter_type == FILTER_NEAREST) ? VK_FILTER_NEAREST : VK_FILTER_LINEAR;
+  //texture->filter_type = filter;
+  texture->path = strdup(path);
 
-  // Todo: Extract filetype and detect pixel bit
-  int type_length = 4;
-  texture->type = malloc(type_length + 1);
-  memset(texture->type, 0, type_length + 1);
-  strcpy(texture->type, ".png");
+  char *name_location = strrchr(path, '/');
+  if (!name_location)
+    texture->name = strdup(name_location);
+  else
+    texture->name = strdup(name_location + 1);
+
+  char *type_location = strrchr(path, '.');
+  if (!type_location)
+    texture->type = strdup(type_location);
+  else
+    texture->type = strdup(type_location + 1);
+
+  // Todo: Detect pixel bit
 
   // Note: Something like this could be useful for optimizing but not needed as stbi will correctly convert up/down bits
   //int pixel_bit = 16;
@@ -70,7 +76,7 @@ int texture_init(struct Texture *texture, struct VulkanState *vulkan_renderer, c
   return 0;
 }
 
-void texture_delete(struct VulkanState *vulkan_renderer, struct Texture *texture) {
+void texture_delete(struct Texture *texture, struct VulkanState *vulkan_renderer) {
   vkDestroySampler(vulkan_renderer->device, texture->texture_sampler, NULL);
   vkDestroyImageView(vulkan_renderer->device, texture->texture_image_view, NULL);
 
@@ -78,5 +84,6 @@ void texture_delete(struct VulkanState *vulkan_renderer, struct Texture *texture
   vkFreeMemory(vulkan_renderer->device, texture->texture_image_memory, NULL);
 
   free(texture->path);
+  free(texture->name);
   free(texture->type);
 }

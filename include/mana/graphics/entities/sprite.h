@@ -34,7 +34,7 @@ enum {
   SPRITE_SUCCESS = 1
 };
 
-int sprite_init(struct Sprite* sprite, struct GPUAPI* gpu_api, struct Shader* shader);
+int sprite_init(struct Sprite* sprite, struct GPUAPI* gpu_api, struct Shader* shader, struct Texture* texture);
 void sprite_delete(struct Sprite* sprite, struct GPUAPI* gpu_api);
 
 #endif  // SPRITE_H

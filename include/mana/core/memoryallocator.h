@@ -19,7 +19,7 @@
 #endif
 
 // Override c std lib memory allocator
-#define CUSTOM_ALLOCATOR
+//#define CUSTOM_ALLOCATOR
 #ifdef CUSTOM_ALLOCATOR
 #include <mimalloc-override.h>
 #endif

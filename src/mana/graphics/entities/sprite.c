@@ -10,12 +10,11 @@
 //  glm_vec3_crossn(v1, v2, dest);
 //}
 
-int sprite_init(struct Sprite* sprite, struct GPUAPI* gpu_api, struct Shader* shader) {
+int sprite_init(struct Sprite* sprite, struct GPUAPI* gpu_api, struct Shader* shader, struct Texture* texture) {
   sprite->image_mesh = calloc(1, sizeof(struct Mesh));
   mesh_sprite_init(sprite->image_mesh);
 
-  sprite->image_texture = calloc(1, sizeof(struct Texture));
-  texture_init(sprite->image_texture, gpu_api->vulkan_state, "./assets/textures/alpha.png", VK_FILTER_LINEAR);
+  sprite->image_texture = texture;
 
   vec3 pos1 = {-0.5f, -0.5f, 0.0f};
   vec3 pos2 = {0.5f, -0.5f, 0.0f};
@@ -90,7 +89,4 @@ void sprite_delete(struct Sprite* sprite, struct GPUAPI* gpu_api) {
 
   mesh_delete(sprite->image_mesh);
   free(sprite->image_mesh);
-
-  texture_delete(gpu_api->vulkan_state, sprite->image_texture);
-  free(sprite->image_texture);
 }
