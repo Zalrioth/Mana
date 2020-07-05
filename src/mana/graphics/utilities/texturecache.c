@@ -1,21 +1,8 @@
 #include "mana/graphics/utilities/texturecache.h"
 
-void texture_cache_init(struct TextureCache* texture_cache, struct GPUAPI* gpu_api, size_t n_textures, ...) {
+void texture_cache_init(struct TextureCache* texture_cache) {
   // Note: Store as references because it would be dangerous to realloc in linear memory
   map_init(&texture_cache->textures, sizeof(struct Texture*));
-
-  va_list args;
-  va_start(args, n_textures);
-
-  while (n_textures-- > 0) {
-    char* path = va_arg(args, char*);
-    enum FilterType filter = va_arg(args, enum FilterType);
-    struct Texture* texture = malloc(sizeof(struct Texture));
-    texture_init(texture, gpu_api->vulkan_state, path, filter);
-    map_set(&texture_cache->textures, path, &texture);  // Store full path in case of models having same texture name like diffuse
-  }
-
-  va_end(args);
 }
 
 void texture_cache_delete(struct TextureCache* texture_cache, struct GPUAPI* gpu_api) {
@@ -28,6 +15,20 @@ void texture_cache_delete(struct TextureCache* texture_cache, struct GPUAPI* gpu
   }
 
   map_delete(&texture_cache->textures);
+}
+
+void texture_cache_add(struct TextureCache* texture_cache, struct GPUAPI* gpu_api, size_t n_textures, ...) {
+  va_list args;
+  va_start(args, n_textures);
+
+  while (n_textures-- > 0) {
+    struct TextureSettings texture_settings = va_arg(args, struct TextureSettings);
+    struct Texture* texture = malloc(sizeof(struct Texture));
+    texture_init(texture, gpu_api->vulkan_state, texture_settings);
+    map_set(&texture_cache->textures, texture_settings.path, &texture);  // Store full path in case of models having same texture name like diffuse
+  }
+
+  va_end(args);
 }
 
 struct Texture* texture_cache_get(struct TextureCache* texture_cache, char* texture_name) {

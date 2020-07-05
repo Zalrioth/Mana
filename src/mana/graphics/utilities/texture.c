@@ -2,18 +2,18 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-int texture_init(struct Texture *texture, struct VulkanState *vulkan_renderer, char *path, enum FilterType filter_type) {
-  VkFilter filter = (filter_type == FILTER_NEAREST) ? VK_FILTER_NEAREST : VK_FILTER_LINEAR;
+int texture_init(struct Texture *texture, struct VulkanState *vulkan_renderer, struct TextureSettings texture_settings) {
+  VkFilter filter = (texture_settings.filter_type == FILTER_NEAREST) ? VK_FILTER_NEAREST : VK_FILTER_LINEAR;
   //texture->filter_type = filter;
-  texture->path = strdup(path);
+  texture->path = strdup(texture_settings.path);
 
-  char *name_location = strrchr(path, '/');
+  char *name_location = strrchr(texture_settings.path, '/');
   if (!name_location)
     texture->name = strdup(name_location);
   else
     texture->name = strdup(name_location + 1);
 
-  char *type_location = strrchr(path, '.');
+  char *type_location = strrchr(texture_settings.path, '.');
   if (!type_location)
     texture->type = strdup(type_location);
   else

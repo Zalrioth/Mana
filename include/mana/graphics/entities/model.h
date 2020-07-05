@@ -79,13 +79,6 @@ struct ModelStaticUniformBufferObject {
   alignas(16) vec3 camera_pos;
 };
 
-struct ModelCache {
-  struct SkeletonData* joints;
-  struct Mesh* model_mesh;
-  // Pointer to texture in texture cache
-  struct Texture* model_texture;
-};
-
 struct Joint {
   int index;
   char* name;
@@ -115,13 +108,24 @@ static inline void joint_calc_inverse_bind_transform(struct Joint* joint, mat4 p
   }
 }
 
+struct ModelSettings {
+  char* path;
+  int max_weights;
+  struct Shader* shader;
+  struct Texture* texture;
+};
+
 struct Model {
-  struct ModelCache* model_raw;
+  struct SkeletonData* joints;
+  struct Mesh* model_mesh;
+  // Pointer to texture in texture cache
+  struct Texture* model_texture;
   bool animated;
   struct Joint* root_joint;
   int joint_count;
   struct Animator* animator;
   struct Animation* animation;
+  char* path;
 
   VkBuffer vertex_buffer;
   VkDeviceMemory vertex_buffer_memory;
@@ -138,7 +142,7 @@ enum {
   MODEL_SUCCESS = 1
 };
 
-int model_init(struct Model* model, struct GPUAPI* gpu_api, char* node_path, int max_weights, struct Shader* shader, struct Texture* texture);
+int model_init(struct Model* model, struct GPUAPI* gpu_api, struct ModelSettings model_settings);
 void model_delete(struct Model* model, struct GPUAPI* gpu_api);
 struct Joint* model_create_joints(struct JointData* root_joint_data);
 struct KeyFrame* model_create_key_frame(struct KeyFrameData* data);

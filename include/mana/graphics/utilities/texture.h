@@ -17,6 +17,11 @@ enum FilterType {
   FILTER_LINEAR
 };
 
+struct TextureSettings {
+  char *path;
+  enum FilterType filter_type;
+};
+
 struct Texture {
   // TODO: Will probably need to use this later, maybe global static int that increments after each texture creation
   unsigned int id;
@@ -30,7 +35,7 @@ struct Texture {
   //VkFilter filter_type;
 };
 
-int texture_init(struct Texture *texture, struct VulkanState *vulkan_renderer, char *path, enum FilterType filter_type);
+int texture_init(struct Texture *texture, struct VulkanState *vulkan_renderer, struct TextureSettings texture_settings);
 void texture_delete(struct Texture *texture, struct VulkanState *vulkan_renderer);
 void texture_copy_buffer_to_image(struct VulkanState *vulkan_renderer, VkBuffer *buffer, VkImage *image, uint32_t width, uint32_t height);
 
