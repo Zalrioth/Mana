@@ -28,6 +28,6 @@ struct ModelCache {
 void model_cache_init(struct ModelCache* model_cache);
 void model_cache_delete(struct ModelCache* model_cache, struct GPUAPI* gpu_api);
 void model_cache_add(struct ModelCache* model_cache, struct GPUAPI* gpu_api, size_t n_models, ...);
-struct Model* model_cache_get(struct ModelCache* model_cache, char* model_name);
+struct Model* model_cache_get(struct ModelCache* model_cache, struct GPUAPI* gpu_api, char* model_name);
 
 #endif  // MODEL_CACHE_H

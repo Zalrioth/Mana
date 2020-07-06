@@ -32,6 +32,8 @@ void model_cache_add(struct ModelCache* model_cache, struct GPUAPI* gpu_api, siz
   va_end(args);
 }
 
-struct Model* model_cache_get(struct ModelCache* model_cache, char* model_name) {
-  return *((struct Model**)map_get(&model_cache->models, model_name));
+struct Model* model_cache_get(struct ModelCache* model_cache, struct GPUAPI* gpu_api, char* model_name) {
+  return model_get_clone(*((struct Model**)map_get(&model_cache->models, model_name)), gpu_api);
 }
+
+// TODO: Maybe get instanced/batched where specific vertex data is not needed

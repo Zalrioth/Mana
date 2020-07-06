@@ -116,17 +116,20 @@ struct ModelSettings {
 };
 
 struct Model {
-  struct SkeletonData* joints;
+  struct Shader* shader_handle;
   struct Mesh* model_mesh;
-  // Pointer to texture in texture cache
   struct Texture* model_texture;
-  bool animated;
+  struct SkeletonData* joints;
   struct Joint* root_joint;
-  int joint_count;
   struct Animator* animator;
   struct Animation* animation;
+  bool animated;
   char* path;
 
+  vec3 position;
+  versor rotation;
+
+  size_t ubo_buffer_size;
   VkBuffer vertex_buffer;
   VkDeviceMemory vertex_buffer_memory;
   VkBuffer index_buffer;
@@ -151,5 +154,9 @@ void model_delete_joints_data(struct JointData* joint_data);
 void model_delete_animation(struct Animation* animation);
 struct JointTransform model_create_transform(struct JointTransformData* data);
 void model_get_joint_transforms(struct Joint* head_joint, mat4 dest[MAX_JOINTS]);
+void model_update_uniforms(struct Model* model, struct GPUAPI* gpu_api, vec3 position, vec3 light_pos);
+struct Model* model_get_clone(struct Model* model, struct GPUAPI* gpu_api);
+void model_clone_delete(struct Model* model, struct GPUAPI* gpu_api);
+void model_render(struct Model* model, struct GPUAPI* gpu_api, float delta_time);
 
 #endif  // MODEL_H

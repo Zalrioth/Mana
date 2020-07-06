@@ -33,7 +33,7 @@ int model_static_shader_init(struct ModelStaticShader* model_static_shader, stru
   if (vkCreateDescriptorSetLayout(gpu_api->vulkan_state->device, &layout_info, NULL, &model_static_shader->shader.descriptor_set_layout) != VK_SUCCESS)
     return 0;
 
-  int model_descriptors = 64;
+  int model_descriptors = 1024;
   VkDescriptorPoolSize pool_sizes[3] = {{0}};
   pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
   pool_sizes[0].descriptorCount = model_descriptors;  // Max number of uniform descriptors
