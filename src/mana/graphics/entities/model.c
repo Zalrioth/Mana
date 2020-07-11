@@ -305,6 +305,7 @@ void model_clone_delete(struct Model* model, struct GPUAPI* gpu_api) {
 }
 
 void model_render(struct Model* model, struct GPUAPI* gpu_api, float delta_time) {
+  // TODO: Should animation updating be seperated from rendering?
   if (model->animated)
     animator_update(model->animator, delta_time);
 
