@@ -154,7 +154,7 @@ struct KeyFrame* model_create_key_frame(struct KeyFrameData* data) {
 
 struct JointTransform model_create_transform(struct JointTransformData* data) {
   mat4 mat = data->joint_local_transform;
-  vec3 translation = (vec3){.data[0] = mat.vecs[3].data[0], .data[1] = mat.vecs[3].data[1], .data[2] = mat.vecs[3].data[2]};
+  vec3 translation = (vec3){.data[0] = mat.m30, .data[1] = mat.m30, .data[2] = mat.m30};
   quat rotation = mat4_to_quaternion(mat);
 
   struct JointTransform joint_transform = {0};
@@ -182,7 +182,7 @@ void model_update_uniforms(struct Model* model, struct GPUAPI* gpu_api, vec3 pos
   if (model->animated) {
     struct ModelUniformBufferObject ubom = {{{0}}};
     ubom.proj = gpu_api->vulkan_state->gbuffer->projection_matrix;
-    ubom.proj.vecs[1].data[1] *= -1;
+    ubom.proj.m10 *= -1;
     ubom.view = gpu_api->vulkan_state->gbuffer->view_matrix;
     ubom.model = MAT4_IDENTITY;
     model->position = mat4_transform(ubom.model, model->position);
@@ -194,7 +194,7 @@ void model_update_uniforms(struct Model* model, struct GPUAPI* gpu_api, vec3 pos
   } else {
     struct ModelStaticUniformBufferObject ubom = {{{0}}};
     ubom.proj = gpu_api->vulkan_state->gbuffer->projection_matrix;
-    ubom.proj.vecs[1].data[1] *= -1;
+    ubom.proj.m10 *= -1;
     ubom.view = gpu_api->vulkan_state->gbuffer->view_matrix;
     ubom.model = MAT4_IDENTITY;
     model->position = mat4_transform(ubom.model, model->position);

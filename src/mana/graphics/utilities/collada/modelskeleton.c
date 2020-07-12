@@ -52,6 +52,7 @@ mat4 skeleton_loader_convert_data(char *matrix_data) {
   mat4 dest;
   char *raw_data = strdup(matrix_data);
   char *raw_part = strtok(raw_data, " ");
+  int row = 0;
   for (int matrix_value = 0; matrix_value < 4; matrix_value++) {
     float m0 = atof(raw_part);
     raw_part = strtok(NULL, " ");
@@ -62,7 +63,9 @@ mat4 skeleton_loader_convert_data(char *matrix_data) {
     float m3 = atof(raw_part);
     raw_part = strtok(NULL, " ");
     vec4 matrix_slice = (vec4){.data[0] = m0, .data[1] = m1, .data[2] = m2, .data[3] = m3};
-    dest.vecs[matrix_value] = matrix_slice;
+    //dest.vecs[matrix_value] = matrix_slice;
+    *((vec4 *)&dest.data[row]) = matrix_slice;
+    row += 4;
   }
   free(raw_data);
   return dest;

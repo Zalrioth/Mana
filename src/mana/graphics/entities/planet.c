@@ -25,7 +25,7 @@ void planet_update_uniforms(struct Planet* planet, struct GPUAPI* gpu_api, struc
   struct DualContouringUniformBufferObject dcubo = {{{0}}};
   dcubo.proj = gpu_api->vulkan_state->gbuffer->projection_matrix;
   dcubo.view = gpu_api->vulkan_state->gbuffer->view_matrix;
-  dcubo.proj.vecs[1].data[1] *= -1;
+  dcubo.proj.m11 *= -1;
   dcubo.model = MAT4_IDENTITY;
   dcubo.camera_pos = camera->position;
   void* terrain_data;
