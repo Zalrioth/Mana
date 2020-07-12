@@ -50,11 +50,10 @@ void geometry_loader_read_positions(struct ModelData* model_data, struct XmlNode
     float z_pos = atof(raw_part);
     raw_part = strtok(NULL, " ");
 
-    vec4 position = {x_pos, y_pos, z_pos, 1.0f};
-    mat4 correction = GLM_MAT4_IDENTITY_INIT;
-    glm_rotate(correction, glm_rad(-90.0f), (vec3){1.0f, 0.0f, 0.0f});
-    glm_mat4_mulv(correction, position, position);
-    vec3 position_corrected = {position[0], position[1], position[2]};
+    vec4 position = (vec4){.x = x_pos, .y = y_pos, .z = z_pos, .w = 1.0f};
+    mat4 correction = mat4_rotate(MAT4_IDENTITY, degree_to_radian(-90.0f), (vec3){.data[0] = 1.0f, .data[1] = 0.0f, .data[2] = 0.0f});
+    position = mat4_mul_vec4(correction, position);
+    vec3 position_corrected = (vec3){.data[0] = position.data[0], .data[1] = position.data[1], .data[2] = position.data[2]};
     struct RawVertexModel raw_vertex = {0};
     if (vertex_weights != NULL)
       raw_vertex_model_init(&raw_vertex, vector_size(model_data->vertices), position_corrected, (struct VertexSkinData*)vector_get(vertex_weights, vector_size(model_data->vertices)));
@@ -83,11 +82,10 @@ void geometry_loader_read_normals(struct ModelData* model_data, struct XmlNode* 
     float z_norm = atof(raw_part);
     raw_part = strtok(NULL, " ");
 
-    vec4 normal = {x_norm, y_norm, z_norm, 0.0f};
-    mat4 correction = GLM_MAT4_IDENTITY_INIT;
-    glm_rotate(correction, glm_rad(-90.0f), (vec3){1.0f, 0.0f, 0.0f});
-    glm_mat4_mulv(correction, normal, normal);
-    vec3 normal_corrected = {normal[0], normal[1], normal[2]};
+    vec4 normal = (vec4){.data[0] = x_norm, .data[1] = y_norm, .data[2] = z_norm, .data[3] = 0.0f};
+    mat4 correction = mat4_rotate(MAT4_IDENTITY, degree_to_radian(-90.0f), (vec3){.data[0] = 1.0f, .data[1] = 0.0f, .data[2] = 0.0f});
+    normal = mat4_mul_vec4(correction, normal);
+    vec3 normal_corrected = (vec3){.data[0] = normal.data[0], .data[1] = normal.data[1], .data[2] = normal.data[2]};
     vector_push_back(model_data->normals, &normal_corrected);
   }
   free(raw_data);
@@ -109,7 +107,7 @@ void geometry_loader_read_texture_coordinates(struct ModelData* model_data, stru
     float t = atof(raw_part);
     raw_part = strtok(NULL, " ");
 
-    vec2 tex_coord = {s, t};
+    vec2 tex_coord = (vec2){.s = s, .t = t};
     vector_push_back(model_data->tex_coords, &tex_coord);
   }
   free(raw_data);
@@ -121,7 +119,7 @@ void geometry_loader_read_colors(struct ModelData* model_data, struct XmlNode* m
     material_node = xml_node_get_child(mesh_data, "triangles");
   struct XmlNode* colors_location = xml_node_get_child_with_attribute(material_node, "input", "semantic", "COLOR");
   if (colors_location == NULL) {
-    vec3 color = {0.0, 0.0, 0.0};
+    vec3 color = (vec3){.r = 0.0, .g = 0.0, .b = 0.0};
     vector_push_back(model_data->colors, &color);
     return;
   }
@@ -153,7 +151,7 @@ void geometry_loader_read_colors(struct ModelData* model_data, struct XmlNode* m
       raw_part = strtok(NULL, " ");
     }
 
-    vec3 color = {r, g, b};
+    vec3 color = (vec3){.r = r, .g = g, .b = b};
     vector_push_back(model_data->colors, &color);
   }
   free(raw_data);
@@ -213,33 +211,21 @@ float geometry_loader_convert_data_to_arrays(struct ModelData* model_data, struc
     if (current_vertex->length > furthest_point)
       furthest_point = current_vertex->length;
 
-    vec3 model_position = GLM_VEC3_ZERO_INIT;
-    glm_vec3_copy(current_vertex->position, model_position);
-
-    vec3 model_normal = GLM_VEC3_ZERO_INIT;
-    glm_vec3_copy(*(vec3*)vector_get(model_data->normals, current_vertex->normal_index), model_normal);
-
-    vec3 model_color = GLM_VEC3_ZERO_INIT;
-    glm_vec3_copy(*(vec3*)vector_get(model_data->colors, current_vertex->color_index), model_color);
-
-    vec2 model_tex_coord = {0.0f, 0.0f};
-    memcpy(model_tex_coord, (vec2*)vector_get(model_data->tex_coords, current_vertex->texture_index), sizeof(vec2));
-    model_tex_coord[1] = 1.0f - model_tex_coord[1];
+    vec3 model_position = current_vertex->position;
+    vec3 model_normal = *(vec3*)vector_get(model_data->normals, current_vertex->normal_index);
+    vec3 model_color = *(vec3*)vector_get(model_data->colors, current_vertex->color_index);
+    vec2 model_tex_coord = *(vec2*)vector_get(model_data->tex_coords, current_vertex->texture_index);
+    model_tex_coord.v = 1.0f - model_tex_coord.v;
 
     if (animated) {
       struct VertexSkinData* model_weights = current_vertex->weights_data;
 
-      ivec3 joint_ids = {0, 0, 0};
-      memcpy(joint_ids, model_weights->joint_ids->items, sizeof(ivec3));
-      //memcpy(joint_ids, (ivec3*)vector_get(model_weights->joint_ids, 0), sizeof(ivec3));
+      ivec3 joint_ids = *(ivec3*)model_weights->joint_ids->items;
+      vec3 joint_weights = *(vec3*)model_weights->weights->items;
 
-      vec3 joint_weights = GLM_VEC3_ZERO_INIT;
-      memcpy(joint_weights, model_weights->weights->items, sizeof(vec3));
-      //memcpy(joint_weights, (vec3*)vector_get(model_weights->weights, 0), sizeof(vec3));
-
-      mesh_model_assign_vertex(model_mesh->vertices, model_position[0], model_position[1], model_position[2], model_normal[0], model_normal[1], model_normal[2], model_tex_coord[0], model_tex_coord[1], model_color[0], model_color[1], model_color[2], joint_ids[0], joint_ids[1], joint_ids[2], joint_weights[0], joint_weights[1], joint_weights[2]);
+      mesh_model_assign_vertex(model_mesh->vertices, model_position.x, model_position.y, model_position.z, model_normal.data[0], model_normal.data[1], model_normal.data[2], model_tex_coord.u, model_tex_coord.v, model_color.r, model_color.g, model_color.b, joint_ids.id0, joint_ids.id1, joint_ids.id2, joint_weights.data[0], joint_weights.data[1], joint_weights.data[2]);
     } else
-      mesh_model_static_assign_vertex(model_mesh->vertices, model_position[0], model_position[1], model_position[2], model_normal[0], model_normal[1], model_normal[2], model_tex_coord[0], model_tex_coord[1], model_color[0], model_color[1], model_color[2]);
+      mesh_model_static_assign_vertex(model_mesh->vertices, model_position.x, model_position.y, model_position.z, model_normal.data[0], model_normal.data[1], model_normal.data[2], model_tex_coord.u, model_tex_coord.v, model_color.r, model_color.g, model_color.b);
   }
 
   return furthest_point;

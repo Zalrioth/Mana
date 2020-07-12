@@ -15,7 +15,7 @@ int model_init(struct Model* model, struct GPUAPI* gpu_api, struct ModelSettings
     model->root_joint = model_create_joints(model->joints->head_joint);
     model->animator = malloc(sizeof(struct Animator));
     animator_init(model->animator, model);
-    joint_calc_inverse_bind_transform(model->root_joint, GLM_MAT4_IDENTITY);
+    joint_calc_inverse_bind_transform(model->root_joint, MAT4_IDENTITY);
 
     struct XmlNode* anim_node = xml_node_get_child(collada_node, "library_animations");
     struct XmlNode* joints_node = xml_node_get_child(collada_node, "library_visual_scenes");
@@ -93,8 +93,8 @@ void model_delete(struct Model* model, struct GPUAPI* gpu_api) {
   free(model->model_mesh);
 }
 
-struct Joint* model_create_joints(struct JointData* root_joint_data) {
-  struct Joint* joint = malloc(sizeof(struct Joint));
+struct ModelJoint* model_create_joints(struct JointData* root_joint_data) {
+  struct ModelJoint* joint = malloc(sizeof(struct ModelJoint));
   joint_init(joint, root_joint_data->index, root_joint_data->name_id, root_joint_data->bind_local_transform);
 
   for (int joint_child_num = 0; joint_child_num < array_list_size(root_joint_data->children); joint_child_num++) {
@@ -104,10 +104,10 @@ struct Joint* model_create_joints(struct JointData* root_joint_data) {
   return joint;
 }
 
-void model_delete_joints(struct Joint* joint) {
+void model_delete_joints(struct ModelJoint* joint) {
   if (joint->children != NULL && !array_list_empty(joint->children)) {
     for (int joint_num = 0; joint_num < array_list_size(joint->children); joint_num++)
-      model_delete_joints((struct Joint*)array_list_get(joint->children, joint_num));
+      model_delete_joints((struct ModelJoint*)array_list_get(joint->children, joint_num));
   }
   free(joint->name);
   array_list_delete(joint->children);
@@ -153,55 +153,52 @@ struct KeyFrame* model_create_key_frame(struct KeyFrameData* data) {
 }
 
 struct JointTransform model_create_transform(struct JointTransformData* data) {
-  mat4 mat = GLM_MAT4_ZERO_INIT;
-  glm_mat4_copy(data->joint_local_transform, mat);
-  vec3 translation = {mat[3][0], mat[3][1], mat[3][2]};
-  versor rotation = GLM_QUAT_IDENTITY_INIT;
-  //glm_mat4_quat(mat, rotation);
-  mat4_to_collada_quaternion(mat, rotation);
+  mat4 mat = data->joint_local_transform;
+  vec3 translation = (vec3){.data[0] = mat.vecs[3].data[0], .data[1] = mat.vecs[3].data[1], .data[2] = mat.vecs[3].data[2]};
+  quat rotation = mat4_to_quaternion(mat);
 
   struct JointTransform joint_transform = {0};
   joint_transform_init(&joint_transform, translation, rotation);
   return joint_transform;
 }
 
-void model_get_joint_transforms(struct Joint* head_joint, mat4 dest[MAX_JOINTS]) {
-  glm_mat4_copy(head_joint->animation_transform, dest[head_joint->index]);
+void model_get_joint_transforms(struct ModelJoint* head_joint, mat4 dest[MAX_JOINTS]) {
+  dest[head_joint->index] = head_joint->animation_transform;
   for (int child_joint_num = 0; child_joint_num < array_list_size(head_joint->children); child_joint_num++)
-    model_get_joint_transforms((struct Joint*)array_list_get(head_joint->children, child_joint_num), dest);
+    model_get_joint_transforms((struct ModelJoint*)array_list_get(head_joint->children, child_joint_num), dest);
 }
 
 void model_update_uniforms(struct Model* model, struct GPUAPI* gpu_api, vec3 position, vec3 light_pos) {
   struct LightingUniformBufferObject light_ubo = {{0}};
-  glm_vec3_copy(light_pos, light_ubo.direction);
-  vec3 light_ambient = {1.0f, 1.0f, 1.0f};
-  glm_vec3_copy(light_ambient, light_ubo.ambient_color);
-  vec3 light_diffuse = {1.0f, 1.0f, 1.0f};
-  glm_vec3_copy(light_diffuse, light_ubo.diffuse_colour);
-  vec3 light_specular = {1.0f, 1.0f, 1.0f};
-  glm_vec3_copy(light_specular, light_ubo.specular_colour);
+  light_ubo.direction = light_pos;
+  vec3 light_ambient = (vec3){.data[0] = 1.0f, .data[1] = 1.0f, .data[2] = 1.0f};
+  light_ubo.ambient_color = light_ambient;
+  vec3 light_diffuse = (vec3){.data[0] = 1.0f, .data[1] = 1.0f, .data[2] = 1.0f};
+  light_ubo.diffuse_colour = light_diffuse;
+  vec3 light_specular = (vec3){.data[0] = 1.0f, .data[1] = 1.0f, .data[2] = 1.0f};
+  light_ubo.specular_colour = light_specular;
 
   void* data;
   if (model->animated) {
     struct ModelUniformBufferObject ubom = {{{0}}};
-    glm_mat4_copy(gpu_api->vulkan_state->gbuffer->projection_matrix, ubom.proj);
-    ubom.proj[1][1] *= -1;
-    glm_mat4_copy(gpu_api->vulkan_state->gbuffer->view_matrix, ubom.view);
-    glm_mat4_identity(ubom.model);
-    glm_translate(ubom.model, model->position);
-    glm_vec3_copy(position, ubom.camera_pos);
+    ubom.proj = gpu_api->vulkan_state->gbuffer->projection_matrix;
+    ubom.proj.vecs[1].data[1] *= -1;
+    ubom.view = gpu_api->vulkan_state->gbuffer->view_matrix;
+    ubom.model = MAT4_IDENTITY;
+    model->position = mat4_transform(ubom.model, model->position);
+    ubom.camera_pos = position;
     model_get_joint_transforms(model->root_joint, ubom.joint_transforms);
     vkMapMemory(gpu_api->vulkan_state->device, model->uniform_buffers_memory, 0, sizeof(struct ModelUniformBufferObject), 0, &data);
     memcpy(data, &ubom, sizeof(struct ModelUniformBufferObject));
     vkUnmapMemory(gpu_api->vulkan_state->device, model->uniform_buffers_memory);
   } else {
     struct ModelStaticUniformBufferObject ubom = {{{0}}};
-    glm_mat4_copy(gpu_api->vulkan_state->gbuffer->projection_matrix, ubom.proj);
-    ubom.proj[1][1] *= -1;
-    glm_mat4_copy(gpu_api->vulkan_state->gbuffer->view_matrix, ubom.view);
-    glm_mat4_identity(ubom.model);
-    glm_translate(ubom.model, model->position);
-    glm_vec3_copy(position, ubom.camera_pos);
+    ubom.proj = gpu_api->vulkan_state->gbuffer->projection_matrix;
+    ubom.proj.vecs[1].data[1] *= -1;
+    ubom.view = gpu_api->vulkan_state->gbuffer->view_matrix;
+    ubom.model = MAT4_IDENTITY;
+    model->position = mat4_transform(ubom.model, model->position);
+    ubom.camera_pos = position;
     vkMapMemory(gpu_api->vulkan_state->device, model->uniform_buffers_memory, 0, sizeof(struct ModelStaticUniformBufferObject), 0, &data);
     memcpy(data, &ubom, sizeof(struct ModelStaticUniformBufferObject));
     vkUnmapMemory(gpu_api->vulkan_state->device, model->uniform_buffers_memory);
@@ -213,23 +210,23 @@ void model_update_uniforms(struct Model* model, struct GPUAPI* gpu_api, vec3 pos
   vkUnmapMemory(gpu_api->vulkan_state->device, model->lighting_uniform_buffers_memory);
 }
 
-struct Joint* model_create_joints_clone(struct Joint* root_joint) {
-  struct Joint* joint = malloc(sizeof(struct Joint));
+struct ModelJoint* model_create_joints_clone(struct ModelJoint* root_joint) {
+  struct ModelJoint* joint = malloc(sizeof(struct ModelJoint));
   *joint = *root_joint;
   joint->name = strdup(root_joint->name);
   joint->children = malloc(sizeof(struct ArrayList));
   array_list_init(joint->children);
 
   for (int joint_child_num = 0; joint_child_num < array_list_size(root_joint->children); joint_child_num++)
-    array_list_add(joint->children, model_create_joints_clone((struct Joint*)array_list_get(root_joint->children, joint_child_num)));
+    array_list_add(joint->children, model_create_joints_clone((struct ModelJoint*)array_list_get(root_joint->children, joint_child_num)));
 
   return joint;
 }
 
-void model_joints_clone_delete(struct Joint* root_joint) {
+void model_joints_clone_delete(struct ModelJoint* root_joint) {
   if (root_joint->children != NULL && !array_list_empty(root_joint->children)) {
     for (int joint_num = 0; joint_num < array_list_size(root_joint->children); joint_num++)
-      model_delete_joints((struct Joint*)array_list_get(root_joint->children, joint_num));
+      model_delete_joints((struct ModelJoint*)array_list_get(root_joint->children, joint_num));
   }
   free(root_joint->name);
   array_list_delete(root_joint->children);
@@ -241,7 +238,7 @@ struct Model* model_get_clone(struct Model* model, struct GPUAPI* gpu_api) {
   struct Model* new_model = malloc(sizeof(struct Model));
   *new_model = *model;
 
-  memset(new_model->position, 0.0f, sizeof(vec3));
+  new_model->position = VEC3_ZERO;
 
   new_model->model_mesh = malloc(sizeof(struct Mesh));
   new_model->model_mesh->indices = malloc(sizeof(struct Vector));

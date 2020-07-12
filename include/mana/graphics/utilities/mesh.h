@@ -93,12 +93,12 @@ static inline void mesh_sprite_init(struct Mesh* mesh) {
 
 static inline void mesh_sprite_assign_vertex(struct Vector* vector, float x, float y, float z, float u, float v) {
   struct VertexSprite vertex = {{0}};
-  vertex.position[0] = x;
-  vertex.position[1] = y;
-  vertex.position[2] = z;
+  vertex.position.x = x;
+  vertex.position.y = y;
+  vertex.position.z = z;
 
-  vertex.tex_coord[0] = u;
-  vertex.tex_coord[1] = v;
+  vertex.tex_coord.u = u;
+  vertex.tex_coord.v = v;
 
   vector_push_back(vector, &vertex);
 }
@@ -148,9 +148,9 @@ static inline void mesh_quad_init(struct Mesh* mesh) {
 
 static inline void mesh_quad_assign_vertex(struct Vector* vector, float x, float y, float z) {
   struct VertexSprite vertex = {{0}};
-  vertex.position[0] = x;
-  vertex.position[1] = y;
-  vertex.position[2] = z;
+  vertex.position.x = x;
+  vertex.position.y = y;
+  vertex.position.z = z;
 
   vector_push_back(vector, &vertex);
 }
@@ -184,28 +184,28 @@ static inline void mesh_model_init(struct Mesh* mesh) {
 static inline void mesh_model_assign_vertex(struct Vector* vector, float x, float y, float z, float r1, float g1, float b1, float u, float v, float r2, float g2, float b2, int joint_id_x, int joint_id_y, int joint_id_z, float weight_x, float weight_y, float weight_z) {
   struct VertexModel vertex = {{0}};
 
-  vertex.position[0] = x;
-  vertex.position[1] = y;
-  vertex.position[2] = z;
+  vertex.position.x = x;
+  vertex.position.y = y;
+  vertex.position.z = z;
 
-  vertex.normal[0] = r1;
-  vertex.normal[1] = g1;
-  vertex.normal[2] = b1;
+  vertex.normal.x = r1;
+  vertex.normal.y = g1;
+  vertex.normal.z = b1;
 
-  vertex.tex_coord[0] = u;
-  vertex.tex_coord[1] = v;
+  vertex.tex_coord.u = u;
+  vertex.tex_coord.v = v;
 
-  vertex.color[0] = r2;
-  vertex.color[1] = g2;
-  vertex.color[2] = b2;
+  vertex.color.r = r2;
+  vertex.color.g = g2;
+  vertex.color.b = b2;
 
-  vertex.joints_ids[0] = joint_id_x;
-  vertex.joints_ids[1] = joint_id_y;
-  vertex.joints_ids[2] = joint_id_z;
+  vertex.joints_ids.id0 = joint_id_x;
+  vertex.joints_ids.id1 = joint_id_y;
+  vertex.joints_ids.id2 = joint_id_z;
 
-  vertex.weights[0] = weight_x;
-  vertex.weights[1] = weight_y;
-  vertex.weights[2] = weight_z;
+  vertex.weights.data[0] = weight_x;
+  vertex.weights.data[1] = weight_y;
+  vertex.weights.data[2] = weight_z;
 
   vector_push_back(vector, &vertex);
 }
@@ -264,20 +264,20 @@ static inline void mesh_model_static_init(struct Mesh* mesh) {
 static inline void mesh_model_static_assign_vertex(struct Vector* vector, float x, float y, float z, float r1, float g1, float b1, float u, float v, float r2, float g2, float b2) {
   struct VertexModelStatic vertex = {{0}};
 
-  vertex.position[0] = x;
-  vertex.position[1] = y;
-  vertex.position[2] = z;
+  vertex.position.x = x;
+  vertex.position.y = y;
+  vertex.position.z = z;
 
-  vertex.normal[0] = r1;
-  vertex.normal[1] = g1;
-  vertex.normal[2] = b1;
+  vertex.normal.x = r1;
+  vertex.normal.y = g1;
+  vertex.normal.z = b1;
 
-  vertex.tex_coord[0] = u;
-  vertex.tex_coord[1] = v;
+  vertex.tex_coord.u = u;
+  vertex.tex_coord.v = v;
 
-  vertex.color[0] = r2;
-  vertex.color[1] = g2;
-  vertex.color[2] = b2;
+  vertex.color.r = r2;
+  vertex.color.g = g2;
+  vertex.color.b = b2;
 
   vector_push_back(vector, &vertex);
 }
@@ -325,13 +325,13 @@ static inline void mesh_dual_contouring_init(struct Mesh* mesh) {
 
 static inline void mesh_dual_contouring_assign_vertex(struct Vector* vector, float x, float y, float z, float r, float g, float b) {
   struct VertexDualContouring vertex = {{0}};
-  vertex.position[0] = x;
-  vertex.position[1] = y;
-  vertex.position[2] = z;
+  vertex.position.x = x;
+  vertex.position.y = y;
+  vertex.position.z = z;
 
-  vertex.normal[0] = r;
-  vertex.normal[1] = g;
-  vertex.normal[2] = b;
+  vertex.normal.x = r;
+  vertex.normal.y = g;
+  vertex.normal.z = b;
 
   vector_push_back(vector, &vertex);
 }

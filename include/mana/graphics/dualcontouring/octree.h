@@ -4,8 +4,8 @@
 
 #include "mana/core/memoryallocator.h"
 //
-#include <cglm/cglm.h>
 #include <cnoise/cnoise.h>
+#include <ubermath/ubermath.h>
 
 #include "mana/graphics/dualcontouring/dualcontouring.h"
 #include "mana/graphics/dualcontouring/qef.h"

@@ -60,9 +60,9 @@ void qef_solver_init(struct QefSolver *qef_solver) {
 
 void qef_solver_add(struct QefSolver *qef_solver, const float px, const float py, const float pz, float nx, float ny, float nz) {
   qef_solver->has_solution = false;
-  vec3 norm_xyz = {nx, ny, nz};
-  glm_normalize(norm_xyz);
-  nx = norm_xyz[0], ny = norm_xyz[1], nz = norm_xyz[2];
+  vec3 norm_xyz = (vec3){.x = nx, .y = ny, .z = nz};
+  vec3_normalise(norm_xyz);
+  nx = norm_xyz.x, ny = norm_xyz.y, nz = norm_xyz.z;
   qef_solver->data.ata_00 += nx * nx;
   qef_solver->data.ata_01 += nx * ny;
   qef_solver->data.ata_02 += nx * nz;
@@ -81,7 +81,7 @@ void qef_solver_add(struct QefSolver *qef_solver, const float px, const float py
 }
 
 void qef_solver_add_vec3(struct QefSolver *qef_solver, const vec3 p, const vec3 n) {
-  qef_solver_add(qef_solver, p[0], p[1], p[2], n[0], n[1], n[2]);
+  qef_solver_add(qef_solver, p.data[0], p.data[1], p.data[2], n.data[0], n.data[1], n.data[2]);
 }
 
 void qef_solver_add_copy(struct QefSolver *qef_solver, struct QefData *rhs) {
@@ -102,14 +102,13 @@ float qef_solver_get_error_pos(struct QefSolver *qef_solver, vec3 pos) {
     qef_solver_set_atb(qef_solver);
   }
 
-  vec3 atax;
-  glm_mat3_mulv(qef_solver->ata, pos, atax);
+  vec3 atax = mat3_transform(qef_solver->ata, pos);
 
-  atax[0] = (qef_solver->ata[0][0] * pos[0]) + (qef_solver->ata[0][1] * pos[1]) + (qef_solver->ata[0][2] * pos[2]);
-  atax[1] = (qef_solver->ata[0][1] * pos[0]) + (qef_solver->ata[1][1] * pos[1]) + (qef_solver->ata[1][2] * pos[2]);
-  atax[1] = (qef_solver->ata[0][2] * pos[0]) + (qef_solver->ata[1][2] * pos[1]) + (qef_solver->ata[2][2] * pos[2]);
+  atax.data[0] = (qef_solver->ata.vecs[0].data[0] * pos.data[0]) + (qef_solver->ata.vecs[0].data[1] * pos.data[1]) + (qef_solver->ata.vecs[0].data[2] * pos.data[2]);
+  atax.data[1] = (qef_solver->ata.vecs[0].data[1] * pos.data[0]) + (qef_solver->ata.vecs[1].data[1] * pos.data[1]) + (qef_solver->ata.vecs[1].data[2] * pos.data[2]);
+  atax.data[1] = (qef_solver->ata.vecs[0].data[2] * pos.data[0]) + (qef_solver->ata.vecs[1].data[2] * pos.data[1]) + (qef_solver->ata.vecs[2].data[2] * pos.data[2]);
 
-  return glm_vec3_dot(pos, atax) - 2 * glm_vec3_dot(pos, qef_solver->atb) + qef_solver->data.btb;
+  return vec3_dot(pos, atax) - 2 * vec3_dot(pos, qef_solver->atb) + qef_solver->data.btb;
 }
 
 void qef_solver_reset(struct QefSolver *qef_solver) {
@@ -118,18 +117,18 @@ void qef_solver_reset(struct QefSolver *qef_solver) {
 }
 
 void qef_solver_set_ata(struct QefSolver *qef_solver) {
-  qef_solver->ata[0][0] = qef_solver->data.ata_00;
-  qef_solver->ata[0][1] = qef_solver->data.ata_01;
-  qef_solver->ata[0][2] = qef_solver->data.ata_02;
-  qef_solver->ata[1][1] = qef_solver->data.ata_11;
-  qef_solver->ata[1][2] = qef_solver->data.ata_12;
-  qef_solver->ata[2][2] = qef_solver->data.ata_22;
+  qef_solver->ata.vecs[0].data[0] = qef_solver->data.ata_00;
+  qef_solver->ata.vecs[0].data[1] = qef_solver->data.ata_01;
+  qef_solver->ata.vecs[0].data[2] = qef_solver->data.ata_02;
+  qef_solver->ata.vecs[1].data[1] = qef_solver->data.ata_11;
+  qef_solver->ata.vecs[1].data[2] = qef_solver->data.ata_12;
+  qef_solver->ata.vecs[2].data[2] = qef_solver->data.ata_22;
 }
 
 void qef_solver_set_atb(struct QefSolver *qef_solver) {
-  qef_solver->atb[0] = qef_solver->data.atb_x;
-  qef_solver->atb[1] = qef_solver->data.atb_y;
-  qef_solver->atb[2] = qef_solver->data.atb_z;
+  qef_solver->atb.data[0] = qef_solver->data.atb_x;
+  qef_solver->atb.data[1] = qef_solver->data.atb_y;
+  qef_solver->atb.data[2] = qef_solver->data.atb_z;
 }
 
 static float calc_pinv(const float x, const float tol) {
@@ -152,110 +151,107 @@ static void calc_symmetric_givens_coefficients(const float a_pp, const float a_p
 
 void rot01(mat3 m, float *c, float *s) {
   //printf("vtav full: %f\n%f\n%f\n%f\n%f\n%f\n", m[0][0], m[0][1], m[0][2], m[1][1], m[1][2], m[2][2]);
-  calc_symmetric_givens_coefficients(m[0][0], m[0][1], m[1][1], c, s);
+  calc_symmetric_givens_coefficients(m.vecs[0].data[0], m.vecs[0].data[1], m.vecs[1].data[1], c, s);
   const float cc = *c * *c;
   const float ss = *s * *s;
-  const float mix = 2 * *c * *s * m[0][1];
+  const float mix = 2 * *c * *s * m.vecs[0].data[1];
 
-  mat3 pre_m;
-  glm_mat3_copy(m, pre_m);
+  mat3 pre_m = m;
 
-  m[0][0] = cc * pre_m[0][0] - mix + ss * pre_m[1][1];
-  m[0][1] = 0;
-  m[0][2] = *c * pre_m[0][2] - *s * pre_m[1][2];
-  m[1][1] = ss * pre_m[0][0] + mix + cc * pre_m[1][1];
-  m[1][2] = *s * pre_m[0][2] + *c * pre_m[1][2];
-  m[2][2] = pre_m[2][2];
+  m.vecs[0].data[0] = cc * pre_m.vecs[0].data[0] - mix + ss * pre_m.vecs[1].data[1];
+  m.vecs[0].data[1] = 0;
+  m.vecs[0].data[2] = *c * pre_m.vecs[0].data[2] - *s * pre_m.vecs[1].data[2];
+  m.vecs[1].data[1] = ss * pre_m.vecs[0].data[0] + mix + cc * pre_m.vecs[1].data[1];
+  m.vecs[1].data[2] = *s * pre_m.vecs[0].data[2] + *c * pre_m.vecs[1].data[2];
+  m.vecs[2].data[2] = pre_m.vecs[2].data[2];
 }
 
 void rot02(mat3 m, float *c, float *s) {
-  calc_symmetric_givens_coefficients(m[0][0], m[0][2], m[2][2], c, s);
+  calc_symmetric_givens_coefficients(m.vecs[0].data[0], m.vecs[0].data[2], m.vecs[2].data[2], c, s);
   const float cc = *c * *c;
   const float ss = *s * *s;
-  const float mix = 2 * *c * *s * m[0][2];
+  const float mix = 2 * *c * *s * m.vecs[0].data[2];
 
-  mat3 pre_m;
-  glm_mat3_copy(m, pre_m);
+  mat3 pre_m = m;
 
-  m[0][0] = cc * pre_m[0][0] - mix + ss * pre_m[2][2];
-  m[0][1] = *c * pre_m[0][1] - *s * pre_m[1][2];
-  m[0][2] = 0;
-  m[1][1] = pre_m[1][1];
-  m[1][2] = *s * pre_m[0][1] + *c * pre_m[1][2];
-  m[2][2] = ss * pre_m[0][0] + mix + cc * pre_m[2][2];
+  m.vecs[0].data[0] = cc * pre_m.vecs[0].data[0] - mix + ss * pre_m.vecs[2].data[2];
+  m.vecs[0].data[1] = *c * pre_m.vecs[0].data[1] - *s * pre_m.vecs[1].data[2];
+  m.vecs[0].data[2] = 0;
+  m.vecs[1].data[1] = pre_m.vecs[1].data[1];
+  m.vecs[1].data[2] = *s * pre_m.vecs[0].data[1] + *c * pre_m.vecs[1].data[2];
+  m.vecs[2].data[2] = ss * pre_m.vecs[0].data[0] + mix + cc * pre_m.vecs[2].data[2];
 }
 
 void rot12(mat3 m, float *c, float *s) {
-  calc_symmetric_givens_coefficients(m[1][1], m[1][2], m[2][2], c, s);
+  calc_symmetric_givens_coefficients(m.vecs[1].data[1], m.vecs[1].data[2], m.vecs[2].data[2], c, s);
   const float cc = *c * *c;
   const float ss = *s * *s;
-  const float mix = 2 * *c * *s * m[1][2];
+  const float mix = 2 * *c * *s * m.vecs[1].data[2];
 
-  mat3 pre_m;
-  glm_mat3_copy(m, pre_m);
+  mat3 pre_m = m;
 
-  m[0][0] = pre_m[0][0];
-  m[0][1] = *c * pre_m[0][1] - *s * pre_m[0][2];
-  m[0][2] = *s * pre_m[0][1] + *c * pre_m[0][2];
-  m[1][1] = cc * pre_m[1][1] - mix + ss * pre_m[2][2];
-  m[1][2] = 0;
-  m[2][2] = ss * pre_m[1][1] + mix + cc * pre_m[2][2];
+  m.vecs[0].data[0] = pre_m.vecs[0].data[0];
+  m.vecs[0].data[1] = *c * pre_m.vecs[0].data[1] - *s * pre_m.vecs[0].data[2];
+  m.vecs[0].data[2] = *s * pre_m.vecs[0].data[1] + *c * pre_m.vecs[0].data[2];
+  m.vecs[1].data[1] = cc * pre_m.vecs[1].data[1] - mix + ss * pre_m.vecs[2].data[2];
+  m.vecs[1].data[2] = 0;
+  m.vecs[2].data[2] = ss * pre_m.vecs[1].data[1] + mix + cc * pre_m.vecs[2].data[2];
 }
 
 void rot01_post(mat3 m, const float c, const float s) {
-  const float m00 = m[0][0], m01 = m[0][1], m10 = m[1][0], m11 = m[1][1], m20 = m[2][0], m21 = m[2][1];
+  const float m00 = m.vecs[0].data[0], m01 = m.vecs[0].data[1], m10 = m.vecs[1].data[0], m11 = m.vecs[1].data[1], m20 = m.vecs[2].data[0], m21 = m.vecs[2].data[1];
 
-  m[0][0] = c * m00 - s * m01;
-  m[0][1] = s * m00 + c * m01;
-  m[0][2] = m[0][2];
-  m[1][0] = c * m10 - s * m11;
-  m[1][1] = s * m10 + c * m11;
-  m[1][2] = m[1][2];
-  m[2][0] = c * m20 - s * m21;
-  m[2][1] = s * m20 + c * m21;
-  m[2][2] = m[2][2];
+  m.vecs[0].data[0] = c * m00 - s * m01;
+  m.vecs[0].data[1] = s * m00 + c * m01;
+  m.vecs[0].data[2] = m.vecs[0].data[2];
+  m.vecs[1].data[0] = c * m10 - s * m11;
+  m.vecs[1].data[1] = s * m10 + c * m11;
+  m.vecs[1].data[2] = m.vecs[1].data[2];
+  m.vecs[2].data[0] = c * m20 - s * m21;
+  m.vecs[2].data[1] = s * m20 + c * m21;
+  m.vecs[2].data[2] = m.vecs[2].data[2];
 }
 
 void rot02_post(mat3 m, const float c, const float s) {
-  const float m00 = m[0][0], m02 = m[0][2], m10 = m[1][0], m12 = m[1][2], m20 = m[2][0], m22 = m[2][2];
+  const float m00 = m.vecs[0].data[0], m02 = m.vecs[0].data[2], m10 = m.vecs[1].data[0], m12 = m.vecs[1].data[2], m20 = m.vecs[2].data[0], m22 = m.vecs[2].data[2];
 
-  m[0][0] = c * m00 - s * m02;
-  m[0][1] = m[0][1];
-  m[0][2] = s * m00 + c * m02;
-  m[1][0] = c * m10 - s * m12;
-  m[1][1] = m[1][1];
-  m[1][2] = s * m10 + c * m12;
-  m[2][0] = c * m20 - s * m22;
-  m[2][1] = m[2][1];
-  m[2][2] = s * m20 + c * m22;
+  m.vecs[0].data[0] = c * m00 - s * m02;
+  m.vecs[0].data[1] = m.vecs[0].data[1];
+  m.vecs[0].data[2] = s * m00 + c * m02;
+  m.vecs[1].data[0] = c * m10 - s * m12;
+  m.vecs[1].data[1] = m.vecs[1].data[1];
+  m.vecs[1].data[2] = s * m10 + c * m12;
+  m.vecs[2].data[0] = c * m20 - s * m22;
+  m.vecs[2].data[1] = m.vecs[2].data[1];
+  m.vecs[2].data[2] = s * m20 + c * m22;
 }
 
 void rot12_post(mat3 m, const float c, const float s) {
-  const float m01 = m[0][1], m02 = m[0][2], m11 = m[1][1], m12 = m[1][2], m21 = m[2][1], m22 = m[2][2];
+  const float m01 = m.vecs[0].data[1], m02 = m.vecs[0].data[2], m11 = m.vecs[1].data[1], m12 = m.vecs[1].data[2], m21 = m.vecs[2].data[1], m22 = m.vecs[2].data[2];
 
-  m[0][0] = m[0][0];
-  m[0][1] = c * m01 - s * m02;
-  m[0][2] = s * m01 + c * m02;
-  m[1][0] = m[1][0];
-  m[1][1] = c * m11 - s * m12;
-  m[1][2] = s * m11 + c * m12;
-  m[2][0] = m[2][0];
-  m[2][1] = c * m21 - s * m22;
-  m[2][2] = s * m21 + c * m22;
+  m.vecs[0].data[0] = m.vecs[0].data[0];
+  m.vecs[0].data[1] = c * m01 - s * m02;
+  m.vecs[0].data[2] = s * m01 + c * m02;
+  m.vecs[1].data[0] = m.vecs[1].data[0];
+  m.vecs[1].data[1] = c * m11 - s * m12;
+  m.vecs[1].data[2] = s * m11 + c * m12;
+  m.vecs[2].data[0] = m.vecs[2].data[0];
+  m.vecs[2].data[1] = c * m21 - s * m22;
+  m.vecs[2].data[2] = s * m21 + c * m22;
 }
 
 static void rotate01(mat3 vtav, mat3 v) {
-  if (vtav[0][1] == 0)
+  if (v.vecs[0].data[1] == 0)
     return;
 
   float c, s;
   rot01(vtav, &c, &s);
-  //printf("vtav full: %f\n%f\n%f\n%f\n%f\n%f\n", vtav[0][0], vtav[0][1], vtav[0][2], vtav[1][1], vtav[1][2], vtav[2][2]);
+  //printf("vtav full: %f\n%f\n%f\n%f\n%f\n%f\n", v.vecs[0][0], v.vecs[0][1], v.vecs[0][2], v.vecs[1][1], v.vecs[1][2], v.vecs[2][2]);
   rot01_post(v, c, s);
 }
 
 static void rotate02(mat3 vtav, mat3 v) {
-  if (vtav[0][2] == 0)
+  if (v.vecs[0].data[2] == 0)
     return;
 
   float c, s;
@@ -264,7 +260,7 @@ static void rotate02(mat3 vtav, mat3 v) {
 }
 
 static void rotate12(mat3 vtav, mat3 v) {
-  if (vtav[1][2] == 0)
+  if (v.vecs[1].data[2] == 0)
     return;
 
   float c, s;
@@ -273,55 +269,55 @@ static void rotate12(mat3 vtav, mat3 v) {
 }
 
 static float off(mat3 vtav) {
-  return sqrt(2 * ((vtav[0][1] * vtav[0][1]) + (vtav[0][2] * vtav[0][2]) + (vtav[1][2] * vtav[1][2])));
+  return sqrt(2 * ((vtav.vecs[0].data[1] * vtav.vecs[0].data[1]) + (vtav.vecs[0].data[2] * vtav.vecs[0].data[2]) + (vtav.vecs[1].data[2] * vtav.vecs[1].data[2])));
 }
 
 float qef_solver_solve(struct QefSolver *qef_solver, vec3 outx, const float svd_tol, const int svd_sweeps, const float pinv_tol) {
   if (qef_solver->data.num_points == 0)
     printf("Invalid argument\n");
 
-  memcpy(qef_solver->mass_point, (vec3){qef_solver->data.mass_point_x, qef_solver->data.mass_point_y, qef_solver->data.mass_point_z}, sizeof(vec3));
-  glm_vec3_scale(qef_solver->mass_point, 1.0f / qef_solver->data.num_points, qef_solver->mass_point);
+  qef_solver->mass_point = (vec3){.data[0] = qef_solver->data.mass_point_x, .data[1] = qef_solver->data.mass_point_y, .data[2] = qef_solver->data.mass_point_z};
+  qef_solver->mass_point = vec3_scale(qef_solver->mass_point, 1.0f / qef_solver->data.num_points);
   qef_solver_set_ata(qef_solver);
   qef_solver_set_atb(qef_solver);
 
   // Symmetric vmul
-  vec3 tmpv = {0.0, 0.0, 0.0};
-  tmpv[0] = (qef_solver->ata[0][0] * qef_solver->mass_point[0]) + (qef_solver->ata[0][1] * qef_solver->mass_point[1]) + (qef_solver->ata[0][2] * qef_solver->mass_point[2]);
-  tmpv[1] = (qef_solver->ata[0][1] * qef_solver->mass_point[0]) + (qef_solver->ata[1][1] * qef_solver->mass_point[1]) + (qef_solver->ata[1][2] * qef_solver->mass_point[2]);
-  tmpv[2] = (qef_solver->ata[0][2] * qef_solver->mass_point[0]) + (qef_solver->ata[1][2] * qef_solver->mass_point[1]) + (qef_solver->ata[2][2] * qef_solver->mass_point[2]);
+  vec3 tmpv;
+  tmpv.data[0] = (qef_solver->ata.vecs[0].data[0] * qef_solver->mass_point.data[0]) + (qef_solver->ata.vecs[0].data[1] * qef_solver->mass_point.data[1]) + (qef_solver->ata.vecs[0].data[2] * qef_solver->mass_point.data[2]);
+  tmpv.data[1] = (qef_solver->ata.vecs[0].data[1] * qef_solver->mass_point.data[0]) + (qef_solver->ata.vecs[1].data[1] * qef_solver->mass_point.data[1]) + (qef_solver->ata.vecs[1].data[2] * qef_solver->mass_point.data[2]);
+  tmpv.data[2] = (qef_solver->ata.vecs[0].data[2] * qef_solver->mass_point.data[0]) + (qef_solver->ata.vecs[1].data[2] * qef_solver->mass_point.data[1]) + (qef_solver->ata.vecs[2].data[2] * qef_solver->mass_point.data[2]);
 
-  glm_vec3_sub(qef_solver->atb, tmpv, qef_solver->atb);
-  qef_solver->x[0] = 0.0f;
-  qef_solver->x[1] = 0.0f;
-  qef_solver->x[2] = 0.0f;
+  qef_solver->atb = vec3_sub(qef_solver->atb, tmpv);
+  qef_solver->x.data[0] = 0.0f;
+  qef_solver->x.data[1] = 0.0f;
+  qef_solver->x.data[2] = 0.0f;
 
   // Solve symmetric
   mat3 mtmp, pinv, v;
   mat3 vtav;
-  glm_mat3_zero(mtmp);
-  glm_mat3_zero(pinv);
-  glm_mat3_zero(v);
-  glm_mat3_zero(vtav);
+  mtmp = MAT3_ZERO;
+  pinv = MAT3_ZERO;
+  v = MAT3_ZERO;
+  vtav = MAT3_ZERO;
 
-  vtav[0][0] = qef_solver->data.ata_00;
-  vtav[0][1] = qef_solver->data.ata_01;
-  vtav[0][2] = qef_solver->data.ata_02;
-  vtav[1][1] = qef_solver->data.ata_11;
-  vtav[1][2] = qef_solver->data.ata_12;
-  vtav[2][2] = qef_solver->data.ata_22;
+  v.vecs[0].data[0] = qef_solver->data.ata_00;
+  v.vecs[0].data[1] = qef_solver->data.ata_01;
+  v.vecs[0].data[2] = qef_solver->data.ata_02;
+  v.vecs[1].data[1] = qef_solver->data.ata_11;
+  v.vecs[1].data[2] = qef_solver->data.ata_12;
+  v.vecs[2].data[2] = qef_solver->data.ata_22;
 
-  v[0][0] = 1;
-  v[0][1] = 0;
-  v[0][2] = 0;
-  v[1][0] = 0;
-  v[1][1] = 1;
-  v[1][2] = 0;
-  v[2][0] = 0;
-  v[2][1] = 0;
-  v[2][2] = 1;
+  v.vecs[0].data[0] = 1;
+  v.vecs[0].data[1] = 0;
+  v.vecs[0].data[2] = 0;
+  v.vecs[1].data[0] = 0;
+  v.vecs[1].data[1] = 1;
+  v.vecs[1].data[2] = 0;
+  v.vecs[2].data[0] = 0;
+  v.vecs[2].data[1] = 0;
+  v.vecs[2].data[2] = 1;
 
-  float fnorm_vtav = sqrt((vtav[0][0] * vtav[0][0]) + (vtav[0][1] * vtav[0][1]) + (vtav[0][2] * vtav[0][2]) + (vtav[0][1] * vtav[0][1]) + (vtav[1][1] * vtav[1][1]) + (vtav[1][2] * vtav[1][2]) + (vtav[0][2] * vtav[0][2]) + (vtav[1][2] * vtav[1][2]) + (vtav[2][2] * vtav[2][2]));
+  float fnorm_vtav = sqrt((vtav.vecs[0].data[0] * vtav.vecs[0].data[0]) + (vtav.vecs[0].data[1] * vtav.vecs[0].data[1]) + (vtav.vecs[0].data[2] * vtav.vecs[0].data[2]) + (v.vecs[0].data[1] * v.vecs[0].data[1]) + (v.vecs[1].data[1] * v.vecs[1].data[1]) + (v.vecs[1].data[2] * v.vecs[1].data[2]) + (v.vecs[0].data[2] * v.vecs[0].data[2]) + (v.vecs[1].data[2] * v.vecs[1].data[2]) + (v.vecs[2].data[2] * v.vecs[2].data[2]));
   const float delta = svd_tol * fnorm_vtav;
 
   for (int i = 0; i < svd_sweeps && off(vtav) > delta; ++i) {
@@ -332,51 +328,48 @@ float qef_solver_solve(struct QefSolver *qef_solver, vec3 outx, const float svd_
   }
 
   // pseudo inverse
-  const float d0 = calc_pinv(vtav[0][0], pinv_tol), d1 = calc_pinv(vtav[1][1], pinv_tol), d2 = calc_pinv(vtav[2][2], pinv_tol);
-  pinv[0][0] = v[0][0] * d0 * v[0][0] + v[0][1] * d1 * v[0][1] + v[0][2] * d2 * v[0][2];
-  pinv[0][1] = v[0][0] * d0 * v[1][0] + v[0][1] * d1 * v[1][1] + v[0][2] * d2 * v[1][2];
-  pinv[0][2] = v[0][0] * d0 * v[2][0] + v[0][1] * d1 * v[2][1] + v[0][2] * d2 * v[2][2];
-  pinv[1][0] = v[1][0] * d0 * v[0][0] + v[1][1] * d1 * v[0][1] + v[1][2] * d2 * v[0][2];
-  pinv[1][1] = v[1][0] * d0 * v[1][0] + v[1][1] * d1 * v[1][1] + v[1][2] * d2 * v[1][2];
-  pinv[1][2] = v[1][0] * d0 * v[2][0] + v[1][1] * d1 * v[2][1] + v[1][2] * d2 * v[2][2];
-  pinv[2][0] = v[2][0] * d0 * v[0][0] + v[2][1] * d1 * v[0][1] + v[2][2] * d2 * v[0][2];
-  pinv[2][1] = v[2][0] * d0 * v[1][0] + v[2][1] * d1 * v[1][1] + v[2][2] * d2 * v[1][2];
-  pinv[2][2] = v[2][0] * d0 * v[2][0] + v[2][1] * d1 * v[2][1] + v[2][2] * d2 * v[2][2];
+  const float d0 = calc_pinv(vtav.vecs[0].data[0], pinv_tol), d1 = calc_pinv(vtav.vecs[1].data[1], pinv_tol), d2 = calc_pinv(vtav.vecs[2].data[2], pinv_tol);
+  pinv.vecs[0].data[0] = v.vecs[0].data[0] * d0 * v.vecs[0].data[0] + v.vecs[0].data[1] * d1 * v.vecs[0].data[1] + v.vecs[0].data[2] * d2 * v.vecs[0].data[2];
+  pinv.vecs[0].data[1] = v.vecs[0].data[0] * d0 * v.vecs[1].data[0] + v.vecs[0].data[1] * d1 * v.vecs[1].data[1] + v.vecs[0].data[2] * d2 * v.vecs[1].data[2];
+  pinv.vecs[0].data[2] = v.vecs[0].data[0] * d0 * v.vecs[2].data[0] + v.vecs[0].data[1] * d1 * v.vecs[2].data[1] + v.vecs[0].data[2] * d2 * v.vecs[2].data[2];
+  pinv.vecs[1].data[0] = v.vecs[1].data[0] * d0 * v.vecs[0].data[0] + v.vecs[1].data[1] * d1 * v.vecs[0].data[1] + v.vecs[1].data[2] * d2 * v.vecs[0].data[2];
+  pinv.vecs[1].data[1] = v.vecs[1].data[0] * d0 * v.vecs[1].data[0] + v.vecs[1].data[1] * d1 * v.vecs[1].data[1] + v.vecs[1].data[2] * d2 * v.vecs[1].data[2];
+  pinv.vecs[1].data[2] = v.vecs[1].data[0] * d0 * v.vecs[2].data[0] + v.vecs[1].data[1] * d1 * v.vecs[2].data[1] + v.vecs[1].data[2] * d2 * v.vecs[2].data[2];
+  pinv.vecs[2].data[0] = v.vecs[2].data[0] * d0 * v.vecs[0].data[0] + v.vecs[2].data[1] * d1 * v.vecs[0].data[1] + v.vecs[2].data[2] * d2 * v.vecs[0].data[2];
+  pinv.vecs[2].data[1] = v.vecs[2].data[0] * d0 * v.vecs[1].data[0] + v.vecs[2].data[1] * d1 * v.vecs[1].data[1] + v.vecs[2].data[2] * d2 * v.vecs[1].data[2];
+  pinv.vecs[2].data[2] = v.vecs[2].data[0] * d0 * v.vecs[2].data[0] + v.vecs[2].data[1] * d1 * v.vecs[2].data[1] + v.vecs[2].data[2] * d2 * v.vecs[2].data[2];
 
-  qef_solver->x[0] = (pinv[0][0] * qef_solver->atb[0]) + (pinv[0][1] * qef_solver->atb[1]) + (pinv[0][2] * qef_solver->atb[2]);
-  qef_solver->x[1] = (pinv[1][0] * qef_solver->atb[0]) + (pinv[1][1] * qef_solver->atb[1]) + (pinv[1][2] * qef_solver->atb[2]);
-  qef_solver->x[2] = (pinv[2][0] * qef_solver->atb[0]) + (pinv[2][1] * qef_solver->atb[1]) + (pinv[2][2] * qef_solver->atb[2]);
+  qef_solver->x.data[0] = (pinv.vecs[0].data[0] * qef_solver->atb.data[0]) + (pinv.vecs[0].data[1] * qef_solver->atb.data[1]) + (pinv.vecs[0].data[2] * qef_solver->atb.data[2]);
+  qef_solver->x.data[1] = (pinv.vecs[1].data[0] * qef_solver->atb.data[0]) + (pinv.vecs[1].data[1] * qef_solver->atb.data[1]) + (pinv.vecs[1].data[2] * qef_solver->atb.data[2]);
+  qef_solver->x.data[2] = (pinv.vecs[2].data[0] * qef_solver->atb.data[0]) + (pinv.vecs[2].data[1] * qef_solver->atb.data[1]) + (pinv.vecs[2].data[2] * qef_solver->atb.data[2]);
 
   // calc error
   mat3 a;
-  glm_mat3_zero(a);
-  vec3 vtmp = {0.0, 0.0, 0.0};
-  a[0][0] = qef_solver->ata[0][0];
-  a[0][1] = qef_solver->ata[0][1];
-  a[0][2] = qef_solver->ata[0][2];
-  a[1][0] = qef_solver->ata[0][1];
-  a[1][1] = qef_solver->ata[1][1];
-  a[1][2] = qef_solver->ata[1][2];
-  a[2][0] = qef_solver->ata[0][2];
-  a[2][1] = qef_solver->ata[1][2];
-  a[2][2] = qef_solver->ata[2][2];
+  a.vecs[0].data[0] = qef_solver->ata.vecs[0].data[0];
+  a.vecs[0].data[1] = qef_solver->ata.vecs[0].data[1];
+  a.vecs[0].data[2] = qef_solver->ata.vecs[0].data[2];
+  a.vecs[1].data[0] = qef_solver->ata.vecs[0].data[1];
+  a.vecs[1].data[1] = qef_solver->ata.vecs[1].data[1];
+  a.vecs[1].data[2] = qef_solver->ata.vecs[1].data[2];
+  a.vecs[2].data[0] = qef_solver->ata.vecs[0].data[2];
+  a.vecs[2].data[1] = qef_solver->ata.vecs[1].data[2];
+  a.vecs[2].data[2] = qef_solver->ata.vecs[2].data[2];
 
   //glm_vec3_mul(a, qef_solver->x, vtmp);
 
-  vtmp[0] = (a[0][0] * qef_solver->x[0]) + (a[0][1] * qef_solver->x[1]) + (a[0][2] * qef_solver->x[2]);
-  vtmp[1] = (a[1][0] * qef_solver->x[0]) + (a[1][1] * qef_solver->x[1]) + (a[1][2] * qef_solver->x[2]);
-  vtmp[2] = (a[2][0] * qef_solver->x[0]) + (a[2][1] * qef_solver->x[1]) + (a[2][2] * qef_solver->x[2]);
+  vec3 vtmp;
+  vtmp.data[0] = (a.vecs[0].data[0] * qef_solver->x.data[0]) + (a.vecs[0].data[1] * qef_solver->x.data[1]) + (a.vecs[0].data[2] * qef_solver->x.data[2]);
+  vtmp.data[1] = (a.vecs[1].data[0] * qef_solver->x.data[0]) + (a.vecs[1].data[1] * qef_solver->x.data[1]) + (a.vecs[1].data[2] * qef_solver->x.data[2]);
+  vtmp.data[2] = (a.vecs[2].data[0] * qef_solver->x.data[0]) + (a.vecs[2].data[1] * qef_solver->x.data[1]) + (a.vecs[2].data[2] * qef_solver->x.data[2]);
 
-  vec3 pre_vtmp;
-  glm_vec3_copy(vtmp, pre_vtmp);
-
-  glm_vec3_sub(qef_solver->atb, pre_vtmp, vtmp);
-  const float result = glm_vec3_dot(vtmp, vtmp);
+  vec3 pre_vtmp = vtmp;
+  vtmp = vec3_sub(qef_solver->atb, pre_vtmp);
+  const float result = vec3_dot(vtmp, vtmp);
 
   // Add scaled
-  glm_vec3_add(qef_solver->x, qef_solver->mass_point, qef_solver->x);
+  qef_solver->x = vec3_add(qef_solver->x, qef_solver->mass_point);
   qef_solver_set_atb(qef_solver);
-  memcpy(outx, qef_solver->x, sizeof(vec3));
+  outx = qef_solver->x;
   qef_solver->has_solution = true;
 
   return result;

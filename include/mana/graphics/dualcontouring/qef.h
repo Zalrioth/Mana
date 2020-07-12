@@ -2,8 +2,8 @@
 #ifndef QEF_H
 #define QEF_H
 
-#include <cglm/cglm.h>
 #include <string.h>
+#include <ubermath/ubermath.h>
 
 struct QefData {
   float ata_00, ata_01, ata_02, ata_11, ata_12, ata_22;

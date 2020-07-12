@@ -81,7 +81,7 @@ set(includeList
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/cstorage/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/cnoise/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/lib/cglm/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/uber-math/include/ubermath
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/stb
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/glfw/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/VulkanSDK/1.1.101.0/Include

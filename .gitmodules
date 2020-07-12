@@ -1,9 +1,6 @@
 [submodule "lib/glfw"]
 	path = lib/glfw
 	url = https://github.com/glfw/glfw
-[submodule "lib/cglm"]
-	path = lib/cglm
-	url = https://github.com/recp/cglm
 [submodule "lib/MoltenVK"]
 	path = lib/MoltenVK
 	url = https://github.com/KhronosGroup/MoltenVK
@@ -25,6 +22,3 @@
 [submodule "lib/stb"]
 	path = lib/stb
 	url = https://github.com/nothings/stb
-[submodule "lib/uber-math"]
-	path = lib/uber-math
-	url = https://github.com/Zalrioth/uber-math

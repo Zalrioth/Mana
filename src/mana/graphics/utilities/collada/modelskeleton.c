@@ -36,13 +36,11 @@ struct JointData *skeleton_loader_extract_main_joint_data(struct XmlNode *joint_
   }
 
   char *matrix_data = xml_node_get_data(xml_node_get_child(joint_node, "matrix"));
-  mat4 matrix = GLM_MAT4_IDENTITY_INIT;
-  skeleton_loader_convert_data(matrix, matrix_data);
-  glm_mat4_transpose(matrix);
+  mat4 matrix = skeleton_loader_convert_data(matrix_data);
+  matrix = mat4_transpose(matrix);
   if (is_root) {
-    mat4 correction = GLM_MAT4_IDENTITY_INIT;
-    glm_rotate(correction, glm_rad(-90.0f), (vec3){1.0f, 0.0f, 0.0f});
-    glm_mat4_mul(correction, matrix, matrix);
+    mat4 correction = mat4_rotate(MAT4_IDENTITY, degree_to_radian(-90.0f), (vec3){.data[0] = 1.0f, .data[1] = 0.0f, .data[2] = 0.0f});
+    matrix = mat4_mul(correction, matrix);
   }
   (*joint_count)++;
   struct JointData *joint_data = malloc(sizeof(struct JointData));
@@ -50,7 +48,8 @@ struct JointData *skeleton_loader_extract_main_joint_data(struct XmlNode *joint_
   return joint_data;
 }
 
-void skeleton_loader_convert_data(mat4 mat_dest, char *matrix_data) {
+mat4 skeleton_loader_convert_data(char *matrix_data) {
+  mat4 dest;
   char *raw_data = strdup(matrix_data);
   char *raw_part = strtok(raw_data, " ");
   for (int matrix_value = 0; matrix_value < 4; matrix_value++) {
@@ -62,8 +61,9 @@ void skeleton_loader_convert_data(mat4 mat_dest, char *matrix_data) {
     raw_part = strtok(NULL, " ");
     float m3 = atof(raw_part);
     raw_part = strtok(NULL, " ");
-    vec4 matrix_slice = {m0, m1, m2, m3};
-    glm_vec4_copy(matrix_slice, mat_dest[matrix_value]);
+    vec4 matrix_slice = (vec4){.data[0] = m0, .data[1] = m1, .data[2] = m2, .data[3] = m3};
+    dest.vecs[matrix_value] = matrix_slice;
   }
   free(raw_data);
+  return dest;
 }

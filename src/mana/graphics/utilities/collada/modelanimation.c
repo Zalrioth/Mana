@@ -61,16 +61,15 @@ void animation_load_joint_transform(struct ArrayList* frames, struct XmlNode* jo
 void animation_process_transforms(char* joint_name, char* raw_data, struct ArrayList* key_frames, bool root) {
   char* raw_part = strtok(raw_data, " ");
   for (int key_frame_num = 0; key_frame_num < array_list_size(key_frames); key_frame_num++) {
-    mat4 transform = GLM_MAT4_ZERO_INIT;
+    mat4 transform = MAT4_ZERO;
     for (int matrix_value = 0; matrix_value < 16; matrix_value++) {
       *(((float*)&transform) + matrix_value) = atof(raw_part);
       raw_part = strtok(NULL, " ");
     }
-    glm_mat4_transpose(transform);
+    transform = mat4_transpose(transform);
     if (root) {
-      mat4 correction = GLM_MAT4_IDENTITY_INIT;
-      glm_rotate(correction, glm_rad(-90.0f), (vec3){1.0f, 0.0f, 0.0f});
-      glm_mat4_mul(correction, transform, transform);
+      mat4 correction = mat4_rotate(MAT4_IDENTITY, degree_to_radian(-90.0f), (vec3){.data[0] = 1.0f, .data[1] = 0.0f, .data[2] = 0.0f});
+      transform = mat4_mul(correction, transform);
     }
     struct JointTransformData* joint_transform_data = malloc(sizeof(struct JointTransformData));
     joint_transform_data_init(joint_transform_data, strdup(joint_name), transform);

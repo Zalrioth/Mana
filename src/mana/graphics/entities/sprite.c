@@ -16,20 +16,20 @@ int sprite_init(struct Sprite* sprite, struct GPUAPI* gpu_api, struct Shader* sh
 
   sprite->image_texture = texture;
 
-  vec3 pos1 = {-0.5f, -0.5f, 0.0f};
-  vec3 pos2 = {0.5f, -0.5f, 0.0f};
-  vec3 pos3 = {0.5f, 0.5f, 0.0f};
-  vec3 pos4 = {-0.5f, 0.5f, 0.0f};
+  vec3 pos1 = (vec3){.x = -0.5f, .y = -0.5f, .z = 0.0f};
+  vec3 pos2 = (vec3){.x = 0.5f, .y = -0.5f, .z = 0.0f};
+  vec3 pos3 = (vec3){.x = 0.5f, .y = 0.5f, .z = 0.0f};
+  vec3 pos4 = (vec3){.x = -0.5f, .y = 0.5f, .z = 0.0f};
 
-  vec2 uv1 = {1.0f, 0.0f};
-  vec2 uv2 = {0.0f, 0.0f};
-  vec2 uv3 = {0.0f, 1.0f};
-  vec2 uv4 = {1.0f, 1.0f};
+  vec2 uv1 = (vec2){.u = 1.0f, .v = 0.0f};
+  vec2 uv2 = (vec2){.u = 0.0f, .v = 0.0f};
+  vec2 uv3 = (vec2){.u = 0.0f, .v = 1.0f};
+  vec2 uv4 = (vec2){.u = 1.0f, .v = 1.0f};
 
-  mesh_sprite_assign_vertex(sprite->image_mesh->vertices, pos1[0], pos1[1], pos1[2], uv1[0], uv1[1]);
-  mesh_sprite_assign_vertex(sprite->image_mesh->vertices, pos2[0], pos2[1], pos2[2], uv2[0], uv2[1]);
-  mesh_sprite_assign_vertex(sprite->image_mesh->vertices, pos3[0], pos3[1], pos3[2], uv3[0], uv3[1]);
-  mesh_sprite_assign_vertex(sprite->image_mesh->vertices, pos4[0], pos4[1], pos4[2], uv4[0], uv4[1]);
+  mesh_sprite_assign_vertex(sprite->image_mesh->vertices, pos1.x, pos1.y, pos1.z, uv1.u, uv1.v);
+  mesh_sprite_assign_vertex(sprite->image_mesh->vertices, pos2.x, pos2.y, pos2.z, uv2.u, uv2.v);
+  mesh_sprite_assign_vertex(sprite->image_mesh->vertices, pos3.x, pos3.y, pos3.z, uv3.u, uv3.v);
+  mesh_sprite_assign_vertex(sprite->image_mesh->vertices, pos4.x, pos4.y, pos4.z, uv4.u, uv4.v);
 
   mesh_assign_indice(sprite->image_mesh->indices, 0);
   mesh_assign_indice(sprite->image_mesh->indices, 1);

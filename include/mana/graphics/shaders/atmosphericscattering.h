@@ -12,12 +12,12 @@
 // Effect for atmospheric scattering
 
 struct AtmosphericScatteringUniformBufferObject {
-  alignas(16) mat4 model_from_view;
+  alignas(32) mat4 model_from_view;
   vec3 camera;
 };
 
 struct AtmosphericScatteringUniformBufferObjectSettings {
-  alignas(16) mat4 view_from_clip;  // Based on window size, will need to update on resize
+  alignas(32) mat4 view_from_clip;  // Based on window size, will need to update on resize
   float exposure;
   vec3 white_point;
   vec3 earth_center;

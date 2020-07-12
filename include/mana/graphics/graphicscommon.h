@@ -8,8 +8,8 @@
 #define Z_FAR 10000000.0f
 #define Z_NEAR 0.01f
 
-#include <cglm/cglm.h>
 #include <stdalign.h>
+#include <ubermath/ubermath.h>
 
 struct LightingUniformBufferObject {
   vec3 direction;

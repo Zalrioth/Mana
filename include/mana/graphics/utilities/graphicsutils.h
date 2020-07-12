@@ -2,8 +2,8 @@
 #ifndef GRAPHICS_UTILS_H
 #define GRAPHICS_UTILS_H
 
-#include <cglm/cglm.h>
 #include <cstorage/cstorage.h>
+#include <ubermath/ubermath.h>
 #include <vulkan/vulkan.h>
 
 #include "mana/graphics/graphicscommon.h"

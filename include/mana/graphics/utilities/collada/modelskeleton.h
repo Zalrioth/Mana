@@ -4,8 +4,8 @@
 
 #include "mana/core/memoryallocator.h"
 //
-#include <cglm/cglm.h>
 #include <cstorage/cstorage.h>
+#include <ubermath/ubermath.h>
 
 #include "mana/core/xmlnode.h"
 
@@ -19,7 +19,7 @@ struct JointData {
 static inline void joint_data_init(struct JointData *joint_data, int index, char *name_id, mat4 bind_local_transform) {
   joint_data->index = index;
   joint_data->name_id = strdup(name_id);
-  glm_mat4_copy(bind_local_transform, joint_data->bind_local_transform);
+  bind_local_transform = joint_data->bind_local_transform;
   joint_data->children = malloc(sizeof(struct ArrayList));
   array_list_init(joint_data->children);
 }
@@ -37,6 +37,6 @@ static inline void skeleton_data_init(struct SkeletonData *skeleton_data, int jo
 struct SkeletonData *skeleton_loader_extract_bone_data(struct XmlNode *visual_scene_node, struct Vector *bone_order);
 struct JointData *skeleton_loader_load_joint_data(struct XmlNode *joint_node, struct Vector *bone_order, bool is_root, int *joint_count);
 struct JointData *skeleton_loader_extract_main_joint_data(struct XmlNode *joint_node, struct Vector *bone_order, bool is_root, int *joint_count);
-void skeleton_loader_convert_data(mat4 mat_dest, char *matrix_data);
+mat4 skeleton_loader_convert_data(char *matrix_data);
 
 #endif  // MODEL_SKELETON_H

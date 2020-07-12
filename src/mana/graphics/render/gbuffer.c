@@ -139,8 +139,8 @@ int gbuffer_init(struct GBuffer* gbuffer, struct VulkanState* vulkan_renderer) {
 
   graphics_utils_create_sampler(vulkan_renderer->device, &gbuffer->texture_sampler, 0, VK_FILTER_LINEAR);
 
-  glm_mat4_zero(gbuffer->projection_matrix);
-  glm_mat4_zero(gbuffer->view_matrix);
+  gbuffer->projection_matrix = MAT4_ZERO;
+  gbuffer->view_matrix = MAT4_ZERO;
 
   // Gbuffer command buffer
   VkCommandBufferAllocateInfo alloc_info_offscreen = {0};

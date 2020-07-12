@@ -42,7 +42,7 @@ int dual_contouring_init(struct DualContouring* dual_contouring, struct VulkanSt
   int threshold_index = -1;
   threshold_index = (threshold_index + 1) % MAX_THRESHOLDS;
   dual_contouring->octree_size = octree_size;
-  dual_contouring->head = octree_build_octree((ivec3){-dual_contouring->octree_size / 2, -dual_contouring->octree_size / 2, -dual_contouring->octree_size / 2}, dual_contouring->octree_size, THRESHOLDS[threshold_index], dual_contouring);
+  dual_contouring->head = octree_build_octree((ivec3){.data[0] = -dual_contouring->octree_size / 2, .data[1] = -dual_contouring->octree_size / 2, .data[2] = -dual_contouring->octree_size / 2}, dual_contouring->octree_size, THRESHOLDS[threshold_index], dual_contouring);
   octree_generate_mesh_from_octree(dual_contouring->head, dual_contouring);
 
   // Vertex buffer

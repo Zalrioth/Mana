@@ -4,8 +4,8 @@
 
 #include "mana/core/memoryallocator.h"
 //
-#include <cglm/cglm.h>
 #include <cstorage/cstorage.h>
+#include <ubermath/ubermath.h>
 
 #include "mana/core/corecommon.h"
 #include "mana/core/xmlnode.h"
@@ -31,8 +31,8 @@ static inline void raw_vertex_model_init(struct RawVertexModel* raw_vertex_model
   raw_vertex_model->color_index = NO_INDEX;
   raw_vertex_model->index = index;
   raw_vertex_model->weights_data = weights_data;
-  glm_vec3_copy(position, raw_vertex_model->position);
-  raw_vertex_model->length = glm_vec3_norm(position);
+  position = raw_vertex_model->position;
+  raw_vertex_model->length = vec3_magnitude(position);
   raw_vertex_model->duplicate_vertex = NULL;
 };
 

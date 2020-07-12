@@ -2,7 +2,7 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#include <cglm/cglm.h>
+#include <ubermath/ubermath.h>
 
 #include "mana//graphics/render/window.h"
 #include "mana/graphics/graphicscommon.h"
@@ -39,8 +39,8 @@ struct Camera {
 };
 
 void camera_init(struct Camera* camera);
-void camera_get_projection_matrix(struct Camera* camera, struct Window* window, mat4 dest);
-void camera_get_view_matrix(struct Camera* camera, mat4 dest);
+mat4 camera_get_projection_matrix(struct Camera* camera, struct Window* window);
+mat4 camera_get_view_matrix(struct Camera* camera);
 void camera_update_vectors(struct Camera* camera);
 
 #endif  // CAMERA_H

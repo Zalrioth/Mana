@@ -4,8 +4,8 @@
 
 #include "mana/core/memoryallocator.h"
 //
-#include <cglm/cglm.h>
 #include <cstorage/cstorage.h>
+#include <ubermath/ubermath.h>
 
 #include "mana/core/corecommon.h"
 #include "mana/core/xmlnode.h"
@@ -40,7 +40,7 @@ struct JointTransformData {
 
 static inline void joint_transform_data_init(struct JointTransformData* joint_transform_data, char* joint_name_id, mat4 joint_local_transform) {
   joint_transform_data->joint_name_id = joint_name_id;
-  glm_mat4_copy(joint_local_transform, joint_transform_data->joint_local_transform);
+  joint_transform_data->joint_local_transform = joint_local_transform;
 }
 
 struct AnimationData* animation_extract_animation(struct XmlNode* animation_data, struct XmlNode* joint_hierarchy);

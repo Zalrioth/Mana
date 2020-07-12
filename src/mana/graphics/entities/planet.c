@@ -23,24 +23,21 @@ void planet_render(struct Planet* planet, struct GPUAPI* gpu_api) {
 // TODO: Pass lights and sun position?
 void planet_update_uniforms(struct Planet* planet, struct GPUAPI* gpu_api, struct Camera* camera, vec3 light_pos) {
   struct DualContouringUniformBufferObject dcubo = {{{0}}};
-  glm_mat4_copy(gpu_api->vulkan_state->gbuffer->projection_matrix, dcubo.proj);
-  glm_mat4_copy(gpu_api->vulkan_state->gbuffer->view_matrix, dcubo.view);
-  dcubo.proj[1][1] *= -1;
-  glm_mat4_identity(dcubo.model);
-  glm_vec3_copy(camera->position, dcubo.camera_pos);
+  dcubo.proj = gpu_api->vulkan_state->gbuffer->projection_matrix;
+  dcubo.view = gpu_api->vulkan_state->gbuffer->view_matrix;
+  dcubo.proj.vecs[1].data[1] *= -1;
+  dcubo.model = MAT4_IDENTITY;
+  dcubo.camera_pos = camera->position;
   void* terrain_data;
   vkMapMemory(gpu_api->vulkan_state->device, planet->dual_contouring.dc_uniform_buffer_memory, 0, sizeof(struct DualContouringUniformBufferObject), 0, &terrain_data);
   memcpy(terrain_data, &dcubo, sizeof(struct DualContouringUniformBufferObject));
   vkUnmapMemory(gpu_api->vulkan_state->device, planet->dual_contouring.dc_uniform_buffer_memory);
 
   struct LightingUniformBufferObject light_ubo = {{0}};
-  glm_vec3_copy(light_pos, light_ubo.direction);
-  vec3 light_ambient = {1.0f, 1.0f, 1.0f};
-  glm_vec3_copy(light_ambient, light_ubo.ambient_color);
-  vec3 light_diffuse = {1.0f, 1.0f, 1.0f};
-  glm_vec3_copy(light_diffuse, light_ubo.diffuse_colour);
-  vec3 light_specular = {1.0f, 1.0f, 1.0f};
-  glm_vec3_copy(light_specular, light_ubo.specular_colour);
+  light_ubo.direction = light_pos;
+  light_ubo.ambient_color = (vec3){.data[0] = 1.0f, .data[1] = 1.0f, .data[2] = 1.0f};
+  light_ubo.diffuse_colour = (vec3){.data[0] = 1.0f, .data[1] = 1.0f, .data[2] = 1.0f};
+  light_ubo.specular_colour = (vec3){.data[0] = 1.0f, .data[1] = 1.0f, .data[2] = 1.0f};
 
   void* lighting_data;
   vkMapMemory(gpu_api->vulkan_state->device, planet->dual_contouring.lighting_uniform_buffer_memory, 0, sizeof(struct LightingUniformBufferObject), 0, &lighting_data);

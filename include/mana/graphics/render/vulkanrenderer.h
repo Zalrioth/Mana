@@ -7,9 +7,9 @@
 #define _CRT_SECURE_NO_DEPRECATE
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#include <cglm/cglm.h>
 #include <cstorage/cstorage.h>
 #include <stdalign.h>
+#include <ubermath/ubermath.h>
 #include <vulkan/vulkan.h>
 
 #include "mana/core/corecommon.h"
