@@ -25,6 +25,7 @@ void vertex_skin_data_add_joint_effect(struct VertexSkinData* vertex_skin_data, 
 
 void vertex_skin_data_limit_joint_number(struct VertexSkinData* vertex_skin_data, const int max) {
   if (vector_size(vertex_skin_data->joint_ids) > max) {
+    // TODO: This value should probably be defined
     float top_weights[max];
     float total = vertex_skin_data_save_top_weights(vertex_skin_data, top_weights, max);
     vertex_skin_data_refill_weight_list(vertex_skin_data, top_weights, max, total);

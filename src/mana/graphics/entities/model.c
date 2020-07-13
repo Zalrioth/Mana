@@ -154,12 +154,9 @@ struct KeyFrame* model_create_key_frame(struct KeyFrameData* data) {
 
 struct JointTransform model_create_transform(struct JointTransformData* data) {
   mat4 mat = data->joint_local_transform;
-  vec3 translation = (vec3){.data[0] = mat.m30, .data[1] = mat.m30, .data[2] = mat.m30};
-  quat rotation = mat4_to_quaternion(mat);
-
-  struct JointTransform joint_transform = {0};
-  joint_transform_init(&joint_transform, translation, rotation);
-  return joint_transform;
+  vec3 translation = (vec3){.data[0] = mat.vecs[3].data[0], .data[1] = mat.vecs[3].data[1], .data[2] = mat.vecs[3].data[2]};
+  quat rot = mat4_to_quaternion(mat);
+  return (struct JointTransform){.position = translation, .rotation = rot};
 }
 
 void model_get_joint_transforms(struct ModelJoint* head_joint, mat4 dest[MAX_JOINTS]) {
@@ -182,23 +179,25 @@ void model_update_uniforms(struct Model* model, struct GPUAPI* gpu_api, vec3 pos
   if (model->animated) {
     struct ModelUniformBufferObject ubom = {{{0}}};
     ubom.proj = gpu_api->vulkan_state->gbuffer->projection_matrix;
-    ubom.proj.m10 *= -1;
+    ubom.proj.vecs[1].data[1] *= -1;
     ubom.view = gpu_api->vulkan_state->gbuffer->view_matrix;
     ubom.model = MAT4_IDENTITY;
-    model->position = mat4_transform(ubom.model, model->position);
+    ubom.model = mat4_translate(ubom.model, model->position);
     ubom.camera_pos = position;
     model_get_joint_transforms(model->root_joint, ubom.joint_transforms);
+
     vkMapMemory(gpu_api->vulkan_state->device, model->uniform_buffers_memory, 0, sizeof(struct ModelUniformBufferObject), 0, &data);
     memcpy(data, &ubom, sizeof(struct ModelUniformBufferObject));
     vkUnmapMemory(gpu_api->vulkan_state->device, model->uniform_buffers_memory);
   } else {
     struct ModelStaticUniformBufferObject ubom = {{{0}}};
     ubom.proj = gpu_api->vulkan_state->gbuffer->projection_matrix;
-    ubom.proj.m10 *= -1;
+    ubom.proj.vecs[1].data[1] *= -1;
     ubom.view = gpu_api->vulkan_state->gbuffer->view_matrix;
     ubom.model = MAT4_IDENTITY;
-    model->position = mat4_transform(ubom.model, model->position);
+    ubom.model = mat4_translate(ubom.model, model->position);
     ubom.camera_pos = position;
+
     vkMapMemory(gpu_api->vulkan_state->device, model->uniform_buffers_memory, 0, sizeof(struct ModelStaticUniformBufferObject), 0, &data);
     memcpy(data, &ubom, sizeof(struct ModelStaticUniformBufferObject));
     vkUnmapMemory(gpu_api->vulkan_state->device, model->uniform_buffers_memory);

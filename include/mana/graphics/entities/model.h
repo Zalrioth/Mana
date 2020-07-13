@@ -29,19 +29,20 @@ struct JointTransform;
 struct JointTransformData;
 
 // TODO: alignas note needed?
+// Seems like alignment over 16 causes this to get snapped
 struct ModelUniformBufferObject {
-  alignas(32) mat4 model;
-  alignas(32) mat4 view;
-  alignas(32) mat4 proj;
-  alignas(32) vec3 camera_pos;
-  alignas(32) mat4 joint_transforms[MAX_JOINTS];
+  alignas(16) mat4 model;
+  alignas(16) mat4 view;
+  alignas(16) mat4 proj;
+  alignas(16) vec3 camera_pos;
+  alignas(16) mat4 joint_transforms[MAX_JOINTS];
 };
 
 struct ModelStaticUniformBufferObject {
-  alignas(32) mat4 model;
-  alignas(32) mat4 view;
-  alignas(32) mat4 proj;
-  alignas(32) vec3 camera_pos;
+  alignas(16) mat4 model;
+  alignas(16) mat4 view;
+  alignas(16) mat4 proj;
+  alignas(16) vec3 camera_pos;
 };
 
 struct ModelJoint {

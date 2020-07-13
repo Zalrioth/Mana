@@ -31,7 +31,7 @@ static inline void raw_vertex_model_init(struct RawVertexModel* raw_vertex_model
   raw_vertex_model->color_index = NO_INDEX;
   raw_vertex_model->index = index;
   raw_vertex_model->weights_data = weights_data;
-  position = raw_vertex_model->position;
+  raw_vertex_model->position = position;
   raw_vertex_model->length = vec3_magnitude(position);
   raw_vertex_model->duplicate_vertex = NULL;
 };

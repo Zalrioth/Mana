@@ -19,7 +19,7 @@ struct JointData {
 static inline void joint_data_init(struct JointData *joint_data, int index, char *name_id, mat4 bind_local_transform) {
   joint_data->index = index;
   joint_data->name_id = strdup(name_id);
-  bind_local_transform = joint_data->bind_local_transform;
+  joint_data->bind_local_transform = bind_local_transform;
   joint_data->children = malloc(sizeof(struct ArrayList));
   array_list_init(joint_data->children);
 }

@@ -37,6 +37,6 @@ float qef_solver_get_error_pos(struct QefSolver *qef_solver, vec3 pos);
 void qef_solver_reset(struct QefSolver *qef_solver);
 void qef_solver_set_ata(struct QefSolver *qef_solver);
 void qef_solver_set_atb(struct QefSolver *qef_solver);
-float qef_solver_solve(struct QefSolver *qef_solver, vec3 outx, const float svd_tol, const int svd_sweeps, const float pinv_tol);
+float qef_solver_solve(struct QefSolver *qef_solver, vec3 *outx, const float svd_tol, const int svd_sweeps, const float pinv_tol);
 
 #endif  // QEF_H

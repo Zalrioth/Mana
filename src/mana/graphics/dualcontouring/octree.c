@@ -77,7 +77,7 @@ struct OctreeNode* octree_simplify_octree(struct OctreeNode* node, float thresho
     return node;
 
   vec3 position = (vec3){.x = 0.0, .y = 0.0, .z = 0.0};
-  qef_solver_solve(&qef, position, QEF_ERROR, QEF_SWEEPS, QEF_ERROR);
+  qef_solver_solve(&qef, &position, QEF_ERROR, QEF_SWEEPS, QEF_ERROR);
   float error = qef_solver_get_error(&qef);
 
   if (error > threshold)
@@ -275,7 +275,7 @@ void octree_contour_cell_proc(struct OctreeNode* node, struct DualContouring* du
   }
 }
 
-void octree_approximate_zero_crossing_position(const vec3 p0, const vec3 p1, vec3 dest, struct DualContouring* dual_contouring) {
+vec3 octree_approximate_zero_crossing_position(const vec3 p0, const vec3 p1, struct DualContouring* dual_contouring) {
   float min_value = 100000.0f;
   float t = 0.0f;
   float current_t = 0.0f;
@@ -296,12 +296,14 @@ void octree_approximate_zero_crossing_position(const vec3 p0, const vec3 p1, vec
     current_t += increment;
   }
 
+  vec3 dest;
   dest.data[0] = p0.data[0] + ((p1.data[0] - p0.data[0]) * t);
   dest.data[1] = p0.data[1] + ((p1.data[1] - p0.data[1]) * t);
   dest.data[2] = p0.data[2] + ((p1.data[2] - p0.data[2]) * t);
+  return dest;
 }
 
-void octree_calculate_surface_normal(const vec3 p, vec3 dest, struct DualContouring* dual_contouring) {
+vec3 octree_calculate_surface_normal(const vec3 p, struct DualContouring* dual_contouring) {
   const float h = 0.001f;
   int half_size = dual_contouring->octree_size / 2;
   vec3 new_pos = (vec3){.x = p.x + half_size, .y = p.y + half_size, .z = p.z + half_size};
@@ -309,10 +311,12 @@ void octree_calculate_surface_normal(const vec3 p, vec3 dest, struct DualContour
   const float dy = dual_contouring->density_func_single(dual_contouring->noises, new_pos.data[0], new_pos.data[1] + h, new_pos.data[2]) - dual_contouring->density_func_single(dual_contouring->noises, new_pos.data[0], new_pos.data[1] - h, new_pos.data[2]);
   const float dz = dual_contouring->density_func_single(dual_contouring->noises, new_pos.data[0], new_pos.data[1], new_pos.data[2] + h) - dual_contouring->density_func_single(dual_contouring->noises, new_pos.data[0], new_pos.data[1], new_pos.data[2] - h);
 
+  vec3 dest;
   dest.data[0] = dx;
   dest.data[1] = dy;
   dest.data[2] = dz;
   dest = vec3_normalise(dest);
+  return dest;
 }
 
 struct OctreeNode* octree_construct_leaf(struct OctreeNode* leaf, struct DualContouring* dual_contouring) {
@@ -354,10 +358,8 @@ struct OctreeNode* octree_construct_leaf(struct OctreeNode* leaf, struct DualCon
 
     const vec3 p1 = (vec3){.x = leaf->min.x + CHILD_MIN_OFFSETS[c1].x, .y = leaf->min.y + CHILD_MIN_OFFSETS[c1].y, .z = leaf->min.z + CHILD_MIN_OFFSETS[c1].z};
     const vec3 p2 = (vec3){.x = leaf->min.x + CHILD_MIN_OFFSETS[c2].x, .y = leaf->min.y + CHILD_MIN_OFFSETS[c2].y, .z = leaf->min.z + CHILD_MIN_OFFSETS[c2].z};
-    vec3 p = VEC3_ZERO;
-    octree_approximate_zero_crossing_position(p1, p2, p, dual_contouring);
-    vec3 n = VEC3_ZERO;
-    octree_calculate_surface_normal(p, n, dual_contouring);
+    vec3 p = octree_approximate_zero_crossing_position(p1, p2, dual_contouring);
+    vec3 n = octree_calculate_surface_normal(p, dual_contouring);
     qef_solver_add(&qef, p.x, p.y, p.z, n.data[0], n.data[1], n.data[2]);
     average_normal.data[0] = average_normal.data[0] + n.data[0];
     average_normal.data[1] = average_normal.data[1] + n.data[1];
@@ -366,7 +368,7 @@ struct OctreeNode* octree_construct_leaf(struct OctreeNode* leaf, struct DualCon
   }
 
   vec3 qef_position = VEC3_ZERO;
-  qef_solver_solve(&qef, qef_position, QEF_ERROR, QEF_SWEEPS, QEF_ERROR);
+  qef_solver_solve(&qef, &qef_position, QEF_ERROR, QEF_SWEEPS, QEF_ERROR);
 
   struct OctreeDrawInfo* draw_info = calloc(1, sizeof(struct OctreeDrawInfo));
   octree_draw_info_init(draw_info);

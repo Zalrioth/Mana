@@ -75,9 +75,14 @@ struct Map* animator_interpolate_poses(struct KeyFrame* previous_frame, struct K
   while ((joint_name = map_next(previous_frame->pose, &iter))) {
     struct JointTransform* previous_transform = (struct JointTransform*)map_get(previous_frame->pose, joint_name);
     struct JointTransform* next_transform = (struct JointTransform*)map_get(next_frame->pose, joint_name);
-    struct JointTransform current_transform = joint_transform_interpolate(previous_transform, next_transform, progression);
-    mat4 local_transform = MAT4_IDENTITY;
-    joint_transform_get_local_transform(current_transform, &local_transform);
+    struct JointTransform current_transform = (struct JointTransform){.position = vec3_interpolate_linear(previous_transform->position, next_transform->position, progression), .rotation = quat_interpolate_linear(previous_transform->rotation, next_transform->rotation, progression)};
+    //joint_transform_interpolate(previous_transform, next_transform, progression);
+
+    mat4 local_transform = mat4_translate(MAT4_IDENTITY, current_transform.position);
+    mat4 rotation_matrix = quaternion_to_mat4(current_transform.rotation);
+    local_transform = mat4_mul(local_transform, rotation_matrix);
+
+    //joint_transform_get_local_transform(current_transform, &local_transform);
     map_set(current_pose, joint_name, &local_transform);
   }
   return current_pose;

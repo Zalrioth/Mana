@@ -39,25 +39,6 @@ struct JointTransform {
   quat rotation;
 };
 
-static inline void joint_transform_init(struct JointTransform* joint_transform, vec3 position, quat rotation) {
-  position = joint_transform->position;
-  rotation = joint_transform->rotation;
-}
-
-static inline void joint_transform_get_local_transform(struct JointTransform joint_transform, mat4* dest) {
-  joint_transform.position = mat4_transform(*dest, joint_transform.position);
-  mat4 rotation_matrix = quaternion_to_mat4(joint_transform.rotation);
-  *dest = mat4_mul(*dest, rotation_matrix);
-}
-
-static inline struct JointTransform joint_transform_interpolate(struct JointTransform* frame_a, struct JointTransform* frame_b, float progression) {
-  vec3 pos = vec3_interpolate_linear(frame_a->position, frame_b->position, progression);
-  quat rot = quat_interpolate_linear(frame_a->rotation, frame_b->rotation, progression);
-  struct JointTransform joint_transform = {0};
-  joint_transform_init(&joint_transform, pos, rot);
-  return joint_transform;
-}
-
 struct Animator {
   struct Model* entity;
   struct Animation* current_animation;

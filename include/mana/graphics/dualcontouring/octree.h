@@ -46,8 +46,8 @@ void octree_contour_process_edge(struct OctreeNode* node[4], int dir, struct Dua
 void octree_contour_edge_proc(struct OctreeNode* node[4], int dir, struct DualContouring* dual_contouring);
 void octree_contour_face_proc(struct OctreeNode* node[2], int dir, struct DualContouring* dual_contouring);
 void octree_contour_cell_proc(struct OctreeNode* node, struct DualContouring* dual_contouring);
-void octree_approximate_zero_crossing_position(const vec3 p0, const vec3 p1, vec3 dest, struct DualContouring* dual_contouring);
-void octree_calculate_surface_normal(const vec3 p, vec3 dest, struct DualContouring* dual_contouring);
+vec3 octree_approximate_zero_crossing_position(const vec3 p0, const vec3 p1, struct DualContouring* dual_contouring);
+vec3 octree_calculate_surface_normal(const vec3 p, struct DualContouring* dual_contouring);
 struct OctreeNode* octree_construct_leaf(struct OctreeNode* leaf, struct DualContouring* dual_contouring);
 struct OctreeNode* octree_construct_octree_nodes(struct OctreeNode* node, struct DualContouring* dual_contouring);
 struct OctreeNode* octree_build_octree(const ivec3 min, const int size, const float threshold, struct DualContouring* dual_contouring);

@@ -61,7 +61,7 @@ void qef_solver_init(struct QefSolver *qef_solver) {
 void qef_solver_add(struct QefSolver *qef_solver, const float px, const float py, const float pz, float nx, float ny, float nz) {
   qef_solver->has_solution = false;
   vec3 norm_xyz = (vec3){.x = nx, .y = ny, .z = nz};
-  vec3_normalise(norm_xyz);
+  norm_xyz = vec3_normalise(norm_xyz);
   nx = norm_xyz.x, ny = norm_xyz.y, nz = norm_xyz.z;
   qef_solver->data.ata_00 += nx * nx;
   qef_solver->data.ata_01 += nx * ny;
@@ -272,7 +272,7 @@ static float off(mat3 vtav) {
   return sqrt(2 * ((vtav.m00 * vtav.m00) + (vtav.m00 * vtav.m00) + (vtav.m10 * vtav.m10)));
 }
 
-float qef_solver_solve(struct QefSolver *qef_solver, vec3 outx, const float svd_tol, const int svd_sweeps, const float pinv_tol) {
+float qef_solver_solve(struct QefSolver *qef_solver, vec3 *outx, const float svd_tol, const int svd_sweeps, const float pinv_tol) {
   if (qef_solver->data.num_points == 0)
     printf("Invalid argument\n");
 
@@ -369,7 +369,7 @@ float qef_solver_solve(struct QefSolver *qef_solver, vec3 outx, const float svd_
   // Add scaled
   qef_solver->x = vec3_add(qef_solver->x, qef_solver->mass_point);
   qef_solver_set_atb(qef_solver);
-  outx = qef_solver->x;
+  *outx = qef_solver->x;
   qef_solver->has_solution = true;
 
   return result;
