@@ -124,5 +124,6 @@ void model_update_uniforms(struct Model* model, struct GPUAPI* gpu_api, vec3 pos
 struct Model* model_get_clone(struct Model* model, struct GPUAPI* gpu_api);
 void model_clone_delete(struct Model* model, struct GPUAPI* gpu_api);
 void model_render(struct Model* model, struct GPUAPI* gpu_api, float delta_time);
+void model_recreate(struct Model* model, struct GPUAPI* gpu_api);
 
 #endif  // MODEL_H

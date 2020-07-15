@@ -314,4 +314,32 @@ void model_render(struct Model* model, struct GPUAPI* gpu_api, float delta_time)
   vkCmdDrawIndexed(gpu_api->vulkan_state->gbuffer->gbuffer_command_buffer, model->model_mesh->indices->size, 1, 0, 0, 0);
 }
 
+void model_recreate(struct Model* model, struct GPUAPI* gpu_api) {
+  vkDestroyBuffer(gpu_api->vulkan_state->device, model->index_buffer, NULL);
+  vkFreeMemory(gpu_api->vulkan_state->device, model->index_buffer_memory, NULL);
+
+  vkDestroyBuffer(gpu_api->vulkan_state->device, model->vertex_buffer, NULL);
+  vkFreeMemory(gpu_api->vulkan_state->device, model->vertex_buffer_memory, NULL);
+
+  vkDestroyBuffer(gpu_api->vulkan_state->device, model->uniform_buffer, NULL);
+  vkFreeMemory(gpu_api->vulkan_state->device, model->uniform_buffers_memory, NULL);
+
+  vkDestroyBuffer(gpu_api->vulkan_state->device, model->lighting_uniform_buffer, NULL);
+  vkFreeMemory(gpu_api->vulkan_state->device, model->lighting_uniform_buffers_memory, NULL);
+
+  graphics_utils_setup_vertex_buffer(gpu_api->vulkan_state, model->model_mesh->vertices, &model->vertex_buffer, &model->vertex_buffer_memory);
+  graphics_utils_setup_index_buffer(gpu_api->vulkan_state, model->model_mesh->indices, &model->index_buffer, &model->index_buffer_memory);
+  graphics_utils_setup_uniform_buffer(gpu_api->vulkan_state, model->ubo_buffer_size, &model->uniform_buffer, &model->uniform_buffers_memory);
+  graphics_utils_setup_uniform_buffer(gpu_api->vulkan_state, sizeof(struct LightingUniformBufferObject), &model->lighting_uniform_buffer, &model->lighting_uniform_buffers_memory);
+  graphics_utils_setup_descriptor(gpu_api->vulkan_state, model->shader_handle->descriptor_set_layout, model->shader_handle->descriptor_pool, &model->descriptor_set);
+
+  VkWriteDescriptorSet dcs[3] = {0};
+
+  graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 0, &model->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(model->ubo_buffer_size, &model->uniform_buffer)});
+  graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 1, &model->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(sizeof(struct LightingUniformBufferObject), &model->lighting_uniform_buffer)});
+  graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 2, &model->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&model->model_texture->texture_image_view, &model->model_texture->texture_sampler)});
+
+  vkUpdateDescriptorSets(gpu_api->vulkan_state->device, 3, dcs, 0, NULL);
+}
+
 // TODO: Maybe get instanced/batched where specific vertex data is not needed

@@ -50,6 +50,7 @@ struct VulkanState {
   VkSampleCountFlagBits msaa_samples;
   struct QueueFamilyIndices indices;
   bool framebuffer_resized;
+  bool reset_shaders;
   struct SwapChain* swap_chain;
   struct GBuffer* gbuffer;
   struct PostProcess* post_process;

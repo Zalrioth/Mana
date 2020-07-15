@@ -21,6 +21,7 @@ struct Sprite {
   struct Mesh* image_mesh;
   struct Texture* image_texture;
 
+  struct Shader* shader;
   VkBuffer vertex_buffer;
   VkDeviceMemory vertex_buffer_memory;
   VkBuffer index_buffer;
@@ -36,5 +37,6 @@ enum {
 
 int sprite_init(struct Sprite* sprite, struct GPUAPI* gpu_api, struct Shader* shader, struct Texture* texture);
 void sprite_delete(struct Sprite* sprite, struct GPUAPI* gpu_api);
+void sprite_recreate(struct Sprite* sprite, struct GPUAPI* gpu_api);
 
 #endif  // SPRITE_H

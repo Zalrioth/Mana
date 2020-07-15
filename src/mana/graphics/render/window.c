@@ -160,6 +160,7 @@ void window_end_frame(struct Window *window) {
 
   if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || vulkan_core->framebuffer_resized) {
     vulkan_core->framebuffer_resized = false;
+    vulkan_core->reset_shaders = true;
     vulkan_renderer_recreate_swap_chain(vulkan_core, &window->engine->graphics_library, &window->width, &window->height);
   } else if (result != VK_SUCCESS)
     fprintf(stderr, "failed to present swap chain image!\n");

@@ -39,7 +39,7 @@ void vulkan_renderer_delete(struct VulkanState* vulkan_state) {
 static void vulkan_renderer_surface_cleanup(struct VulkanState* vulkan_state) {
   vkDestroySurfaceKHR(vulkan_state->instance, vulkan_state->surface, NULL);
 }
-//window->engine->graphics_library.glfw_library
+
 void vulkan_renderer_recreate_swap_chain(struct VulkanState* vulkan_state, struct GraphicsLibrary* graphics_library, int* width_handle, int* height_handle) {
   int width = 0, height = 0;
   switch (graphics_library->type) {
@@ -57,7 +57,7 @@ void vulkan_renderer_recreate_swap_chain(struct VulkanState* vulkan_state, struc
   *width_handle = width;
   *height_handle = height;
 
-  // When window is minimized will pause thread and gpu
+  // NOTE: When window is minimized will pause thread and gpu
   vkDeviceWaitIdle(vulkan_state->device);
 
   post_process_delete(vulkan_state->post_process, vulkan_state);
@@ -70,14 +70,6 @@ void vulkan_renderer_recreate_swap_chain(struct VulkanState* vulkan_state, struc
 
   blit_swap_chain_init(vulkan_state->swap_chain->blit_swap_chain, vulkan_state);
   blit_post_process_init(vulkan_state->post_process->blit_post_process, vulkan_state);
-
-  //create_swap_chain(vulkan_state, width, height);
-  //create_image_views(vulkan_state);
-  //create_render_pass(vulkan_state);
-  //create_graphics_pipeline(vulkan_state);
-  //create_depth_resources(vulkan_state);
-  //create_framebuffers(vulkan_state);
-  //create_command_buffers(vulkan_state);
 }
 
 static bool vulkan_renderer_device_can_present(struct VulkanState* vulkan_state, VkPhysicalDevice device) {
