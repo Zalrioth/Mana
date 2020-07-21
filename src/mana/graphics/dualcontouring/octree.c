@@ -121,6 +121,7 @@ struct OctreeNode* octree_simplify_octree(struct OctreeNode* node, float thresho
 }
 
 void octree_generate_vertex_indices(struct OctreeNode* node, struct DualContouring* dual_contouring) {
+  // Crashing because octree is empty I think
   if (!node)
     return;
 
@@ -195,7 +196,7 @@ void octree_contour_edge_proc(struct OctreeNode* node[4], int dir, struct DualCo
     octree_contour_process_edge(node, dir, dual_contouring);
   else {
     for (int i = 0; i < 2; i++) {
-      struct OctreeNode* edge_nodes[4];
+      struct OctreeNode* edge_nodes[4] = {NULL};
       const int c[4] = {edge_proc_edge_mask[dir][i][0], edge_proc_edge_mask[dir][i][1], edge_proc_edge_mask[dir][i][2], edge_proc_edge_mask[dir][i][3]};
 
       for (int j = 0; j < 4; j++) {
@@ -216,7 +217,7 @@ void octree_contour_face_proc(struct OctreeNode* node[2], int dir, struct DualCo
 
   if (node[0]->type == NODE_INTERNAL || node[1]->type == NODE_INTERNAL) {
     for (int i = 0; i < 4; i++) {
-      struct OctreeNode* face_nodes[2];
+      struct OctreeNode* face_nodes[2] = {NULL};
       const int c[2] = {face_proc_face_mask[dir][i][0], face_proc_face_mask[dir][i][1]};
 
       for (int j = 0; j < 2; j++) {
@@ -230,7 +231,7 @@ void octree_contour_face_proc(struct OctreeNode* node[2], int dir, struct DualCo
 
     const int orders[2][4] = {{0, 0, 1, 1}, {0, 1, 0, 1}};
     for (int i = 0; i < 4; i++) {
-      struct OctreeNode* edgeNodes[4];
+      struct OctreeNode* edgeNodes[4] = {NULL};
       const int c[4] = {face_proc_edge_mask[dir][i][1], face_proc_edge_mask[dir][i][2], face_proc_edge_mask[dir][i][3], face_proc_edge_mask[dir][i][4]};
 
       const int* order = orders[face_proc_edge_mask[dir][i][0]];
@@ -254,7 +255,7 @@ void octree_contour_cell_proc(struct OctreeNode* node, struct DualContouring* du
       octree_contour_cell_proc(node->children[i], dual_contouring);
 
     for (int i = 0; i < 12; i++) {
-      struct OctreeNode* face_nodes[2];
+      struct OctreeNode* face_nodes[2] = {NULL};
       const int c[2] = {cell_proc_face_mask[i][0], cell_proc_face_mask[i][1]};
 
       face_nodes[0] = node->children[c[0]];
@@ -264,7 +265,7 @@ void octree_contour_cell_proc(struct OctreeNode* node, struct DualContouring* du
     }
 
     for (int i = 0; i < 6; i++) {
-      struct OctreeNode* edge_nodes[4];
+      struct OctreeNode* edge_nodes[4] = {NULL};
       const int c[4] = {cell_proc_edge_mask[i][0], cell_proc_edge_mask[i][1], cell_proc_edge_mask[i][2], cell_proc_edge_mask[i][3]};
 
       for (int j = 0; j < 4; j++)
@@ -284,7 +285,6 @@ vec3 octree_approximate_zero_crossing_position(const vec3 p0, const vec3 p1, str
 
   while (current_t <= 1.0f) {
     const vec3 p = (vec3){.x = p0.data[0] + ((p1.data[0] - p0.data[0]) * current_t), .y = p0.data[1] + ((p1.data[1] - p0.data[1]) * current_t), .z = p0.data[2] + ((p1.data[2] - p0.data[2]) * current_t)};
-    //const float density = fabsf(density_func(p[0], p[1], p[2]));
     int half_size = dual_contouring->octree_size / 2;
     vec3 new_pos = (vec3){.x = p.data[0] + half_size, .y = p.data[1] + half_size, .z = p.data[2] + half_size};
     const float density = fabsf(dual_contouring->density_func_single(dual_contouring->noises, new_pos.x, new_pos.y, new_pos.z));

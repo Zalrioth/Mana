@@ -8,21 +8,21 @@ layout(binding = 0) uniform ModelStaticUniformBufferObject {
 	vec3 camera_pos;
 } ubo;
 
-layout(location = 0) in vec3 position;
-layout(location = 1) in vec3 normal;
-layout(location = 2) in vec2 tex_coord;
-layout(location = 3) in vec3 color;
+layout(location = 0) in vec3 in_position;
+layout(location = 1) in vec3 in_normal;
+layout(location = 2) in vec2 in_tex_coord;
+layout(location = 3) in vec3 in_color;
 
-layout(location = 0) out vec2 textureCoords;
-layout(location = 1) out vec3 outNormal;
-layout(location = 2) out vec3 outColor;
-layout(location = 3) out vec3 FragPos;
+layout(location = 0) out vec2 out_tex_coord;
+layout(location = 1) out vec3 out_normal;
+layout(location = 2) out vec3 out_color;
+layout(location = 3) out vec3 out_frag_pos;
 
 void main(void){
-  gl_Position = ubo.proj * ubo.view * ubo.model * vec4(position, 1.0);
-	outNormal = normal;
-	textureCoords = tex_coord;
+  gl_Position = ubo.proj * ubo.view * ubo.model * vec4(in_position, 1.0);
+	out_normal = in_normal;
+	out_tex_coord = in_tex_coord;
 
-	outColor = color;
-	FragPos = vec3(ubo.model * vec4(position, 1.0));
+	out_color = in_color;
+	out_frag_pos = vec3(ubo.model * vec4(in_position, 1.0));
 }

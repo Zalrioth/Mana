@@ -1,13 +1,14 @@
 #include "mana/graphics/entities/planet.h"
 
-void planet_init(struct Planet* planet, struct GPUAPI* gpu_api, size_t octree_size, struct Shader* shader, struct Vector* noises, float (*density_func_single)(struct Vector*, float, float, float), float* (*density_func_set)(struct Vector*, float, float, float, int, int, int)) {
+void planet_init(struct Planet* planet, struct GPUAPI* gpu_api, size_t octree_size, struct Shader* shader, vec3 position, struct Vector* noises, float (*density_func_single)(struct Vector*, float, float, float), float* (*density_func_set)(struct Vector*, float, float, float, int, int, int)) {
   planet->planet_type = ROUND_PLANET;
   planet->terrain_shader = shader;
-  dual_contouring_init(&planet->dual_contouring, gpu_api->vulkan_state, octree_size, shader, noises, density_func_single, density_func_set);
+  planet->position = position;
+  dual_contouring_init(&planet->dual_contouring, gpu_api, octree_size, shader, noises, density_func_single, density_func_set);
 }
 
 void planet_delete(struct Planet* planet, struct GPUAPI* gpu_api) {
-  dual_contouring_delete(&planet->dual_contouring, gpu_api->vulkan_state);
+  dual_contouring_delete(&planet->dual_contouring, gpu_api);
 }
 
 void planet_render(struct Planet* planet, struct GPUAPI* gpu_api) {
@@ -27,6 +28,7 @@ void planet_update_uniforms(struct Planet* planet, struct GPUAPI* gpu_api, struc
   dcubo.view = gpu_api->vulkan_state->gbuffer->view_matrix;
   dcubo.proj.m11 *= -1;
   dcubo.model = MAT4_IDENTITY;
+  dcubo.model = mat4_translate(dcubo.model, planet->position);
   dcubo.camera_pos = camera->position;
   void* terrain_data;
   vkMapMemory(gpu_api->vulkan_state->device, planet->dual_contouring.dc_uniform_buffer_memory, 0, sizeof(struct DualContouringUniformBufferObject), 0, &terrain_data);

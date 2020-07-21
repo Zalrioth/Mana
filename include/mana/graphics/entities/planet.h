@@ -19,9 +19,10 @@ struct Planet {
   enum PlanetType planet_type;
   struct DualContouring dual_contouring;
   struct Shader* terrain_shader;
+  vec3 position;
 };
 
-void planet_init(struct Planet* planet, struct GPUAPI* gpu_api, size_t octree_size, struct Shader* shader, struct Vector* noises, float (*density_func_single)(struct Vector*, float, float, float), float* (*density_func_set)(struct Vector*, float, float, float, int, int, int));
+void planet_init(struct Planet* planet, struct GPUAPI* gpu_api, size_t octree_size, struct Shader* shader, vec3 position, struct Vector* noises, float (*density_func_single)(struct Vector*, float, float, float), float* (*density_func_set)(struct Vector*, float, float, float, int, int, int));
 void planet_delete(struct Planet* planet, struct GPUAPI* gpu_api);
 void planet_render(struct Planet* planet, struct GPUAPI* gpu_api);
 void planet_update_uniforms(struct Planet* planet, struct GPUAPI* gpu_api, struct Camera* camera, vec3 light_pos);

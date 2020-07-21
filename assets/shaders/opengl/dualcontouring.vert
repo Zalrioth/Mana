@@ -8,16 +8,16 @@ layout(binding = 0) uniform DualContouringUniformBufferObject {
   vec3 camera;
 } dcubo;
 
-layout(location = 0) in vec3 inPosition;
-layout(location = 1) in vec3 inNormal;
+layout(location = 0) in vec3 in_position;
+layout(location = 1) in vec3 in_normal;
 
-layout(location = 0) out vec3 outNormal;
-layout(location = 1) out vec3 FragPos;
+layout(location = 0) out vec3 out_normal;
+layout(location = 1) out vec3 out_frag_pos;
 
 void main() {
-  gl_Position = dcubo.proj * dcubo.view * dcubo.model * vec4(inPosition, 1.0);
-  mat3 normalMatrix = transpose(inverse(mat3(dcubo.view * dcubo.model)));
-  outNormal = inNormal;
+  gl_Position = dcubo.proj * dcubo.view * dcubo.model * vec4(in_position, 1.0);
+  //mat3 normal_matrix = transpose(inverse(mat3(dcubo.view * dcubo.model)));
+  out_normal = in_normal;
 
-  FragPos = vec3(dcubo.model * vec4(inPosition, 1.0));
+  out_frag_pos = vec3(dcubo.model * vec4(in_position, 1.0));
 }

@@ -44,41 +44,17 @@ int sprite_init(struct Sprite* sprite, struct GPUAPI* gpu_api, struct Shader* sh
   graphics_utils_setup_uniform_buffer(gpu_api->vulkan_state, sizeof(struct SpriteUniformBufferObject), &sprite->uniform_buffer, &sprite->uniform_buffers_memory);
   graphics_utils_setup_descriptor(gpu_api->vulkan_state, shader->descriptor_set_layout, shader->descriptor_pool, &sprite->descriptor_set);
 
-  VkDescriptorBufferInfo buffer_info = {0};
-  buffer_info.buffer = sprite->uniform_buffer;
-  buffer_info.offset = 0;
-  buffer_info.range = sizeof(struct SpriteUniformBufferObject);
+  VkWriteDescriptorSet dcs[2] = {0};
 
-  VkDescriptorImageInfo image_info = {0};
-  image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  image_info.imageView = sprite->image_texture->texture_image_view;
-  image_info.sampler = sprite->image_texture->texture_sampler;
-
-  VkWriteDescriptorSet dcs[2];
-  memset(dcs, 0, sizeof(dcs));
-
-  dcs[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  dcs[0].dstSet = sprite->descriptor_set;
-  dcs[0].dstBinding = 0;
-  dcs[0].dstArrayElement = 0;
-  dcs[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  dcs[0].descriptorCount = 1;
-  dcs[0].pBufferInfo = &buffer_info;
-
-  dcs[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  dcs[1].dstSet = sprite->descriptor_set;
-  dcs[1].dstBinding = 1;
-  dcs[1].dstArrayElement = 0;
-  dcs[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  dcs[1].descriptorCount = 1;
-  dcs[1].pImageInfo = &image_info;
+  graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 0, &sprite->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(sizeof(struct SpriteUniformBufferObject), &sprite->uniform_buffer)});
+  graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 1, &sprite->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&sprite->image_texture->texture_image_view, &sprite->image_texture->texture_sampler)});
 
   vkUpdateDescriptorSets(gpu_api->vulkan_state->device, 2, dcs, 0, NULL);
 
   return SPRITE_SUCCESS;
 }
 
-void sprite_delete(struct Sprite* sprite, struct GPUAPI* gpu_api) {
+static inline void sprite_vulkan_cleanup(struct Sprite* sprite, struct GPUAPI* gpu_api) {
   vkDestroyBuffer(gpu_api->vulkan_state->device, sprite->index_buffer, NULL);
   vkFreeMemory(gpu_api->vulkan_state->device, sprite->index_buffer_memory, NULL);
 
@@ -87,54 +63,38 @@ void sprite_delete(struct Sprite* sprite, struct GPUAPI* gpu_api) {
 
   vkDestroyBuffer(gpu_api->vulkan_state->device, sprite->uniform_buffer, NULL);
   vkFreeMemory(gpu_api->vulkan_state->device, sprite->uniform_buffers_memory, NULL);
+}
 
+void sprite_delete(struct Sprite* sprite, struct GPUAPI* gpu_api) {
+  sprite_vulkan_cleanup(sprite, gpu_api);
   mesh_delete(sprite->image_mesh);
   free(sprite->image_mesh);
 }
 
+void sprite_render(struct Sprite* sprite, struct GPUAPI* gpu_api, float delta_time) {
+  vkCmdBindPipeline(gpu_api->vulkan_state->gbuffer->gbuffer_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, sprite->shader->graphics_pipeline);
+
+  VkBuffer vertex_buffers[] = {sprite->vertex_buffer};
+  VkDeviceSize offsets[] = {0};
+  vkCmdBindVertexBuffers(gpu_api->vulkan_state->gbuffer->gbuffer_command_buffer, 0, 1, vertex_buffers, offsets);
+  vkCmdBindIndexBuffer(gpu_api->vulkan_state->gbuffer->gbuffer_command_buffer, sprite->index_buffer, 0, VK_INDEX_TYPE_UINT32);
+  vkCmdBindDescriptorSets(gpu_api->vulkan_state->gbuffer->gbuffer_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, sprite->shader->pipeline_layout, 0, 1, &sprite->descriptor_set, 0, NULL);
+  vkCmdDrawIndexed(gpu_api->vulkan_state->gbuffer->gbuffer_command_buffer, sprite->image_mesh->indices->size, 1, 0, 0, 0);
+}
+
 void sprite_recreate(struct Sprite* sprite, struct GPUAPI* gpu_api) {
-  vkDestroyBuffer(gpu_api->vulkan_state->device, sprite->index_buffer, NULL);
-  vkFreeMemory(gpu_api->vulkan_state->device, sprite->index_buffer_memory, NULL);
-
-  vkDestroyBuffer(gpu_api->vulkan_state->device, sprite->vertex_buffer, NULL);
-  vkFreeMemory(gpu_api->vulkan_state->device, sprite->vertex_buffer_memory, NULL);
-
-  vkDestroyBuffer(gpu_api->vulkan_state->device, sprite->uniform_buffer, NULL);
-  vkFreeMemory(gpu_api->vulkan_state->device, sprite->uniform_buffers_memory, NULL);
+  sprite_vulkan_cleanup(sprite, gpu_api);
 
   graphics_utils_setup_vertex_buffer(gpu_api->vulkan_state, sprite->image_mesh->vertices, &sprite->vertex_buffer, &sprite->vertex_buffer_memory);
   graphics_utils_setup_index_buffer(gpu_api->vulkan_state, sprite->image_mesh->indices, &sprite->index_buffer, &sprite->index_buffer_memory);
   graphics_utils_setup_uniform_buffer(gpu_api->vulkan_state, sizeof(struct SpriteUniformBufferObject), &sprite->uniform_buffer, &sprite->uniform_buffers_memory);
   graphics_utils_setup_descriptor(gpu_api->vulkan_state, sprite->shader->descriptor_set_layout, sprite->shader->descriptor_pool, &sprite->descriptor_set);
 
-  VkDescriptorBufferInfo buffer_info = {0};
-  buffer_info.buffer = sprite->uniform_buffer;
-  buffer_info.offset = 0;
-  buffer_info.range = sizeof(struct SpriteUniformBufferObject);
+  VkWriteDescriptorSet dcs[2] = {0};
 
-  VkDescriptorImageInfo image_info = {0};
-  image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  image_info.imageView = sprite->image_texture->texture_image_view;
-  image_info.sampler = sprite->image_texture->texture_sampler;
+  graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 0, &sprite->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(sizeof(struct SpriteUniformBufferObject), &sprite->uniform_buffer)});
+  graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 1, &sprite->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&sprite->image_texture->texture_image_view, &sprite->image_texture->texture_sampler)});
 
-  VkWriteDescriptorSet dcs[2];
-  memset(dcs, 0, sizeof(dcs));
-
-  dcs[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  dcs[0].dstSet = sprite->descriptor_set;
-  dcs[0].dstBinding = 0;
-  dcs[0].dstArrayElement = 0;
-  dcs[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  dcs[0].descriptorCount = 1;
-  dcs[0].pBufferInfo = &buffer_info;
-
-  dcs[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  dcs[1].dstSet = sprite->descriptor_set;
-  dcs[1].dstBinding = 1;
-  dcs[1].dstArrayElement = 0;
-  dcs[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  dcs[1].descriptorCount = 1;
-  dcs[1].pImageInfo = &image_info;
-
+  vkUpdateDescriptorSets(gpu_api->vulkan_state->device, 2, dcs, 0, NULL);
   vkUpdateDescriptorSets(gpu_api->vulkan_state->device, 2, dcs, 0, NULL);
 }

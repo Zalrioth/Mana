@@ -36,6 +36,9 @@ struct Camera {
   float zoom;
   float z_near;
   float z_far;
+  bool mouse_locked;
+  quat orientation;
+  mat4 view;
 };
 
 void camera_init(struct Camera* camera);

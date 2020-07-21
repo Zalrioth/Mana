@@ -276,7 +276,7 @@ struct Model* model_get_clone(struct Model* model, struct GPUAPI* gpu_api) {
   return new_model;
 }
 
-void model_clone_delete(struct Model* model, struct GPUAPI* gpu_api) {
+static inline void model_vulkan_cleanup(struct Model* model, struct GPUAPI* gpu_api) {
   vkDestroyBuffer(gpu_api->vulkan_state->device, model->index_buffer, NULL);
   vkFreeMemory(gpu_api->vulkan_state->device, model->index_buffer_memory, NULL);
 
@@ -288,6 +288,10 @@ void model_clone_delete(struct Model* model, struct GPUAPI* gpu_api) {
 
   vkDestroyBuffer(gpu_api->vulkan_state->device, model->lighting_uniform_buffer, NULL);
   vkFreeMemory(gpu_api->vulkan_state->device, model->lighting_uniform_buffers_memory, NULL);
+}
+
+void model_clone_delete(struct Model* model, struct GPUAPI* gpu_api) {
+  model_vulkan_cleanup(model, gpu_api);
 
   // TODO: Delete uniform colors if needed
 
@@ -315,17 +319,7 @@ void model_render(struct Model* model, struct GPUAPI* gpu_api, float delta_time)
 }
 
 void model_recreate(struct Model* model, struct GPUAPI* gpu_api) {
-  vkDestroyBuffer(gpu_api->vulkan_state->device, model->index_buffer, NULL);
-  vkFreeMemory(gpu_api->vulkan_state->device, model->index_buffer_memory, NULL);
-
-  vkDestroyBuffer(gpu_api->vulkan_state->device, model->vertex_buffer, NULL);
-  vkFreeMemory(gpu_api->vulkan_state->device, model->vertex_buffer_memory, NULL);
-
-  vkDestroyBuffer(gpu_api->vulkan_state->device, model->uniform_buffer, NULL);
-  vkFreeMemory(gpu_api->vulkan_state->device, model->uniform_buffers_memory, NULL);
-
-  vkDestroyBuffer(gpu_api->vulkan_state->device, model->lighting_uniform_buffer, NULL);
-  vkFreeMemory(gpu_api->vulkan_state->device, model->lighting_uniform_buffers_memory, NULL);
+  model_vulkan_cleanup(model, gpu_api);
 
   graphics_utils_setup_vertex_buffer(gpu_api->vulkan_state, model->model_mesh->vertices, &model->vertex_buffer, &model->vertex_buffer_memory);
   graphics_utils_setup_index_buffer(gpu_api->vulkan_state, model->model_mesh->indices, &model->index_buffer, &model->index_buffer_memory);

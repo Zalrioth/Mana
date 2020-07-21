@@ -15,24 +15,24 @@ layout(binding = 1) uniform AtmosphericScatteringUniformBufferObjectSettings {
   vec2 sun_size;
 } ubos;
 
-layout(location = 0) in vec3 inPosition;
-layout(location = 1) in vec3 inNormal;
-layout(location = 2) in vec2 inTexCoord;
-layout(location = 3) in vec3 inTangent;
-layout(location = 4) in vec3 inBitTangent;
+layout(location = 0) in vec3 in_position;
+layout(location = 1) in vec3 in_normal;
+layout(location = 2) in vec2 in_tex_coord;
+layout(location = 3) in vec3 in_tangent;
+layout(location = 4) in vec3 in_bit_tangent;
 
-layout(location = 0) out vec2 outTexCoord;
-layout(location = 1) out vec3 outFragPos;
-layout(location = 2) out vec3 outNormal;
+layout(location = 0) out vec2 out_tex_coord;
+layout(location = 1) out vec3 out_frag_pos;
+layout(location = 2) out vec3 out_normal;
 
 void main() {
-  vec4 world_pos = ubo.model * vec4(inPosition, 1.0f);
-  outFragPos = world_pos.xyz;
+  vec4 world_pos = ubo.model * vec4(in_position, 1.0f);
+  out_frag_pos = world_pos.xyz;
 
   mat3 model_mat = mat3(ubo.model);
 
-  outNormal = normalize(model_mat * inNormal);
-  outTexCoord = inTexCoord;
+  out_normal = normalize(model_mat * in_normal);
+  out_tex_coord = in_tex_coord;
   
   gl_Position = ubo.proj * ubo.view * world_pos;
 }
