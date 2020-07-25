@@ -82,6 +82,22 @@ void sprite_render(struct Sprite* sprite, struct GPUAPI* gpu_api, float delta_ti
   vkCmdDrawIndexed(gpu_api->vulkan_state->gbuffer->gbuffer_command_buffer, sprite->image_mesh->indices->size, 1, 0, 0, 0);
 }
 
+void sprite_update_uniforms(struct Sprite* sprite, struct GPUAPI* gpu_api) {
+  struct SpriteUniformBufferObject ubos = {{{0}}};
+  ubos.proj = gpu_api->vulkan_state->gbuffer->projection_matrix;
+  ubos.proj.vecs[1].data[1] *= -1;
+  ubos.view = gpu_api->vulkan_state->gbuffer->view_matrix;
+
+  ubos.model = mat4_rotate(MAT4_IDENTITY, 0.0, (vec3){.data[0] = 0.0f, .data[1] = 0.0f, .data[2] = 1.0f});
+  ubos.model = mat4_translate(ubos.model, (vec3){.data[0] = 0.0f, .data[1] = 0.0f, .data[2] = 0.0f});
+
+  // TODO: Put in function
+  void* data;
+  vkMapMemory(gpu_api->vulkan_state->device, sprite->uniform_buffers_memory, 0, sizeof(struct SpriteUniformBufferObject), 0, &data);
+  memcpy(data, &ubos, sizeof(struct SpriteUniformBufferObject));
+  vkUnmapMemory(gpu_api->vulkan_state->device, sprite->uniform_buffers_memory);
+}
+
 void sprite_recreate(struct Sprite* sprite, struct GPUAPI* gpu_api) {
   sprite_vulkan_cleanup(sprite, gpu_api);
 

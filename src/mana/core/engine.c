@@ -3,7 +3,7 @@
 int engine_init(struct Engine* engine, struct EngineSettings engine_settings) {
   engine->engine_settings = engine_settings;
 
-  const char* graphics_lbrary_extensions[32] = {0};
+  const char* graphics_lbrary_extensions[MAX_GRAPHICS_LIBRARY_EXTENSIONS] = {0};
   uint32_t graphics_library_extension_count;
 
   int graphics_library_error = graphics_library_init(&engine->graphics_library, engine_settings.graphics_library_type, graphics_lbrary_extensions, &graphics_library_extension_count);
@@ -36,9 +36,6 @@ int engine_init(struct Engine* engine, struct EngineSettings engine_settings) {
 void engine_delete(struct Engine* engine) {
   gpu_api_delete(&engine->gpu_api);
   graphics_library_delete(&engine->graphics_library);
-}
-
-void render(struct Engine* engine) {
 }
 
 double engine_get_time() {

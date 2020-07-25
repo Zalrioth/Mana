@@ -10,6 +10,8 @@
 #include "mana/core/graphicslibrary.h"
 #include "mana/core/vulkancore.h"
 #include "mana/graphics/render/window.h"
+
+#define MAX_GRAPHICS_LIBRARY_EXTENSIONS 32
 #define FPS_COUNT 10
 
 enum ENGINE_STATUS {
