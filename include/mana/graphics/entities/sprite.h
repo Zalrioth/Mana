@@ -21,6 +21,9 @@ struct Sprite {
   struct Mesh* image_mesh;
   struct Texture* image_texture;
 
+  vec3 position;
+  quat rotation;
+
   struct Shader* shader;
   VkBuffer vertex_buffer;
   VkDeviceMemory vertex_buffer_memory;

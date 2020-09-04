@@ -56,9 +56,6 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-pragma-pack -Wno-unused-function -Wno-u
 
 add_subdirectory(lib/chaos buildchaos)
 
-set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
-add_subdirectory(lib/tinycthread buildtinycthread)
-
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")
 add_subdirectory(lib/mimalloc buildmimalloc)
 string(REPLACE " -w" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
@@ -73,7 +70,6 @@ target_link_libraries(mana
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/openmp/libomp.lib
         glfw
         chaos
-        tinycthread
         #mimalloc
         mimalloc-static)
 
@@ -81,12 +77,12 @@ set(includeList
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/cstorage/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/cnoise/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/cthreads/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/uber-math/include/ubermath
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/stb
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/glfw/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/VulkanSDK/1.1.101.0/Include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/Chaos/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/lib/tinycthread/source
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/mimalloc/include
         ${OpenMP_CXX_LIBRARIES})
 

@@ -4,11 +4,11 @@
 
 ## Getting Started
 
-Mana is a WIP cross platform 2D and 3D rendering engine written in C. Clang is currently the only tested compiler on all platforms. Better OSX/Linux and GCC/MSVC support will be coming up soon. <br/>
+Mana is a WIP cross platform 2D and 3D rendering engine written in C. Clang is currently the only tested compiler on all platforms. Better OSX/Linux support will be coming up soon. <br/>
 
 ### Setting Up a Project
 
-Clone the repo and download all dependencies/submodules in the lib folder. Build with CMake and you should be good to go.<br/>
+Build with CMake and you should be good to go.<br/>
 
 ### Features
 

@@ -25,11 +25,14 @@ void planet_render(struct Planet* planet, struct GPUAPI* gpu_api) {
 void planet_update_uniforms(struct Planet* planet, struct GPUAPI* gpu_api, struct Camera* camera, vec3 light_pos) {
   struct DualContouringUniformBufferObject dcubo = {{{0}}};
   dcubo.proj = gpu_api->vulkan_state->gbuffer->projection_matrix;
-  dcubo.view = gpu_api->vulkan_state->gbuffer->view_matrix;
   dcubo.proj.m11 *= -1;
-  dcubo.model = MAT4_IDENTITY;
-  dcubo.model = mat4_translate(dcubo.model, planet->position);
+
+  dcubo.view = gpu_api->vulkan_state->gbuffer->view_matrix;
+
+  dcubo.model = mat4_translate(MAT4_IDENTITY, planet->position);
+
   dcubo.camera_pos = camera->position;
+
   void* terrain_data;
   vkMapMemory(gpu_api->vulkan_state->device, planet->dual_contouring.dc_uniform_buffer_memory, 0, sizeof(struct DualContouringUniformBufferObject), 0, &terrain_data);
   memcpy(terrain_data, &dcubo, sizeof(struct DualContouringUniformBufferObject));

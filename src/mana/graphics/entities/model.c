@@ -180,10 +180,14 @@ void model_update_uniforms(struct Model* model, struct GPUAPI* gpu_api, vec3 pos
     struct ModelUniformBufferObject ubom = {{{0}}};
     ubom.proj = gpu_api->vulkan_state->gbuffer->projection_matrix;
     ubom.proj.vecs[1].data[1] *= -1;
+
     ubom.view = gpu_api->vulkan_state->gbuffer->view_matrix;
-    ubom.model = MAT4_IDENTITY;
-    ubom.model = mat4_translate(ubom.model, model->position);
+
+    ubom.model = mat4_translate(MAT4_IDENTITY, model->position);
+    ubom.model = mat4_mul(ubom.model, quaternion_to_mat4(quaternion_normalise(model->rotation)));
+
     ubom.camera_pos = position;
+
     model_get_joint_transforms(model->root_joint, ubom.joint_transforms);
 
     vkMapMemory(gpu_api->vulkan_state->device, model->uniform_buffers_memory, 0, sizeof(struct ModelUniformBufferObject), 0, &data);
@@ -193,9 +197,12 @@ void model_update_uniforms(struct Model* model, struct GPUAPI* gpu_api, vec3 pos
     struct ModelStaticUniformBufferObject ubom = {{{0}}};
     ubom.proj = gpu_api->vulkan_state->gbuffer->projection_matrix;
     ubom.proj.vecs[1].data[1] *= -1;
+
     ubom.view = gpu_api->vulkan_state->gbuffer->view_matrix;
-    ubom.model = MAT4_IDENTITY;
-    ubom.model = mat4_translate(ubom.model, model->position);
+
+    ubom.model = mat4_translate(MAT4_IDENTITY, model->position);
+    ubom.model = mat4_mul(ubom.model, quaternion_to_mat4(quaternion_normalise(model->rotation)));
+
     ubom.camera_pos = position;
 
     vkMapMemory(gpu_api->vulkan_state->device, model->uniform_buffers_memory, 0, sizeof(struct ModelStaticUniformBufferObject), 0, &data);
@@ -238,6 +245,7 @@ struct Model* model_get_clone(struct Model* model, struct GPUAPI* gpu_api) {
   *new_model = *model;
 
   new_model->position = VEC3_ZERO;
+  new_model->rotation = QUAT_DEFAULT;
 
   new_model->model_mesh = malloc(sizeof(struct Mesh));
   new_model->model_mesh->indices = malloc(sizeof(struct Vector));

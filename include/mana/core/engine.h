@@ -4,6 +4,7 @@
 
 #include "mana/core/memoryallocator.h"
 //
+#include <threads/threads.h>
 #include <time.h>
 
 #include "mana/core/gpuapi.h"

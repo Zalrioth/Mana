@@ -4,8 +4,6 @@
 
 #include "mana/core/memoryallocator.h"
 //
-#include <tinycthread.h>
-
 #include "mana/core/corecommon.h"
 #include "mana/graphics/dualcontouring/octree.h"
 #include "mana/graphics/graphicscommon.h"
