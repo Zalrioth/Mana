@@ -13,12 +13,12 @@
 [submodule "lib/chaos"]
 	path = lib/chaos
 	url = https://github.com/Zalrioth/chaos
-[submodule "lib/tinycthread"]
-	path = lib/tinycthread
-	url = https://github.com/tinycthread/tinycthread
 [submodule "lib/mimalloc"]
 	path = lib/mimalloc
 	url = https://github.com/microsoft/mimalloc
 [submodule "lib/stb"]
 	path = lib/stb
 	url = https://github.com/nothings/stb
+[submodule "lib/cthreads"]
+	path = lib/cthreads
+	url = https://github.com/Zalrioth/cthreads
