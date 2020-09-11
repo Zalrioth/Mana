@@ -92,8 +92,11 @@ struct Model {
   bool animated;
   char* path;
 
+  mat4 temp_transform;
+
   vec3 position;
   quat rotation;
+  vec3 scale;
 
   size_t ubo_buffer_size;
   VkBuffer vertex_buffer;

@@ -185,6 +185,7 @@ void model_update_uniforms(struct Model* model, struct GPUAPI* gpu_api, vec3 pos
 
     ubom.model = mat4_translate(MAT4_IDENTITY, model->position);
     ubom.model = mat4_mul(ubom.model, quaternion_to_mat4(quaternion_normalise(model->rotation)));
+    ubom.model = mat4_scale(ubom.model, model->scale);
 
     ubom.camera_pos = position;
 
@@ -202,6 +203,7 @@ void model_update_uniforms(struct Model* model, struct GPUAPI* gpu_api, vec3 pos
 
     ubom.model = mat4_translate(MAT4_IDENTITY, model->position);
     ubom.model = mat4_mul(ubom.model, quaternion_to_mat4(quaternion_normalise(model->rotation)));
+    ubom.model = mat4_scale(ubom.model, model->scale);
 
     ubom.camera_pos = position;
 
@@ -246,6 +248,7 @@ struct Model* model_get_clone(struct Model* model, struct GPUAPI* gpu_api) {
 
   new_model->position = VEC3_ZERO;
   new_model->rotation = QUAT_DEFAULT;
+  new_model->scale = VEC3_ONE;
 
   new_model->model_mesh = malloc(sizeof(struct Mesh));
   new_model->model_mesh->indices = malloc(sizeof(struct Vector));
