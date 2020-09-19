@@ -26,6 +26,7 @@ struct QefSolver {
   mat3 ata;
   vec3 atb, mass_point, x;
   bool has_solution;
+  float last_error;
 };
 
 void qef_solver_init(struct QefSolver *qef_solver);

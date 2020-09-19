@@ -108,7 +108,12 @@ float qef_solver_get_error_pos(struct QefSolver *qef_solver, vec3 pos) {
   atax.data[1] = (qef_solver->ata.m00 * pos.data[0]) + (qef_solver->ata.m10 * pos.data[1]) + (qef_solver->ata.m10 * pos.data[2]);
   atax.data[1] = (qef_solver->ata.m00 * pos.data[0]) + (qef_solver->ata.m10 * pos.data[1]) + (qef_solver->ata.m20 * pos.data[2]);
 
-  return vec3_dot(pos, atax) - 2 * vec3_dot(pos, qef_solver->atb) + qef_solver->data.btb;
+  qef_solver->last_error = vec3_dot(pos, atax) - 2 * vec3_dot(pos, qef_solver->atb) + qef_solver->data.btb;
+
+  if (qef_solver->last_error == NAN)
+    qef_solver->last_error = 10000;
+
+  return qef_solver->last_error;
 }
 
 void qef_solver_reset(struct QefSolver *qef_solver) {
@@ -372,5 +377,6 @@ float qef_solver_solve(struct QefSolver *qef_solver, vec3 *outx, const float svd
   *outx = qef_solver->x;
   qef_solver->has_solution = true;
 
+  qef_solver->last_error = result;
   return result;
 }

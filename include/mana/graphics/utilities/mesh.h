@@ -46,6 +46,13 @@ struct VertexDualContouring {
   vec3 normal;
 };
 
+struct VertexManifoldDualContouring {
+  vec3 position;
+  vec3 color;
+  vec3 normal1;
+  vec3 normal2;
+};
+
 struct Mesh {
   struct Vector* vertices;
   struct Vector* indices;
@@ -76,6 +83,11 @@ static inline void mesh_dual_contouring_init(struct Mesh* mesh);
 static inline void mesh_dual_contouring_assign_vertex(struct Vector* vector, float x, float y, float z, float r, float g, float b);
 static inline VkVertexInputBindingDescription mesh_dual_contouring_get_binding_description();
 static inline void mesh_dual_contouring_get_attribute_descriptions(VkVertexInputAttributeDescription* attribute_descriptions);
+
+static inline void mesh_manifold_dual_contouring_init(struct Mesh* mesh);
+static inline void mesh_manifold_dual_contouring_assign_vertex(struct Vector* vector, float x, float y, float z, float r, float g, float b, float nr1, float ng1, float nb1, float nr2, float ng2, float nb2);
+static inline VkVertexInputBindingDescription mesh_manifold_dual_contouring_get_binding_description();
+static inline void mesh_manifold_dual_contouring_get_attribute_descriptions(VkVertexInputAttributeDescription* attribute_descriptions);
 
 static inline void mesh_delete(struct Mesh* mesh);
 static inline void mesh_clear(struct Mesh* mesh);
@@ -355,6 +367,68 @@ static inline void mesh_dual_contouring_get_attribute_descriptions(VkVertexInput
   attribute_descriptions[1].location = 1;
   attribute_descriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
   attribute_descriptions[1].offset = offsetof(struct VertexDualContouring, normal);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+
+static inline void mesh_manifold_dual_contouring_init(struct Mesh* mesh) {
+  mesh->vertices = calloc(1, sizeof(struct Vector));
+  vector_init(mesh->vertices, sizeof(struct VertexManifoldDualContouring));
+
+  mesh->indices = calloc(1, sizeof(struct Vector));
+  vector_init(mesh->indices, sizeof(uint32_t));
+}
+
+static inline void mesh_manifold_dual_contouring_assign_vertex(struct Vector* vector, float x, float y, float z, float r, float g, float b, float nr1, float ng1, float nb1, float nr2, float ng2, float nb2) {
+  struct VertexManifoldDualContouring vertex = {{0}};
+  vertex.position.x = x;
+  vertex.position.y = y;
+  vertex.position.z = z;
+
+  vertex.color.r = r;
+  vertex.color.g = g;
+  vertex.color.b = b;
+
+  vertex.normal1.r = nr1;
+  vertex.normal1.g = ng1;
+  vertex.normal1.b = nb1;
+
+  vertex.normal2.r = nr2;
+  vertex.normal2.g = ng2;
+  vertex.normal2.b = nb2;
+
+  vector_push_back(vector, &vertex);
+}
+
+static inline VkVertexInputBindingDescription mesh_manifold_dual_contouring_get_binding_description() {
+  VkVertexInputBindingDescription binding_description = {0};
+  binding_description.binding = 0;
+  binding_description.stride = sizeof(struct VertexDualContouring);
+  binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+  return binding_description;
+}
+
+static inline void mesh_manifold_dual_contouring_get_attribute_descriptions(VkVertexInputAttributeDescription* attribute_descriptions) {
+  attribute_descriptions[0].binding = 0;
+  attribute_descriptions[0].location = 0;
+  attribute_descriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+  attribute_descriptions[0].offset = offsetof(struct VertexManifoldDualContouring, position);
+
+  attribute_descriptions[1].binding = 0;
+  attribute_descriptions[1].location = 0;
+  attribute_descriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+  attribute_descriptions[1].offset = offsetof(struct VertexManifoldDualContouring, color);
+
+  attribute_descriptions[2].binding = 0;
+  attribute_descriptions[2].location = 1;
+  attribute_descriptions[2].format = VK_FORMAT_R32G32B32_SFLOAT;
+  attribute_descriptions[2].offset = offsetof(struct VertexManifoldDualContouring, normal1);
+
+  attribute_descriptions[3].binding = 0;
+  attribute_descriptions[3].location = 1;
+  attribute_descriptions[3].format = VK_FORMAT_R32G32B32_SFLOAT;
+  attribute_descriptions[3].offset = offsetof(struct VertexManifoldDualContouring, normal2);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
