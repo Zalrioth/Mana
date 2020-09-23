@@ -4,6 +4,7 @@
 
 #include "mana/core/memoryallocator.h"
 //
+#include <cstorage/cstorage.h>
 #include <math.h>
 #include <ubermath/ubermath.h>
 
@@ -23,6 +24,7 @@ struct ManifoldDualContouring {
   int resolution;
   int octree_size;
   struct ManifoldOctreeNode* tree;
+  struct ArrayList* vertice_list;
 
   struct Shader* shader;
   struct Mesh* mesh;

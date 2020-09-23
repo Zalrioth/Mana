@@ -25,4 +25,4 @@ void shader_delete(struct Shader* shader, struct VulkanState* vulkan_renderer);
 VkShaderModule shader_create_shader_module(struct VulkanState* vulkan_renderer, const char* code, int length);
 int sprite_create_sprite_descriptor_pool(struct Shader* shader, struct VulkanState* vulkan_renderer);
 
-#endif
+#endif  // SHADER_H

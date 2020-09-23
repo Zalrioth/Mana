@@ -4,6 +4,7 @@
 
 #include "mana/core/memoryallocator.h"
 //
+#include <cstorage/cstorage.h>
 #include <ubermath/ubermath.h>
 
 #include "mana/graphics/dualcontouring/manifold/manifolddualcontouring.h"
@@ -39,7 +40,10 @@ static inline void vertex_init(struct Vertex* vertex) {
   qef_solver_init(&vertex->qef);
   vertex->normal = VEC3_ZERO;
   vertex->surface_index = -1;
+  vertex->error = 0.0f;
+  vertex->euler = 0;
   memset(vertex->eis, 0, sizeof(int) * 12);
+  vertex->face_prop2 = false;
 }
 
 //vec3 vertex_position(struct Vertex* vertex) {
@@ -54,8 +58,8 @@ struct ManifoldOctreeNode {
   int size;
   struct ManifoldOctreeNode* children[8];
   enum NodeType type;
-  struct Vector* vertices;
-  char corners;
+  struct ArrayList* vertices;
+  unsigned char corners;
   int child_index;
 };
 
@@ -68,8 +72,14 @@ static inline void octree_node_init(struct ManifoldOctreeNode* octree_node, vec3
   //octree_node->vertices = new Vertex[0];
 }
 
+//static inline float Sphere(vec3 pos) {
+//  return vec3_magnitude(pos) - 0.5f;
+//}
+
 static inline float Sphere(vec3 pos) {
-  return vec3_magnitude(pos) - 0.5f;
+  const float radius = (float)64 / 2.0f - 2.0f;
+  vec3 origin = vec3_set((64 - 2.0f) * 0.5f);
+  return vec3_square_magnitude(vec3_sub(pos, origin)) - radius * radius;
 }
 
 static inline vec3 GetIntersection(vec3 p1, vec3 p2, float d1, float d2) {
@@ -87,20 +97,20 @@ static inline vec3 GetNormal(vec3 v) {
   return vec3_normalise((vec3){.x = dxp - dxm, .y = dyp - dym, .z = dzp - dzm});
 }
 
-void manifold_octree_construct_base(struct ManifoldOctreeNode* octree_node, int size, float error, struct Vector* vertices);
+void manifold_octree_construct_base(struct ManifoldOctreeNode* octree_node, int size, float error, struct ArrayList* vertices);
 void manifold_octree_generate_vertex_buffer(struct ManifoldOctreeNode* octree_node, struct Vector* vertices);
-bool manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, struct Vector* vertices, int* n_index);
-bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* octree_node, struct Vector* vertices, int* index);
+bool manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, struct ArrayList* vertices, int* n_index);
+bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* octree_node, struct ArrayList* vertices, int* index);
 void manifold_octree_process_cell(struct ManifoldOctreeNode* octree_node, struct Vector* indexes, struct Vector* tri_count, float threshold);
 void manifold_octree_process_face(struct ManifoldOctreeNode* nodes[2], int direction, struct Vector* indexes, struct Vector* tri_count, float threshold);
 void manifold_octree_process_edge(struct ManifoldOctreeNode* nodes[4], int direction, struct Vector* indexes, struct Vector* tri_count, float threshold);
 void manifold_octree_process_indexes(struct ManifoldOctreeNode* nodes[4], int direction, struct Vector* indexes, struct Vector* tri_count, float threshold);
 void manifold_octree_cluster_cell_base(struct ManifoldOctreeNode* octree_node, float error);
 void manifold_octree_cluster_cell(struct ManifoldOctreeNode* octree_node, float error);
-void manifold_octree_gather_vertices(struct ManifoldOctreeNode* n, struct Vector* dest, int* surface_index);
-void manifold_octree_cluster_face(struct ManifoldOctreeNode* nodes[2], int direction, int* surface_index, struct Vector* collected_vertices);
-void manifold_octree_cluster_edge(struct ManifoldOctreeNode* nodes[4], int direction, int* surface_index, struct Vector* collected_vertices);
-void manifold_octree_cluster_indexes(struct ManifoldOctreeNode* nodes[8], int direction, int* max_surface_index, struct Vector* collected_vertices);
-void manifold_octree_assign_surface(struct Vector* vertices, int from, int to);
+void manifold_octree_gather_vertices(struct ManifoldOctreeNode* n, struct ArrayList* dest, int* surface_index);
+void manifold_octree_cluster_face(struct ManifoldOctreeNode* nodes[2], int direction, int* surface_index, struct ArrayList* collected_vertices);
+void manifold_octree_cluster_edge(struct ManifoldOctreeNode* nodes[4], int direction, int* surface_index, struct ArrayList* collected_vertices);
+void manifold_octree_cluster_indexes(struct ManifoldOctreeNode* nodes[8], int direction, int* max_surface_index, struct ArrayList* collected_vertices);
+void manifold_octree_assign_surface(struct ArrayList* vertices, int from, int to);
 
 #endif  // MANIFOLD_OCTREE_H

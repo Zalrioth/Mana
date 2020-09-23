@@ -416,17 +416,17 @@ static inline void mesh_manifold_dual_contouring_get_attribute_descriptions(VkVe
   attribute_descriptions[0].offset = offsetof(struct VertexManifoldDualContouring, position);
 
   attribute_descriptions[1].binding = 0;
-  attribute_descriptions[1].location = 0;
+  attribute_descriptions[1].location = 1;
   attribute_descriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
   attribute_descriptions[1].offset = offsetof(struct VertexManifoldDualContouring, color);
 
   attribute_descriptions[2].binding = 0;
-  attribute_descriptions[2].location = 1;
+  attribute_descriptions[2].location = 2;
   attribute_descriptions[2].format = VK_FORMAT_R32G32B32_SFLOAT;
   attribute_descriptions[2].offset = offsetof(struct VertexManifoldDualContouring, normal1);
 
   attribute_descriptions[3].binding = 0;
-  attribute_descriptions[3].location = 1;
+  attribute_descriptions[3].location = 3;
   attribute_descriptions[3].format = VK_FORMAT_R32G32B32_SFLOAT;
   attribute_descriptions[3].offset = offsetof(struct VertexManifoldDualContouring, normal2);
 }

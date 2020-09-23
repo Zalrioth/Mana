@@ -7,6 +7,9 @@ void manifold_dual_contouring_init(struct ManifoldDualContouring* manifold_dual_
   manifold_dual_contouring->mesh = calloc(1, sizeof(struct Mesh));
   mesh_manifold_dual_contouring_init(manifold_dual_contouring->mesh);
 
+  manifold_dual_contouring->vertice_list = calloc(1, sizeof(struct ArrayList));
+  array_list_init(manifold_dual_contouring->vertice_list);
+
   manifold_dual_contouring->octree_size = size;
   manifold_dual_contouring->resolution = resolution;
 }
@@ -15,7 +18,7 @@ void manifold_dual_contouring_contour(struct ManifoldDualContouring* manifold_du
   vector_clear(manifold_dual_contouring->mesh->vertices);
   manifold_dual_contouring->tree = calloc(1, sizeof(struct ManifoldOctreeNode));
 
-  manifold_octree_construct_base(manifold_dual_contouring->tree, 64, 0, manifold_dual_contouring->mesh->vertices);
+  manifold_octree_construct_base(manifold_dual_contouring->tree, 64, 0, manifold_dual_contouring->vertice_list);
   manifold_octree_cluster_cell_base(manifold_dual_contouring->tree, 0);
 
   manifold_octree_generate_vertex_buffer(manifold_dual_contouring->tree, manifold_dual_contouring->mesh->vertices);
@@ -49,7 +52,7 @@ void manifold_dual_contouring_construct_tree_grid(struct ManifoldOctreeNode* nod
 
   float size = node->size;
 
-  if (node->type == MANIFOLD_NODE_INTERNAL && vector_size(node->vertices) == 0) {
+  if (node->type == MANIFOLD_NODE_INTERNAL && array_list_size(node->vertices) == 0) {
     for (int i = 0; i < 8; i++) {
       manifold_dual_contouring_construct_tree_grid(node->children[i]);
     }
@@ -62,6 +65,12 @@ void manifold_dual_contouring_calculate_indexes(struct ManifoldDualContouring* m
   vector_init(&tri_count, sizeof(int));
 
   manifold_octree_process_cell(manifold_dual_contouring->tree, manifold_dual_contouring->mesh->indices, &tri_count, threshold);
+
+  /*if (vector_size(manifold_dual_contouring->mesh->indices) == 0)
+    return;*/
+
+  struct Vector* new_vertices = calloc(1, sizeof(struct Vector));
+  vector_init(new_vertices, sizeof(struct VertexManifoldDualContouring));
 
   int t_index = 0;
   for (int i = 0; i < vector_size(manifold_dual_contouring->mesh->indices); i += 3) {
@@ -98,22 +107,24 @@ void manifold_dual_contouring_calculate_indexes(struct ManifoldDualContouring* m
     struct VertexManifoldDualContouring v1 = (struct VertexManifoldDualContouring){vertex_stuff[1]->position, c, n, vertex_stuff[1]->normal1};
     struct VertexManifoldDualContouring v2 = (struct VertexManifoldDualContouring){vertex_stuff[2]->position, c, n, vertex_stuff[2]->normal1};
 
-    vector_push_back(manifold_dual_contouring->mesh->vertices, &v0);
-    vector_push_back(manifold_dual_contouring->mesh->vertices, &v1);
-    vector_push_back(manifold_dual_contouring->mesh->vertices, &v2);
+    vector_push_back(new_vertices, &v0);
+    vector_push_back(new_vertices, &v1);
+    vector_push_back(new_vertices, &v2);
 
     if (count > 1) {
       struct VertexManifoldDualContouring v3 = (struct VertexManifoldDualContouring){vertex_stuff[3]->position, c, n, vertex_stuff[3]->normal1};
       struct VertexManifoldDualContouring v4 = (struct VertexManifoldDualContouring){vertex_stuff[4]->position, c, n, vertex_stuff[4]->normal1};
       struct VertexManifoldDualContouring v5 = (struct VertexManifoldDualContouring){vertex_stuff[5]->position, c, n, vertex_stuff[5]->normal1};
 
-      vector_push_back(manifold_dual_contouring->mesh->vertices, &v3);
-      vector_push_back(manifold_dual_contouring->mesh->vertices, &v4);
-      vector_push_back(manifold_dual_contouring->mesh->vertices, &v5);
+      vector_push_back(new_vertices, &v3);
+      vector_push_back(new_vertices, &v4);
+      vector_push_back(new_vertices, &v5);
 
       i += 3;
     }
   }
+  if (vector_size(new_vertices) > 0)
+    manifold_dual_contouring->mesh->vertices = new_vertices;
 }
 
 vec3 manifold_dual_contouring_get_normal_q(struct Vector* verts, int indexes[6], int index_length) {
