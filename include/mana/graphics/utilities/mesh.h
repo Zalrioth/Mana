@@ -91,6 +91,8 @@ static inline void mesh_manifold_dual_contouring_get_attribute_descriptions(VkVe
 
 static inline void mesh_delete(struct Mesh* mesh);
 static inline void mesh_clear(struct Mesh* mesh);
+static inline void mesh_clear_vertices(struct Mesh* mesh);
+static inline void mesh_clear_indices(struct Mesh* mesh);
 static inline void mesh_assign_indice(struct Vector* vector, uint32_t indice);
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -403,7 +405,7 @@ static inline void mesh_manifold_dual_contouring_assign_vertex(struct Vector* ve
 static inline VkVertexInputBindingDescription mesh_manifold_dual_contouring_get_binding_description() {
   VkVertexInputBindingDescription binding_description = {0};
   binding_description.binding = 0;
-  binding_description.stride = sizeof(struct VertexDualContouring);
+  binding_description.stride = sizeof(struct VertexManifoldDualContouring);
   binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
   return binding_description;
@@ -443,6 +445,14 @@ static inline void mesh_delete(struct Mesh* mesh) {
 
 static inline void mesh_clear(struct Mesh* mesh) {
   vector_clear(mesh->vertices);
+  vector_clear(mesh->indices);
+}
+
+static inline void mesh_clear_vertices(struct Mesh* mesh) {
+  vector_clear(mesh->vertices);
+}
+
+static inline void mesh_clear_indices(struct Mesh* mesh) {
   vector_clear(mesh->indices);
 }
 

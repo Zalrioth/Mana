@@ -25,12 +25,17 @@ void manifold_octree_generate_vertex_buffer(struct ManifoldOctreeNode* octree_no
   if (vertices == NULL || octree_node->vertices == NULL || array_list_size(octree_node->vertices) == 0)
     return;
 
+  static int counter = 0;
+  counter++;
+  if (counter == 20000)
+    asm("nop");
+
   for (int i = 0; i < array_list_size(octree_node->vertices); i++) {
     struct Vertex* ver = (struct Vertex*)array_list_get(octree_node->vertices, i);
     if (ver == NULL)
       continue;
     ver->index = vector_size(vertices);
-    vec3 nc = vec3_normalise(vec3_add(vec3_scale(ver->normal, 0.5f), vec3_scale(VEC3_ONE, 0.5f)));
+    vec3 nc = vec3_old_skool_normalise(vec3_add(vec3_scale(ver->normal, 0.5f), vec3_scale(VEC3_ONE, 0.5f)));
     vec3 solved_x = VEC3_ZERO;
     qef_solver_solve(&ver->qef, &solved_x, 1e-6f, 4, 1e-6f);
     //struct VertexManifoldDualContouring* new_ver = calloc(1, sizeof(struct VertexManifoldDualContouring));
@@ -153,12 +158,13 @@ bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* octree_node, stru
       vec3 intersection = GetIntersection(a, b, samples[TEdgePairs[v_edges[i][k]][0]], samples[TEdgePairs[v_edges[i][k]][1]]);
       vec3 n = GetNormal(intersection);
       normal = vec3_add(normal, n);
-      qef_solver_add(&get_vertice->qef, intersection.x, intersection.y, intersection.z, normal.x, normal.y, normal.z);
+      qef_solver_add_simp(&get_vertice->qef, intersection, n);
       k++;
     }
 
-    normal = vec3_normalise(vec3_divs(normal, (float)k));
-    get_vertice->index = array_list_size(octree_node->vertices);
+    normal = vec3_old_skool_divs(normal, k);
+    normal = vec3_old_skool_normalise(normal);
+    get_vertice->index = array_list_size(vertices);
     get_vertice->parent = NULL;
     get_vertice->collapsible = true;
     get_vertice->normal = normal;
@@ -310,14 +316,14 @@ void manifold_octree_process_indexes(struct ManifoldOctreeNode* nodes[4], int di
     struct Vertex* v = (struct Vertex*)array_list_get(nodes[i]->vertices, index);
     struct Vertex* highest = v;
     while (highest->parent != NULL) {
-      if ((highest->parent->error <= threshold && (!true || (highest->parent->euler == 1 && highest->parent->face_prop2))))
-        highest = v = highest->parent;
-      else
-        highest = highest->parent;
-      //if (highest->parent->error <= threshold && (highest->parent->euler == 1 && highest->parent->face_prop2))
+      //if ((highest->parent->error <= threshold && (!true || (highest->parent->euler == 1 && highest->parent->face_prop2))))
       //  highest = v = highest->parent;
       //else
       //  highest = highest->parent;
+      if (highest->parent->error <= threshold && (highest->parent->euler == 1 && highest->parent->face_prop2))
+        highest = v = highest->parent;
+      else
+        highest = highest->parent;
     }
 
     indices[i] = v->index;
@@ -499,7 +505,8 @@ void manifold_octree_cluster_cell(struct ManifoldOctreeNode* octree_node, float 
 
       struct Vertex* new_vertex = calloc(1, sizeof(struct Vertex));
       vertex_init(new_vertex);
-      normal = vec3_normalise(vec3_divs(normal, (float)count));
+      normal = vec3_old_skool_divs(normal, count);
+      normal = vec3_old_skool_normalise(normal);
       new_vertex->normal = normal;
       new_vertex->qef = qef;
       memcpy(new_vertex->eis, edges, sizeof(int) * 12);

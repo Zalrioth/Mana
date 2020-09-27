@@ -4,10 +4,6 @@ void qef_data_init(struct QefData *qef_data) {
   qef_data_clear(qef_data);
 }
 
-void qef_data_init_full(struct QefData *qef_data, const float ata_00, const float ata_01, const float ata_02, const float ata_11, const float ata_12, const float ata_22, const float atb_x, const float atb_y, const float atb_z, const float btb, const float massPoint_x, const float massPoint_y, const float massPoint_z, const int numPoints) {
-  qef_data_set(qef_data, ata_00, ata_01, ata_02, ata_11, ata_12, ata_22, atb_x, atb_y, atb_z, btb, massPoint_x, massPoint_y, massPoint_z, numPoints);
-}
-
 void qef_data_init_copy(struct QefData *qef_data, struct QefData *rhs) {
   qef_data_set_copy(qef_data, rhs);
 }
@@ -61,7 +57,7 @@ void qef_solver_init(struct QefSolver *qef_solver) {
 void qef_solver_add(struct QefSolver *qef_solver, const float px, const float py, const float pz, float nx, float ny, float nz) {
   qef_solver->has_solution = false;
   vec3 norm_xyz = (vec3){.x = nx, .y = ny, .z = nz};
-  norm_xyz = vec3_normalise(norm_xyz);
+  norm_xyz = vec3_old_skool_normalise(norm_xyz);
   nx = norm_xyz.x, ny = norm_xyz.y, nz = norm_xyz.z;
   qef_solver->data.ata_00 += nx * nx;
   qef_solver->data.ata_01 += nx * ny;
@@ -80,13 +76,52 @@ void qef_solver_add(struct QefSolver *qef_solver, const float px, const float py
   ++qef_solver->data.num_points;
 }
 
+void qef_solver_add_simp(struct QefSolver *qef_solver, vec3 p, vec3 n) {
+  qef_solver->has_solution = false;
+  // XNA normal
+  //float ls = n.x * n.x + n.y * n.y + n.z * n.z;
+  //float length = (float)sqrt(ls);
+  //n = (vec3){.x = n.x / length, .y = n.y / length, .z = n.z / length};
+  //
+  n = vec3_old_skool_normalise(n);
+  qef_solver->data.ata_00 += n.x * n.x;
+  qef_solver->data.ata_01 += n.x * n.y;
+  qef_solver->data.ata_02 += n.x * n.z;
+  qef_solver->data.ata_11 += n.y * n.y;
+  qef_solver->data.ata_12 += n.y * n.z;
+  qef_solver->data.ata_22 += n.z * n.z;
+  const float dot = n.x * p.x + n.y * p.y + n.z * p.z;
+  qef_solver->data.atb_x += dot * n.x;
+  qef_solver->data.atb_y += dot * n.y;
+  qef_solver->data.atb_z += dot * n.z;
+  qef_solver->data.btb += dot * dot;
+  qef_solver->data.mass_point_x += p.x;
+  qef_solver->data.mass_point_y += p.y;
+  qef_solver->data.mass_point_z += p.z;
+  ++qef_solver->data.num_points;
+}
+
 void qef_solver_add_vec3(struct QefSolver *qef_solver, const vec3 p, const vec3 n) {
   qef_solver_add(qef_solver, p.data[0], p.data[1], p.data[2], n.data[0], n.data[1], n.data[2]);
 }
 
 void qef_solver_add_copy(struct QefSolver *qef_solver, struct QefData *rhs) {
   qef_solver->has_solution = false;
-  qef_data_add(&qef_solver->data, rhs);
+  qef_solver->data.ata_00 += rhs->ata_00;
+  qef_solver->data.ata_01 += rhs->ata_01;
+  qef_solver->data.ata_02 += rhs->ata_02;
+  qef_solver->data.ata_11 += rhs->ata_11;
+  qef_solver->data.ata_12 += rhs->ata_12;
+  qef_solver->data.ata_22 += rhs->ata_22;
+  qef_solver->data.atb_x += rhs->atb_x;
+  qef_solver->data.atb_y += rhs->atb_y;
+  qef_solver->data.atb_z += rhs->atb_z;
+  qef_solver->data.btb += rhs->btb;
+  qef_solver->data.mass_point_x += rhs->mass_point_x;
+  qef_solver->data.mass_point_y += rhs->mass_point_y;
+  qef_solver->data.mass_point_z += rhs->mass_point_z;
+  qef_solver->data.num_points += rhs->num_points;
+  //qef_data_add(&qef_solver->data, rhs);
 }
 
 float qef_solver_get_error(struct QefSolver *qef_solver) {

@@ -79,7 +79,7 @@ static inline void octree_node_init(struct ManifoldOctreeNode* octree_node, vec3
 static inline float Sphere(vec3 pos) {
   const float radius = (float)64 / 2.0f - 2.0f;
   vec3 origin = vec3_set((64 - 2.0f) * 0.5f);
-  return vec3_square_magnitude(vec3_sub(pos, origin)) - radius * radius;
+  return -vec3_square_magnitude(vec3_sub(pos, origin)) + radius * radius;
 }
 
 static inline vec3 GetIntersection(vec3 p1, vec3 p2, float d1, float d2) {
@@ -94,7 +94,9 @@ static inline vec3 GetNormal(vec3 v) {
   float dym = Sphere((vec3){.x = v.x, .y = v.y - h, .z = v.z});
   float dzp = Sphere((vec3){.x = v.x, .y = v.y, .z = v.z + h});
   float dzm = Sphere((vec3){.x = v.x, .y = v.y, .z = v.z - h});
-  return vec3_normalise((vec3){.x = dxp - dxm, .y = dyp - dym, .z = dzp - dzm});
+  vec3 gradient = (vec3){.x = dxp - dxm, .y = dyp - dym, .z = dzp - dzm};
+  gradient = vec3_old_skool_normalise(gradient);
+  return gradient;
 }
 
 void manifold_octree_construct_base(struct ManifoldOctreeNode* octree_node, int size, float error, struct ArrayList* vertices);

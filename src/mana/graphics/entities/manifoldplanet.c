@@ -13,6 +13,9 @@ void manifold_planet_delete(struct ManifoldPlanet* planet, struct GPUAPI* gpu_ap
 }
 
 void manifold_planet_render(struct ManifoldPlanet* planet, struct GPUAPI* gpu_api) {
+  if (vector_size(planet->manifold_dual_contouring.mesh->vertices) == 0)
+    return;
+
   vkCmdBindPipeline(gpu_api->vulkan_state->gbuffer->gbuffer_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, planet->terrain_shader->graphics_pipeline);
   VkBuffer vertex_buffers[] = {planet->manifold_dual_contouring.vertex_buffer};
   VkDeviceSize offsets[] = {0};
@@ -24,6 +27,9 @@ void manifold_planet_render(struct ManifoldPlanet* planet, struct GPUAPI* gpu_ap
 
 // TODO: Pass lights and sun position?
 void manifold_planet_update_uniforms(struct ManifoldPlanet* planet, struct GPUAPI* gpu_api, struct Camera* camera, vec3 light_pos) {
+  if (vector_size(planet->manifold_dual_contouring.mesh->vertices) == 0)
+    return;
+
   struct ManifoldDualContouringUniformBufferObject dcubo = {{{0}}};
   dcubo.proj = gpu_api->vulkan_state->gbuffer->projection_matrix;
   dcubo.proj.m11 *= -1;

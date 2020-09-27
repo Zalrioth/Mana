@@ -66,14 +66,17 @@ void manifold_dual_contouring_calculate_indexes(struct ManifoldDualContouring* m
 
   manifold_octree_process_cell(manifold_dual_contouring->tree, manifold_dual_contouring->mesh->indices, &tri_count, threshold);
 
+  // Note: The following is not needed for flat shading testing
   /*if (vector_size(manifold_dual_contouring->mesh->indices) == 0)
     return;*/
 
-  struct Vector* new_vertices = calloc(1, sizeof(struct Vector));
+  /*struct Vector* new_vertices = calloc(1, sizeof(struct Vector));
   vector_init(new_vertices, sizeof(struct VertexManifoldDualContouring));
 
   int t_index = 0;
   for (int i = 0; i < vector_size(manifold_dual_contouring->mesh->indices); i += 3) {
+    if (i > 80000)
+      asm("nop");
     int count = *((int*)vector_get(&tri_count, t_index++));
     vec3 n = VEC3_ZERO;
     int indexes_raw[6] = {*((int*)vector_get(manifold_dual_contouring->mesh->indices, i + 0)) & 0xFFFFFFF,
@@ -93,7 +96,7 @@ void manifold_dual_contouring_calculate_indexes(struct ManifoldDualContouring* m
       n = manifold_dual_contouring_get_normal_q(manifold_dual_contouring->mesh->vertices, indexes, size);
     }
     vec3 nc = vec3_add(vec3_scale(n, 0.5f), vec3_scale(VEC3_ONE, 0.5f));
-    nc = vec3_normalise(nc);
+    nc = vec3_old_skool_normalise(nc);
     vec3 c = nc;
 
     struct VertexManifoldDualContouring* vertex_stuff[6] = {(struct VertexManifoldDualContouring*)vector_get(manifold_dual_contouring->mesh->vertices, indexes_raw[0]),
@@ -107,24 +110,26 @@ void manifold_dual_contouring_calculate_indexes(struct ManifoldDualContouring* m
     struct VertexManifoldDualContouring v1 = (struct VertexManifoldDualContouring){vertex_stuff[1]->position, c, n, vertex_stuff[1]->normal1};
     struct VertexManifoldDualContouring v2 = (struct VertexManifoldDualContouring){vertex_stuff[2]->position, c, n, vertex_stuff[2]->normal1};
 
-    vector_push_back(new_vertices, &v0);
-    vector_push_back(new_vertices, &v1);
-    vector_push_back(new_vertices, &v2);
+    mesh_manifold_dual_contouring_assign_vertex(new_vertices, v0.position.x, v0.position.y, v0.position.z, v0.color.r, v0.color.g, v0.color.b, v0.normal1.r, v0.normal1.g, v0.normal1.b, v0.normal1.r, v0.normal1.g, v0.normal1.b);
+    mesh_manifold_dual_contouring_assign_vertex(new_vertices, v1.position.x, v1.position.y, v1.position.z, v1.color.r, v1.color.g, v1.color.b, v1.normal1.r, v1.normal1.g, v1.normal1.b, v1.normal1.r, v1.normal1.g, v1.normal1.b);
+    mesh_manifold_dual_contouring_assign_vertex(new_vertices, v2.position.x, v2.position.y, v2.position.z, v2.color.r, v2.color.g, v2.color.b, v2.normal1.r, v2.normal1.g, v2.normal1.b, v2.normal1.r, v2.normal1.g, v2.normal1.b);
 
     if (count > 1) {
       struct VertexManifoldDualContouring v3 = (struct VertexManifoldDualContouring){vertex_stuff[3]->position, c, n, vertex_stuff[3]->normal1};
       struct VertexManifoldDualContouring v4 = (struct VertexManifoldDualContouring){vertex_stuff[4]->position, c, n, vertex_stuff[4]->normal1};
       struct VertexManifoldDualContouring v5 = (struct VertexManifoldDualContouring){vertex_stuff[5]->position, c, n, vertex_stuff[5]->normal1};
 
-      vector_push_back(new_vertices, &v3);
-      vector_push_back(new_vertices, &v4);
-      vector_push_back(new_vertices, &v5);
+      mesh_manifold_dual_contouring_assign_vertex(new_vertices, v3.position.x, v3.position.y, v3.position.z, v3.color.r, v3.color.g, v3.color.b, v3.normal1.r, v3.normal1.g, v3.normal1.b, v3.normal1.r, v3.normal1.g, v3.normal1.b);
+      mesh_manifold_dual_contouring_assign_vertex(new_vertices, v4.position.x, v4.position.y, v4.position.z, v4.color.r, v4.color.g, v4.color.b, v4.normal1.r, v4.normal1.g, v4.normal1.b, v4.normal1.r, v4.normal1.g, v4.normal1.b);
+      mesh_manifold_dual_contouring_assign_vertex(new_vertices, v5.position.x, v5.position.y, v5.position.z, v5.color.r, v5.color.g, v5.color.b, v5.normal1.r, v5.normal1.g, v5.normal1.b, v5.normal1.r, v5.normal1.g, v5.normal1.b);
 
       i += 3;
     }
   }
-  if (vector_size(new_vertices) > 0)
+  if (vector_size(new_vertices) > 0) {
+    mesh_clear_vertices(manifold_dual_contouring->mesh);
     manifold_dual_contouring->mesh->vertices = new_vertices;
+  }*/
 }
 
 vec3 manifold_dual_contouring_get_normal_q(struct Vector* verts, int indexes[6], int index_length) {
@@ -143,10 +148,10 @@ vec3 manifold_dual_contouring_get_normal_q(struct Vector* verts, int indexes[6],
       d = VEC3_ZERO;
 
     c = vec3_add(c, d);
-    c = vec3_divs(c, 2.0f);
+    c = vec3_old_skool_divs(c, 2.0f);
   }
 
-  c = vec3_normalise(c);
+  c = vec3_old_skool_normalise(c);
 
   return vec3_invert(c);
 }
