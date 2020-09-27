@@ -8,6 +8,7 @@
 #include <math.h>
 #include <ubermath/ubermath.h>
 
+#include "mana/core/engine.h"
 #include "mana/graphics/dualcontouring/manifold/manifoldoctree.h"
 #include "mana/graphics/dualcontouring/manifold/manifoldtables.h"
 #include "mana/graphics/dualcontouring/qef.h"
@@ -40,6 +41,8 @@ struct ManifoldDualContouring {
 };
 
 void manifold_dual_contouring_init(struct ManifoldDualContouring* manifold_dual_contouring, struct GPUAPI* gpu_api, struct Shader* shader, int resolution, int size);
+void manifold_dual_contouring_delete(struct ManifoldDualContouring* manifold_dual_contouring, struct GPUAPI* gpu_api);
+void manifold_dual_contouring_recreate(struct ManifoldDualContouring* manifold_dual_contouring, struct GPUAPI* gpu_api);
 void manifold_dual_contouring_contour(struct ManifoldDualContouring* manifold_dual_contouring, struct GPUAPI* gpu_api, float threshold);
 void manifold_dual_contouring_construct_tree_grid(struct ManifoldOctreeNode* node);
 void manifold_dual_contouring_calculate_indexes(struct ManifoldDualContouring* manifold_dual_contouring, float threshold);

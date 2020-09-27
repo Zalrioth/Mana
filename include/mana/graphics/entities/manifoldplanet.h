@@ -4,6 +4,7 @@
 
 #include "mana/core/memoryallocator.h"
 //
+#include <cnoise/cnoise.h>
 #include <mana/core/gpuapi.h>
 
 #include "mana/graphics/dualcontouring/manifold/manifolddualcontouring.h"

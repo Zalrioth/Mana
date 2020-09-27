@@ -14,11 +14,71 @@ void manifold_dual_contouring_init(struct ManifoldDualContouring* manifold_dual_
   manifold_dual_contouring->resolution = resolution;
 }
 
+static inline void manifold_dual_contouring_vulkan_cleanup(struct ManifoldDualContouring* manifold_dual_contouring, struct GPUAPI* gpu_api) {
+  vkDestroyBuffer(gpu_api->vulkan_state->device, manifold_dual_contouring->index_buffer, NULL);
+  vkFreeMemory(gpu_api->vulkan_state->device, manifold_dual_contouring->index_buffer_memory, NULL);
+
+  vkDestroyBuffer(gpu_api->vulkan_state->device, manifold_dual_contouring->vertex_buffer, NULL);
+  vkFreeMemory(gpu_api->vulkan_state->device, manifold_dual_contouring->vertex_buffer_memory, NULL);
+
+  vkDestroyBuffer(gpu_api->vulkan_state->device, manifold_dual_contouring->lighting_uniform_buffer, NULL);
+  vkFreeMemory(gpu_api->vulkan_state->device, manifold_dual_contouring->lighting_uniform_buffer_memory, NULL);
+
+  vkDestroyBuffer(gpu_api->vulkan_state->device, manifold_dual_contouring->dc_uniform_buffer, NULL);
+  vkFreeMemory(gpu_api->vulkan_state->device, manifold_dual_contouring->dc_uniform_buffer_memory, NULL);
+}
+
+void manifold_dual_contouring_delete(struct ManifoldDualContouring* manifold_dual_contouring, struct GPUAPI* gpu_api) {
+  manifold_dual_contouring_vulkan_cleanup(manifold_dual_contouring, gpu_api);
+
+  //if (manifold_dual_contouring->vertice_list) {
+  //  for (int vertice_num = 0; vertice_num < array_list_size(manifold_dual_contouring->vertice_list); vertice_num++) {
+  //    struct Vertex* vertex = (struct Vertex*)array_list_get(manifold_dual_contouring->vertice_list, vertice_num);
+  //    if (vertex == NULL)
+  //      continue;
+  //    free(vertex);
+  //  }
+  //  array_list_delete(manifold_dual_contouring->vertice_list);
+  //  free(manifold_dual_contouring->vertice_list);
+  //}
+  struct ArrayList collected_vertices = {0};
+  array_list_init(&collected_vertices);
+  manifold_octree_destroy_octree(manifold_dual_contouring->tree, &collected_vertices);
+
+  for (int vertice_num = 0; vertice_num < array_list_size(&collected_vertices); vertice_num++) {
+    struct Vertex* vertex = (struct Vertex*)array_list_get(&collected_vertices, vertice_num);
+    free(vertex);
+  }
+  mesh_delete(manifold_dual_contouring->mesh);
+  free(manifold_dual_contouring->mesh);
+  //noise_free(manifold_dual_contouring->noise_set);
+}
+
+void manifold_dual_contouring_recreate(struct ManifoldDualContouring* manifold_dual_contouring, struct GPUAPI* gpu_api) {
+  manifold_dual_contouring_vulkan_cleanup(manifold_dual_contouring, gpu_api);
+
+  graphics_utils_setup_vertex_buffer(gpu_api->vulkan_state, manifold_dual_contouring->mesh->vertices, &manifold_dual_contouring->vertex_buffer, &manifold_dual_contouring->vertex_buffer_memory);
+  graphics_utils_setup_index_buffer(gpu_api->vulkan_state, manifold_dual_contouring->mesh->indices, &manifold_dual_contouring->index_buffer, &manifold_dual_contouring->index_buffer_memory);
+  graphics_utils_setup_uniform_buffer(gpu_api->vulkan_state, sizeof(struct ManifoldDualContouringUniformBufferObject), &manifold_dual_contouring->dc_uniform_buffer, &manifold_dual_contouring->dc_uniform_buffer_memory);
+  graphics_utils_setup_uniform_buffer(gpu_api->vulkan_state, sizeof(struct LightingUniformBufferObject), &manifold_dual_contouring->lighting_uniform_buffer, &manifold_dual_contouring->lighting_uniform_buffer_memory);
+  graphics_utils_setup_descriptor(gpu_api->vulkan_state, manifold_dual_contouring->shader->descriptor_set_layout, manifold_dual_contouring->shader->descriptor_pool, &manifold_dual_contouring->descriptor_set);
+
+  VkWriteDescriptorSet dcs[2] = {0};
+
+  graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 0, &manifold_dual_contouring->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(sizeof(struct ManifoldDualContouringUniformBufferObject), &manifold_dual_contouring->dc_uniform_buffer)});
+  graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 1, &manifold_dual_contouring->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(sizeof(struct LightingUniformBufferObject), &manifold_dual_contouring->lighting_uniform_buffer)});
+
+  vkUpdateDescriptorSets(gpu_api->vulkan_state->device, 2, dcs, 0, NULL);
+}
+
 void manifold_dual_contouring_contour(struct ManifoldDualContouring* manifold_dual_contouring, struct GPUAPI* gpu_api, float threshold) {
-  vector_clear(manifold_dual_contouring->mesh->vertices);
+  mesh_clear(manifold_dual_contouring->mesh);
   manifold_dual_contouring->tree = calloc(1, sizeof(struct ManifoldOctreeNode));
 
+  double start_time = engine_get_time();
   manifold_octree_construct_base(manifold_dual_contouring->tree, 64, 0, manifold_dual_contouring->vertice_list);
+  double end_time = engine_get_time();
+  printf("Total time taken: %lf\n", end_time - start_time);
   manifold_octree_cluster_cell_base(manifold_dual_contouring->tree, 0);
 
   manifold_octree_generate_vertex_buffer(manifold_dual_contouring->tree, manifold_dual_contouring->mesh->vertices);
@@ -61,10 +121,11 @@ void manifold_dual_contouring_construct_tree_grid(struct ManifoldOctreeNode* nod
 
 void manifold_dual_contouring_calculate_indexes(struct ManifoldDualContouring* manifold_dual_contouring, float threshold) {
   //vector_clear(manifold_dual_contouring->mesh->indices);
-  struct Vector tri_count;
-  vector_init(&tri_count, sizeof(int));
+  //struct Vector tri_count;
+  //vector_init(&tri_count, sizeof(int));
 
-  manifold_octree_process_cell(manifold_dual_contouring->tree, manifold_dual_contouring->mesh->indices, &tri_count, threshold);
+  //manifold_octree_process_cell(manifold_dual_contouring->tree, manifold_dual_contouring->mesh->indices, &tri_count, threshold);
+  manifold_octree_process_cell(manifold_dual_contouring->tree, manifold_dual_contouring->mesh->indices, threshold);
 
   // Note: The following is not needed for flat shading testing
   /*if (vector_size(manifold_dual_contouring->mesh->indices) == 0)

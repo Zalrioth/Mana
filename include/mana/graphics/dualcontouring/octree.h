@@ -40,6 +40,7 @@ struct OctreeNode {
 
 void octree_init(struct OctreeNode* octree_node, enum OctreeNodeType type);
 void octree_init_none(struct OctreeNode* octree_node);
+void octree_destroy_octree(struct OctreeNode* node);
 struct OctreeNode* octree_simplify_octree(struct OctreeNode* node, float threshold);
 void octree_generate_vertex_indices(struct OctreeNode* node, struct DualContouring* dual_contouring);
 void octree_contour_process_edge(struct OctreeNode* node[4], int dir, struct DualContouring* dual_contouring);
@@ -52,6 +53,5 @@ struct OctreeNode* octree_construct_leaf(struct OctreeNode* leaf, struct DualCon
 struct OctreeNode* octree_construct_octree_nodes(struct OctreeNode* node, struct DualContouring* dual_contouring);
 struct OctreeNode* octree_build_octree(const ivec3 min, const int size, const float threshold, struct DualContouring* dual_contouring);
 void octree_generate_mesh_from_octree(struct OctreeNode* node, struct DualContouring* dual_contouring);
-void octree_destroy_octree(struct OctreeNode* node);
 
 #endif  // OCTREE_H

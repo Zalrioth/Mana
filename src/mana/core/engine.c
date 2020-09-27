@@ -41,5 +41,6 @@ void engine_delete(struct Engine* engine) {
 double engine_get_time() {
   struct timespec current_time;
   timespec_get(&current_time, TIME_UTC);
-  return (double)current_time.tv_sec + (double)current_time.tv_nsec / 1000000000;
+  double time = (double)current_time.tv_sec + (double)current_time.tv_nsec / 1000000000;
+  return time;
 }

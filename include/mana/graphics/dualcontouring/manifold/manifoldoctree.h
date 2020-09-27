@@ -4,6 +4,7 @@
 
 #include "mana/core/memoryallocator.h"
 //
+#include <cnoise/cnoise.h>
 #include <cstorage/cstorage.h>
 #include <ubermath/ubermath.h>
 
@@ -77,15 +78,25 @@ static inline void octree_node_init(struct ManifoldOctreeNode* octree_node, vec3
 //}
 
 static inline float Sphere(vec3 pos) {
-  const float radius = (float)64 / 2.0f - 2.0f;
-  vec3 origin = vec3_set((64 - 2.0f) * 0.5f);
-  return -vec3_square_magnitude(vec3_sub(pos, origin)) + radius * radius;
+  //const float radius = (float)64 / 2.0f - 2.0f;
+  //vec3 origin = vec3_set((64 - 2.0f) * 0.5f);
+  //return -vec3_square_magnitude(vec3_sub(pos, origin)) + radius * radius;
+  float STEP = 1.0 / 64.0f;
+  struct RidgedFractalNoise noise = {0};
+  ridged_fractal_noise_init(&noise);
+  noise.octave_count = 4;
+  noise.frequency = 1.0;
+  noise.lacunarity = 2.2324f;
+  noise.step = STEP;
+  return ridged_fractal_noise_eval_3d_single(&noise, pos.x, pos.y, pos.z);
 }
 
 static inline vec3 GetIntersection(vec3 p1, vec3 p2, float d1, float d2) {
   return vec3_add(p1, vec3_divs(vec3_scale(vec3_sub(p2, p1), -d1), d2 - d1));
 }
 
+// TODO: Calculating normals can be much faster in a special noise function either by a single 8x1 array for SIMD with each position unique in 3D space
+// OR calculate
 static inline vec3 GetNormal(vec3 v) {
   float h = 0.001f;
   float dxp = Sphere((vec3){.x = v.x + h, .y = v.y, .z = v.z});
@@ -100,13 +111,14 @@ static inline vec3 GetNormal(vec3 v) {
 }
 
 void manifold_octree_construct_base(struct ManifoldOctreeNode* octree_node, int size, float error, struct ArrayList* vertices);
+void manifold_octree_destroy_octree(struct ManifoldOctreeNode* octree_node, struct ArrayList* collected_vertices);
 void manifold_octree_generate_vertex_buffer(struct ManifoldOctreeNode* octree_node, struct Vector* vertices);
-bool manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, struct ArrayList* vertices, int* n_index);
-bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* octree_node, struct ArrayList* vertices, int* index);
-void manifold_octree_process_cell(struct ManifoldOctreeNode* octree_node, struct Vector* indexes, struct Vector* tri_count, float threshold);
-void manifold_octree_process_face(struct ManifoldOctreeNode* nodes[2], int direction, struct Vector* indexes, struct Vector* tri_count, float threshold);
-void manifold_octree_process_edge(struct ManifoldOctreeNode* nodes[4], int direction, struct Vector* indexes, struct Vector* tri_count, float threshold);
-void manifold_octree_process_indexes(struct ManifoldOctreeNode* nodes[4], int direction, struct Vector* indexes, struct Vector* tri_count, float threshold);
+bool manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, struct ArrayList* vertices, int threads);
+bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* octree_node, struct ArrayList* vertices);
+void manifold_octree_process_cell(struct ManifoldOctreeNode* octree_node, struct Vector* indexes, float threshold);
+void manifold_octree_process_face(struct ManifoldOctreeNode* nodes[2], int direction, struct Vector* indexes, float threshold);
+void manifold_octree_process_edge(struct ManifoldOctreeNode* nodes[4], int direction, struct Vector* indexes, float threshold);
+void manifold_octree_process_indexes(struct ManifoldOctreeNode* nodes[4], int direction, struct Vector* indexes, float threshold);
 void manifold_octree_cluster_cell_base(struct ManifoldOctreeNode* octree_node, float error);
 void manifold_octree_cluster_cell(struct ManifoldOctreeNode* octree_node, float error);
 void manifold_octree_gather_vertices(struct ManifoldOctreeNode* n, struct ArrayList* dest, int* surface_index);

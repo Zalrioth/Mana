@@ -41,6 +41,19 @@ void octree_init_none(struct OctreeNode* octree_node) {
   octree_init(octree_node, NODE_NONE);
 }
 
+void octree_destroy_octree(struct OctreeNode* node) {
+  if (!node)
+    return;
+
+  for (int i = 0; i < 8; i++)
+    octree_destroy_octree(node->children[i]);
+
+  if (node->draw_info)
+    free(node->draw_info);
+
+  free(node);
+}
+
 struct OctreeNode* octree_simplify_octree(struct OctreeNode* node, float threshold) {
   if (!node)
     return NULL;
@@ -445,17 +458,4 @@ void octree_generate_mesh_from_octree(struct OctreeNode* node, struct DualContou
 
   octree_generate_vertex_indices(node, dual_contouring);
   octree_contour_cell_proc(node, dual_contouring);
-}
-
-void octree_destroy_octree(struct OctreeNode* node) {
-  if (!node)
-    return;
-
-  for (int i = 0; i < 8; i++)
-    octree_destroy_octree(node->children[i]);
-
-  if (node->draw_info)
-    free(node->draw_info);
-
-  free(node);
 }

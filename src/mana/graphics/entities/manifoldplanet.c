@@ -9,7 +9,7 @@ void manifold_planet_init(struct ManifoldPlanet* planet, struct GPUAPI* gpu_api,
 }
 
 void manifold_planet_delete(struct ManifoldPlanet* planet, struct GPUAPI* gpu_api) {
-  //dual_contouring_delete(&planet->dual_contouring, gpu_api);
+  manifold_dual_contouring_delete(&planet->manifold_dual_contouring, gpu_api);
 }
 
 void manifold_planet_render(struct ManifoldPlanet* planet, struct GPUAPI* gpu_api) {

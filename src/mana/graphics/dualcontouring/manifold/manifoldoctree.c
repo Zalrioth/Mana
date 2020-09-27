@@ -5,11 +5,53 @@ void manifold_octree_construct_base(struct ManifoldOctreeNode* octree_node, int 
   octree_node->position = VEC3_ZERO;
   octree_node->size = size;
   octree_node->type = MANIFOLD_NODE_INTERNAL;
-  //this.children = new ManifoldOctreeNode[8];
-  //this.vertices = new Vertex[0];
   octree_node->child_index = 0;
-  int n_index = 1;
-  manifold_octree_construct_nodes(octree_node, vertices, &n_index);
+  manifold_octree_construct_nodes(octree_node, vertices, omp_get_max_threads());
+}
+
+static inline void manifold_octree_free_parent_vertices(struct Vertex* vertice, struct ArrayList* collected_vertices) {
+  if (vertice == NULL)
+    return;
+
+  if (vertice->parent != NULL)
+    manifold_octree_free_parent_vertices(vertice->parent, collected_vertices);
+
+  bool found = false;
+  for (int vertice_num = 0; vertice_num < array_list_size(collected_vertices); vertice_num++) {
+    struct Vertex* vertex = (struct Vertex*)array_list_get(collected_vertices, vertice_num);
+    if (vertex == vertice)
+      found = true;
+  }
+  if (found == false)
+    array_list_add(collected_vertices, vertice);
+  //free(vertice);
+}
+
+void manifold_octree_destroy_octree(struct ManifoldOctreeNode* octree_node, struct ArrayList* collected_vertices) {
+  if (!octree_node)
+    return;
+
+  for (int i = 0; i < 8; i++)
+    manifold_octree_destroy_octree(octree_node->children[i], collected_vertices);
+
+  if (octree_node->vertices) {
+    for (int vertice_num = 0; vertice_num < array_list_size(octree_node->vertices); vertice_num++) {
+      struct Vertex* vertex = (struct Vertex*)array_list_get(octree_node->vertices, vertice_num);
+      if (vertex == NULL)
+        continue;
+
+      array_list_add(collected_vertices, vertex);
+      //manifold_octree_free_parent_vertices(vertex, collected_vertices);
+      //manifold_octree_free_parent_vertices(vertex);
+      //if (vertex->parent)
+      //free(vertex->parent);
+      //free(vertex);
+    }
+    array_list_delete(octree_node->vertices);
+    free(octree_node->vertices);
+  }
+
+  free(octree_node);
 }
 
 void manifold_octree_generate_vertex_buffer(struct ManifoldOctreeNode* octree_node, struct Vector* vertices) {
@@ -20,15 +62,8 @@ void manifold_octree_generate_vertex_buffer(struct ManifoldOctreeNode* octree_no
     }
   }
 
-  // TODO: Check could be wrong
-  // octree_node->vertices == NULL would be node with no vertices?
   if (vertices == NULL || octree_node->vertices == NULL || array_list_size(octree_node->vertices) == 0)
     return;
-
-  static int counter = 0;
-  counter++;
-  if (counter == 20000)
-    asm("nop");
 
   for (int i = 0; i < array_list_size(octree_node->vertices); i++) {
     struct Vertex* ver = (struct Vertex*)array_list_get(octree_node->vertices, i);
@@ -38,59 +73,39 @@ void manifold_octree_generate_vertex_buffer(struct ManifoldOctreeNode* octree_no
     vec3 nc = vec3_old_skool_normalise(vec3_add(vec3_scale(ver->normal, 0.5f), vec3_scale(VEC3_ONE, 0.5f)));
     vec3 solved_x = VEC3_ZERO;
     qef_solver_solve(&ver->qef, &solved_x, 1e-6f, 4, 1e-6f);
-    //struct VertexManifoldDualContouring* new_ver = calloc(1, sizeof(struct VertexManifoldDualContouring));
-    //*new_ver = (struct VertexManifoldDualContouring){.position = solved_x, .color = nc, .normal1 = ver->normal, .normal2 = ver->normal};
-    //vector_push_back(vertices, new_ver);
     mesh_manifold_dual_contouring_assign_vertex(vertices, solved_x.x, solved_x.y, solved_x.z, nc.r, nc.g, nc.b, ver->normal.r, ver->normal.g, ver->normal.b, ver->normal.r, ver->normal.g, ver->normal.b);
   }
 }
 
-bool manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, struct ArrayList* vertices, int* n_index) {
+bool manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, struct ArrayList* vertices, int threads) {
   if (octree_node->size == 1)
-    return manifold_octree_construct_leaf(octree_node, vertices, n_index);
+    return manifold_octree_construct_leaf(octree_node, vertices);
 
   octree_node->type = MANIFOLD_NODE_INTERNAL;
   int child_size = octree_node->size / 2;
   bool has_children = false;
-  bool return_values[8] = {false};
 
-  for (int i = 0; i < 8; i++) {
-    octree_node->index = (*n_index)++;
-    vec3 child_pos = TCornerDeltas[i];
+#pragma omp parallel for num_threads(threads) if (threads > 0)
+  for (int index = 0; index < 8; index++) {
+    vec3 child_pos = TCornerDeltas[index];
     struct ManifoldOctreeNode* new_node = calloc(1, sizeof(struct ManifoldOctreeNode));
     octree_node_init(new_node, vec3_add(octree_node->position, vec3_scale(child_pos, (float)child_size)), child_size, MANIFOLD_NODE_INTERNAL);
-    octree_node->children[i] = new_node;
-    octree_node->children[i]->child_index = i;
-
-    int index = i;
-    if (octree_node->size > 2) {
-      int temp = 0;
-      return_values[index] = manifold_octree_construct_nodes(octree_node->children[index], vertices, &temp);
-      if (!return_values[index])
-        octree_node->children[index] = NULL;
-    } else {
-      if (manifold_octree_construct_nodes(octree_node->children[i], vertices, n_index))
-        has_children = true;
-      else
-        octree_node->children[i] = NULL;
-    }
-  }
-
-  if (octree_node->size > 2) {
-    for (int i = 0; i < 8; i++) {
-      if (return_values[i])
-        has_children = true;
-    }
+    octree_node->children[index] = new_node;
+    octree_node->children[index]->child_index = index;
+    // NOTE: If user has cpu with very high thread count could technically go one more level would be threads - (8 ^ depth)
+    if (manifold_octree_construct_nodes(octree_node->children[index], vertices, 0))
+      has_children |= true;
+    else
+      octree_node->children[index] = NULL;
   }
 
   return has_children;
 }
 
-bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* octree_node, struct ArrayList* vertices, int* index) {
+bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* octree_node, struct ArrayList* vertices) {
   if (octree_node->size != 1)
     return false;
 
-  octree_node->index = (*index)++;
   octree_node->type = MANIFOLD_NODE_LEAF;
   int corners = 0;
   float samples[8] = {0};
@@ -103,19 +118,7 @@ bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* octree_node, stru
   if (corners == 0 || corners == 255)
     return false;
 
-  //int v_edges[TransformedVerticesNumberTable[octree_node->corners]][16] = {0};
-  /*int* v_edges[16] = {NULL};
-  for (int edge_num = 0; edge_num < 16; edge_num++)
-    v_edges[edge_num] = calloc(1, sizeof(int) * TransformedVerticesNumberTable[octree_node->corners]);*/
-
   int total_edges = TransformedVerticesNumberTable[octree_node->corners];
-  /*int* v_edges = callof(1, sizeof(int) * total_edges);
-  for (int edge_num = 0; edge_num < total_edges; edge_num++)
-    v_edges[edge_num] = calloc(1, sizeof(int) * 16);*/
-
-  // TODO: If working move to vector
-  //int v_edges[total_edges][16];
-  //unsigned(*v_edges)[16] = malloc(sizeof(unsigned[total_edges][16]));
   int v_edges[4][16] = {0};
 
   octree_node->vertices = calloc(1, sizeof(struct ArrayList));
@@ -175,20 +178,16 @@ bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* octree_node, stru
     vec3 emp_buffer = VEC3_ZERO;
     qef_solver_solve(&get_vertice->qef, &emp_buffer, 1e-6f, 4, 1e-6f);
     get_vertice->error = qef_solver_get_error_pos(&get_vertice->qef, get_vertice->qef.x);
-    asm("nop");
   }
-
-  /*for (int edge_num = 0; edge_num < 16; edge_num++)
-    free(v_edges[edge_num]);*/
 
   return true;
 }
 
-void manifold_octree_process_cell(struct ManifoldOctreeNode* octree_node, struct Vector* indexes, struct Vector* tri_count, float threshold) {
+void manifold_octree_process_cell(struct ManifoldOctreeNode* octree_node, struct Vector* indexes, float threshold) {
   if (octree_node->type == MANIFOLD_NODE_INTERNAL) {
     for (int i = 0; i < 8; i++) {
       if (octree_node->children[i] != NULL)
-        manifold_octree_process_cell(octree_node->children[i], indexes, tri_count, threshold);
+        manifold_octree_process_cell(octree_node->children[i], indexes, threshold);
     }
 
     for (int i = 0; i < 12; i++) {
@@ -200,18 +199,18 @@ void manifold_octree_process_cell(struct ManifoldOctreeNode* octree_node, struct
       face_nodes[0] = octree_node->children[c1];
       face_nodes[1] = octree_node->children[c2];
 
-      manifold_octree_process_face(face_nodes, TEdgePairs[i][2], indexes, tri_count, threshold);
+      manifold_octree_process_face(face_nodes, TEdgePairs[i][2], indexes, threshold);
     }
 
     for (int i = 0; i < 6; i++) {
       struct ManifoldOctreeNode* edge_nodes[4] = {octree_node->children[TCellProcEdgeMask[i][0]], octree_node->children[TCellProcEdgeMask[i][1]], octree_node->children[TCellProcEdgeMask[i][2]], octree_node->children[TCellProcEdgeMask[i][3]]};
 
-      manifold_octree_process_edge(edge_nodes, TCellProcEdgeMask[i][4], indexes, tri_count, threshold);
+      manifold_octree_process_edge(edge_nodes, TCellProcEdgeMask[i][4], indexes, threshold);
     }
   }
 }
 
-void manifold_octree_process_face(struct ManifoldOctreeNode* nodes[2], int direction, struct Vector* indexes, struct Vector* tri_count, float threshold) {
+void manifold_octree_process_face(struct ManifoldOctreeNode* nodes[2], int direction, struct Vector* indexes, float threshold) {
   if (nodes[0] == NULL || nodes[1] == NULL)
     return;
 
@@ -226,7 +225,7 @@ void manifold_octree_process_face(struct ManifoldOctreeNode* nodes[2], int direc
           face_nodes[j] = nodes[j]->children[TFaceProcFaceMask[direction][i][j]];
       }
 
-      manifold_octree_process_face(face_nodes, TFaceProcFaceMask[direction][i][2], indexes, tri_count, threshold);
+      manifold_octree_process_face(face_nodes, TFaceProcFaceMask[direction][i][2], indexes, threshold);
     }
 
     int orders[2][4] = {{0, 0, 1, 1}, {0, 1, 0, 1}};
@@ -241,17 +240,17 @@ void manifold_octree_process_face(struct ManifoldOctreeNode* nodes[2], int direc
           edge_nodes[j] = nodes[orders[TFaceProcEdgeMask[direction][i][0]][j]]->children[TFaceProcEdgeMask[direction][i][1 + j]];
       }
 
-      manifold_octree_process_edge(edge_nodes, TFaceProcEdgeMask[direction][i][5], indexes, tri_count, threshold);
+      manifold_octree_process_edge(edge_nodes, TFaceProcEdgeMask[direction][i][5], indexes, threshold);
     }
   }
 }
 
-void manifold_octree_process_edge(struct ManifoldOctreeNode* nodes[4], int direction, struct Vector* indexes, struct Vector* tri_count, float threshold) {
+void manifold_octree_process_edge(struct ManifoldOctreeNode* nodes[4], int direction, struct Vector* indexes, float threshold) {
   if (nodes[0] == NULL || nodes[1] == NULL || nodes[2] == NULL || nodes[3] == NULL)
     return;
 
   if (nodes[0]->type == MANIFOLD_NODE_LEAF && nodes[1]->type == MANIFOLD_NODE_LEAF && nodes[2]->type == MANIFOLD_NODE_LEAF && nodes[3]->type == MANIFOLD_NODE_LEAF) {
-    manifold_octree_process_indexes(nodes, direction, indexes, tri_count, threshold);
+    manifold_octree_process_indexes(nodes, direction, indexes, threshold);
   } else {
     for (int i = 0; i < 2; i++) {
       struct ManifoldOctreeNode* edge_nodes[4] = {NULL};
@@ -263,12 +262,12 @@ void manifold_octree_process_edge(struct ManifoldOctreeNode* nodes[4], int direc
           edge_nodes[j] = nodes[j]->children[TEdgeProcEdgeMask[direction][i][j]];
       }
 
-      manifold_octree_process_edge(edge_nodes, TEdgeProcEdgeMask[direction][i][4], indexes, tri_count, threshold);
+      manifold_octree_process_edge(edge_nodes, TEdgeProcEdgeMask[direction][i][4], indexes, threshold);
     }
   }
 }
 
-void manifold_octree_process_indexes(struct ManifoldOctreeNode* nodes[4], int direction, struct Vector* indexes, struct Vector* tri_count, float threshold) {
+void manifold_octree_process_indexes(struct ManifoldOctreeNode* nodes[4], int direction, struct Vector* indexes, float threshold) {
   int min_size = 10000000;
   int min_index = 0;
   int indices[4] = {-1, -1, -1, -1};
@@ -366,9 +365,6 @@ void manifold_octree_process_indexes(struct ManifoldOctreeNode* nodes[4], int di
         count++;
       }
     }
-
-    if (count > 0)
-      vector_push_back(tri_count, &count);
   }
 }
 
@@ -503,6 +499,7 @@ void manifold_octree_cluster_cell(struct ManifoldOctreeNode* octree_node, float 
           face_prop2 = false;
       }
 
+      bool assigned_vertex = false;
       struct Vertex* new_vertex = calloc(1, sizeof(struct Vertex));
       vertex_init(new_vertex);
       normal = vec3_old_skool_divs(normal, count);
@@ -526,15 +523,22 @@ void manifold_octree_cluster_cell(struct ManifoldOctreeNode* octree_node, float 
         struct Vertex* v = (struct Vertex*)array_list_get(&collected_vertices, vertice_num);
         if (v->surface_index == i) {
           struct Vertex* p = v;
-          if (p != new_vertex)
+          if (p != new_vertex) {
             p->parent = new_vertex;
-          else
+            assigned_vertex = true;
+          } else
             p->parent = NULL;
         }
       }
+      if (assigned_vertex == false)
+        free(new_vertex);
     }
-  } else
+  } else {
+    array_list_delete(new_vertices);
+    free(new_vertices);
+    array_list_delete(&collected_vertices);
     return;
+  }
 
   //foreach (Vertex v2 in collected_vertices) {
   for (int vertice_num = 0; vertice_num < array_list_size(&collected_vertices); vertice_num++) {
