@@ -47,12 +47,6 @@ static inline void vertex_init(struct Vertex* vertex) {
   vertex->face_prop2 = false;
 }
 
-//vec3 vertex_position(struct Vertex* vertex) {
-//  if (vertex->qef != NULL)
-//    return qef_solve(1e-6f, 4, 1e-6f);
-//  return VEC3_ZERO;
-//}
-//
 struct ManifoldOctreeNode {
   int index;
   vec3 position;
@@ -69,18 +63,9 @@ static inline void octree_node_init(struct ManifoldOctreeNode* octree_node, vec3
   octree_node->position = position;
   octree_node->size = size;
   octree_node->type = type;
-  //octree_node->children = new OctreeNode[8];
-  //octree_node->vertices = new Vertex[0];
 }
 
-//static inline float Sphere(vec3 pos) {
-//  return vec3_magnitude(pos) - 0.5f;
-//}
-
 static inline float Sphere(vec3 pos) {
-  //const float radius = (float)64 / 2.0f - 2.0f;
-  //vec3 origin = vec3_set((64 - 2.0f) * 0.5f);
-  //return -vec3_square_magnitude(vec3_sub(pos, origin)) + radius * radius;
   float STEP = 1.0 / 64.0f;
   struct RidgedFractalNoise noise = {0};
   ridged_fractal_noise_init(&noise);
@@ -88,7 +73,22 @@ static inline float Sphere(vec3 pos) {
   noise.frequency = 1.0;
   noise.lacunarity = 2.2324f;
   noise.step = STEP;
+
   return ridged_fractal_noise_eval_3d_single(&noise, pos.x, pos.y, pos.z);
+}
+
+static inline void SphereNormals(vec3 v, float dest[6]) {
+  float STEP = 1.0 / 64.0f;
+  struct RidgedFractalNoise noise = {0};
+  ridged_fractal_noise_init(&noise);
+  noise.octave_count = 4;
+  noise.frequency = 1.0;
+  noise.lacunarity = 2.2324f;
+  noise.step = STEP;
+
+  float h = 0.001f;
+  float poss[6][3] = {{v.x + h, v.y, v.z}, {v.x - h, v.y, v.z}, {v.x, v.y + h, v.z}, {v.x, v.y - h, v.z}, {v.x, v.y, v.z + h}, {v.x, v.y, v.z - h}};
+  ridged_fractal_noise_eval_normals(&noise, poss, dest);
 }
 
 static inline vec3 GetIntersection(vec3 p1, vec3 p2, float d1, float d2) {
@@ -96,8 +96,16 @@ static inline vec3 GetIntersection(vec3 p1, vec3 p2, float d1, float d2) {
 }
 
 // TODO: Calculating normals can be much faster in a special noise function either by a single 8x1 array for SIMD with each position unique in 3D space
-// OR calculate
+// OR calculate bulk in chunky 8*8 kernel sorta thing
+#define FAST_NORMALS_AVX2 true
 static inline vec3 GetNormal(vec3 v) {
+#if FAST_NORMALS_AVX2
+  float dest[6] = {0};
+  SphereNormals(v, dest);
+  vec3 gradient = (vec3){.x = dest[0] - dest[1], .y = dest[2] - dest[3], .z = dest[4] - dest[5]};
+  gradient = vec3_old_skool_normalise(gradient);
+  return gradient;
+#else
   float h = 0.001f;
   float dxp = Sphere((vec3){.x = v.x + h, .y = v.y, .z = v.z});
   float dxm = Sphere((vec3){.x = v.x - h, .y = v.y, .z = v.z});
@@ -108,6 +116,7 @@ static inline vec3 GetNormal(vec3 v) {
   vec3 gradient = (vec3){.x = dxp - dxm, .y = dyp - dym, .z = dzp - dzm};
   gradient = vec3_old_skool_normalise(gradient);
   return gradient;
+#endif
 }
 
 void manifold_octree_construct_base(struct ManifoldOctreeNode* octree_node, int size, float error, struct ArrayList* vertices);
