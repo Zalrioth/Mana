@@ -119,11 +119,11 @@ static inline vec3 GetNormal(vec3 v) {
 #endif
 }
 
-void manifold_octree_construct_base(struct ManifoldOctreeNode* octree_node, int size, float error, struct ArrayList* vertices);
-void manifold_octree_destroy_octree(struct ManifoldOctreeNode* octree_node, struct ArrayList* collected_vertices);
+void manifold_octree_construct_base(struct ManifoldOctreeNode* octree_node, int size, float error);
+void manifold_octree_destroy_octree(struct ManifoldOctreeNode* octree_node, struct Map* vertice_map);
 void manifold_octree_generate_vertex_buffer(struct ManifoldOctreeNode* octree_node, struct Vector* vertices);
-bool manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, struct ArrayList* vertices, int threads);
-bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* octree_node, struct ArrayList* vertices);
+bool manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, int threads);
+bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* octree_node);
 void manifold_octree_process_cell(struct ManifoldOctreeNode* octree_node, struct Vector* indexes, float threshold);
 void manifold_octree_process_face(struct ManifoldOctreeNode* nodes[2], int direction, struct Vector* indexes, float threshold);
 void manifold_octree_process_edge(struct ManifoldOctreeNode* nodes[4], int direction, struct Vector* indexes, float threshold);

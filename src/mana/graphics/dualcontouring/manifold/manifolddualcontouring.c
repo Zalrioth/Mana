@@ -7,9 +7,6 @@ void manifold_dual_contouring_init(struct ManifoldDualContouring* manifold_dual_
   manifold_dual_contouring->mesh = calloc(1, sizeof(struct Mesh));
   mesh_manifold_dual_contouring_init(manifold_dual_contouring->mesh);
 
-  manifold_dual_contouring->vertice_list = calloc(1, sizeof(struct ArrayList));
-  array_list_init(manifold_dual_contouring->vertice_list);
-
   manifold_dual_contouring->octree_size = size;
   manifold_dual_contouring->resolution = resolution;
 }
@@ -31,24 +28,15 @@ static inline void manifold_dual_contouring_vulkan_cleanup(struct ManifoldDualCo
 void manifold_dual_contouring_delete(struct ManifoldDualContouring* manifold_dual_contouring, struct GPUAPI* gpu_api) {
   manifold_dual_contouring_vulkan_cleanup(manifold_dual_contouring, gpu_api);
 
-  //if (manifold_dual_contouring->vertice_list) {
-  //  for (int vertice_num = 0; vertice_num < array_list_size(manifold_dual_contouring->vertice_list); vertice_num++) {
-  //    struct Vertex* vertex = (struct Vertex*)array_list_get(manifold_dual_contouring->vertice_list, vertice_num);
-  //    if (vertex == NULL)
-  //      continue;
-  //    free(vertex);
-  //  }
-  //  array_list_delete(manifold_dual_contouring->vertice_list);
-  //  free(manifold_dual_contouring->vertice_list);
-  //}
-  struct ArrayList collected_vertices = {0};
-  array_list_init(&collected_vertices);
-  manifold_octree_destroy_octree(manifold_dual_contouring->tree, &collected_vertices);
+  struct Map vertice_map = {0};
+  map_init(&vertice_map, sizeof(struct Vertex*));
+  manifold_octree_destroy_octree(manifold_dual_contouring->tree, &vertice_map);
+  const char* key;
+  struct MapIter iter = map_iter();
+  while ((key = map_next(&vertice_map, &iter)))
+    free(*(char**)map_get(&vertice_map, key));
+  map_delete(&vertice_map);
 
-  for (int vertice_num = 0; vertice_num < array_list_size(&collected_vertices); vertice_num++) {
-    struct Vertex* vertex = (struct Vertex*)array_list_get(&collected_vertices, vertice_num);
-    free(vertex);
-  }
   mesh_delete(manifold_dual_contouring->mesh);
   free(manifold_dual_contouring->mesh);
   //noise_free(manifold_dual_contouring->noise_set);
@@ -76,7 +64,7 @@ void manifold_dual_contouring_contour(struct ManifoldDualContouring* manifold_du
   manifold_dual_contouring->tree = calloc(1, sizeof(struct ManifoldOctreeNode));
 
   double start_time = engine_get_time();
-  manifold_octree_construct_base(manifold_dual_contouring->tree, 64, 0, manifold_dual_contouring->vertice_list);
+  manifold_octree_construct_base(manifold_dual_contouring->tree, 64, 0);
   double end_time = engine_get_time();
   printf("Total time taken: %lf\n", end_time - start_time);
   manifold_octree_cluster_cell_base(manifold_dual_contouring->tree, 0);
@@ -127,7 +115,7 @@ void manifold_dual_contouring_calculate_indexes(struct ManifoldDualContouring* m
   //manifold_octree_process_cell(manifold_dual_contouring->tree, manifold_dual_contouring->mesh->indices, &tri_count, threshold);
   manifold_octree_process_cell(manifold_dual_contouring->tree, manifold_dual_contouring->mesh->indices, threshold);
 
-  // Note: The following is not needed for flat shading testing
+  // Note: The following is not needed, for flat shading testing
   /*if (vector_size(manifold_dual_contouring->mesh->indices) == 0)
     return;*/
 

@@ -1,52 +1,36 @@
 #include "mana/graphics/dualcontouring/manifold/manifoldoctree.h"
 
-void manifold_octree_construct_base(struct ManifoldOctreeNode* octree_node, int size, float error, struct ArrayList* vertices) {
+void manifold_octree_construct_base(struct ManifoldOctreeNode* octree_node, int size, float error) {
   octree_node->index = 0;
   octree_node->position = VEC3_ZERO;
   octree_node->size = size;
   octree_node->type = MANIFOLD_NODE_INTERNAL;
   octree_node->child_index = 0;
-  manifold_octree_construct_nodes(octree_node, vertices, omp_get_max_threads());
+  manifold_octree_construct_nodes(octree_node, omp_get_max_threads());
 }
 
-static inline void manifold_octree_free_parent_vertices(struct Vertex* vertice, struct ArrayList* collected_vertices) {
-  if (vertice == NULL)
+static inline void manifold_octree_find_vertice(struct Vertex* vertex, struct Map* vertice_map) {
+  if (vertex == NULL)
     return;
 
-  if (vertice->parent != NULL)
-    manifold_octree_free_parent_vertices(vertice->parent, collected_vertices);
+  manifold_octree_find_vertice(vertex->parent, vertice_map);
 
-  bool found = false;
-  for (int vertice_num = 0; vertice_num < array_list_size(collected_vertices); vertice_num++) {
-    struct Vertex* vertex = (struct Vertex*)array_list_get(collected_vertices, vertice_num);
-    if (vertex == vertice)
-      found = true;
-  }
-  if (found == false)
-    array_list_add(collected_vertices, vertice);
-  //free(vertice);
+  // NOTE: On a 64 bit archetiecture 8 bytes are allocated for a memory address, yet a hex value uses 4 bits per value. Meaning a memory address in hex is length of 16 numbers aka 8 bytes * 8 bits / 4 hex
+  char buffer[((sizeof(char*) * 8) / 4) + 1] = {0};
+  sprintf(buffer, "%p", vertex);
+  map_set(vertice_map, buffer, &vertex);
 }
 
-void manifold_octree_destroy_octree(struct ManifoldOctreeNode* octree_node, struct ArrayList* collected_vertices) {
+void manifold_octree_destroy_octree(struct ManifoldOctreeNode* octree_node, struct Map* vertice_map) {
   if (!octree_node)
     return;
 
   for (int i = 0; i < 8; i++)
-    manifold_octree_destroy_octree(octree_node->children[i], collected_vertices);
+    manifold_octree_destroy_octree(octree_node->children[i], vertice_map);
 
   if (octree_node->vertices) {
-    for (int vertice_num = 0; vertice_num < array_list_size(octree_node->vertices); vertice_num++) {
-      struct Vertex* vertex = (struct Vertex*)array_list_get(octree_node->vertices, vertice_num);
-      if (vertex == NULL)
-        continue;
-
-      array_list_add(collected_vertices, vertex);
-      //manifold_octree_free_parent_vertices(vertex, collected_vertices);
-      //manifold_octree_free_parent_vertices(vertex);
-      //if (vertex->parent)
-      //free(vertex->parent);
-      //free(vertex);
-    }
+    for (int vertice_num = 0; vertice_num < array_list_size(octree_node->vertices); vertice_num++)
+      manifold_octree_find_vertice(array_list_get(octree_node->vertices, vertice_num), vertice_map);
     array_list_delete(octree_node->vertices);
     free(octree_node->vertices);
   }
@@ -77,9 +61,9 @@ void manifold_octree_generate_vertex_buffer(struct ManifoldOctreeNode* octree_no
   }
 }
 
-bool manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, struct ArrayList* vertices, int threads) {
+bool manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, int threads) {
   if (octree_node->size == 1)
-    return manifold_octree_construct_leaf(octree_node, vertices);
+    return manifold_octree_construct_leaf(octree_node);
 
   octree_node->type = MANIFOLD_NODE_INTERNAL;
   int child_size = octree_node->size / 2;
@@ -93,16 +77,18 @@ bool manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, str
     octree_node->children[index] = new_node;
     octree_node->children[index]->child_index = index;
     // NOTE: If user has cpu with very high thread count could technically go one more level would be threads - (8 ^ depth)
-    if (manifold_octree_construct_nodes(octree_node->children[index], vertices, 0))
+    if (manifold_octree_construct_nodes(octree_node->children[index], 0))
       has_children |= true;
-    else
+    else {
       octree_node->children[index] = NULL;
+      free(new_node);
+    }
   }
 
   return has_children;
 }
 
-bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* octree_node, struct ArrayList* vertices) {
+bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* octree_node) {
   if (octree_node->size != 1)
     return false;
 
@@ -120,14 +106,6 @@ bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* octree_node, stru
 
   int total_edges = TransformedVerticesNumberTable[octree_node->corners];
   int v_edges[4][16] = {0};
-
-  octree_node->vertices = calloc(1, sizeof(struct ArrayList));
-  array_list_init(octree_node->vertices);
-  for (int add_num = 0; add_num < TransformedVerticesNumberTable[corners]; add_num++) {
-    struct Vertex* temp = calloc(1, sizeof(struct Vertex));
-    vertex_init(temp);
-    array_list_add(octree_node->vertices, temp);
-  }
 
   int v_index = 0;
   int e_index = 0;
@@ -148,9 +126,14 @@ bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* octree_node, stru
     v_edges[v_index][e_index++] = code;
   }
 
+  octree_node->vertices = calloc(1, sizeof(struct ArrayList));
+  array_list_init(octree_node->vertices);
+
   for (int i = 0; i < v_index; i++) {
     int k = 0;
-    struct Vertex* get_vertice = (struct Vertex*)array_list_get(octree_node->vertices, i);
+    struct Vertex* get_vertice = calloc(1, sizeof(struct Vertex));
+    vertex_init(get_vertice);
+    array_list_add(octree_node->vertices, get_vertice);
     qef_solver_init(&get_vertice->qef);
     vec3 normal = VEC3_ZERO;
     int ei[12] = {0};
@@ -167,7 +150,7 @@ bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* octree_node, stru
 
     normal = vec3_old_skool_divs(normal, k);
     normal = vec3_old_skool_normalise(normal);
-    get_vertice->index = array_list_size(vertices);
+    get_vertice->index = array_list_size(octree_node->vertices);
     get_vertice->parent = NULL;
     get_vertice->collapsible = true;
     get_vertice->normal = normal;
@@ -499,7 +482,6 @@ void manifold_octree_cluster_cell(struct ManifoldOctreeNode* octree_node, float 
           face_prop2 = false;
       }
 
-      bool assigned_vertex = false;
       struct Vertex* new_vertex = calloc(1, sizeof(struct Vertex));
       vertex_init(new_vertex);
       normal = vec3_old_skool_divs(normal, count);
@@ -511,6 +493,7 @@ void manifold_octree_cluster_cell(struct ManifoldOctreeNode* octree_node, float 
       new_vertex->in_cell = octree_node->child_index;
       new_vertex->face_prop2 = face_prop2;
       array_list_add(new_vertices, new_vertex);
+      //array_list_add(vertices, new_vertex);
 
       vec3 buf_extra = VEC3_ZERO;
       qef_solver_solve(&qef, &buf_extra, 1e-6f, 4, 1e-6f);
@@ -519,19 +502,14 @@ void manifold_octree_cluster_cell(struct ManifoldOctreeNode* octree_node, float 
       new_vertex->error = err;
       clustered_count++;
 
+      bool assigned = false;
       for (int vertice_num = 0; vertice_num < array_list_size(&collected_vertices); vertice_num++) {
         struct Vertex* v = (struct Vertex*)array_list_get(&collected_vertices, vertice_num);
         if (v->surface_index == i) {
-          struct Vertex* p = v;
-          if (p != new_vertex) {
-            p->parent = new_vertex;
-            assigned_vertex = true;
-          } else
-            p->parent = NULL;
+          v->parent = new_vertex;
+          assigned = true;
         }
       }
-      if (assigned_vertex == false)
-        free(new_vertex);
     }
   } else {
     array_list_delete(new_vertices);
