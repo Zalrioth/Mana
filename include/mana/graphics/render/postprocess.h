@@ -9,14 +9,14 @@
 #include "mana/graphics/render/vulkanrenderer.h"
 #include "mana/graphics/shaders/blitshader.h"
 #include "mana/graphics/shaders/shader.h"
-#include "mana/graphics/utilities/fullscreenquad.h"
+#include "mana/graphics/utilities/fullscreentriangle.h"
 
 #define POST_PROCESS_TOTAL_DEPENDENCIES 2
 
 struct BlitPostProcess {
   struct BlitShader* blit_shader;
   VkDescriptorSet descriptor_set;
-  struct FullscreenQuad* fullscreen_quad;
+  struct FullscreenTriangle* fullscreen_triangle;
 };
 
 struct PostProcess {
@@ -35,13 +35,13 @@ struct PostProcess {
   struct BlitPostProcess* blit_post_process;
 };
 
-int post_process_init(struct PostProcess* post_process, struct VulkanState* vulkan_renderer);
-int post_process_delete(struct PostProcess* post_process, struct VulkanState* vulkan_renderer);
-int post_process_start(struct PostProcess* post_process, struct VulkanState* vulkan_renderer);
-int post_process_stop(struct PostProcess* post_process, struct VulkanState* vulkan_renderer);
+int post_process_init(struct PostProcess* post_process, struct GPUAPI* gpu_api);
+int post_process_delete(struct PostProcess* post_process, struct GPUAPI* gpu_api);
+int post_process_start(struct PostProcess* post_process, struct GPUAPI* gpu_api);
+int post_process_stop(struct PostProcess* post_process, struct GPUAPI* gpu_api);
 
-int blit_post_process_init(struct BlitPostProcess* blit_post_, struct VulkanState* vulkan_renderer);
-void blit_post_process_delete(struct BlitPostProcess* blit_post_process, struct VulkanState* vulkan_renderer);
-int blit_post_process_render(struct BlitPostProcess* blit_post_, struct VulkanState* vulkan_renderer);
+int blit_post_process_init(struct BlitPostProcess* blit_post_, struct GPUAPI* gpu_api);
+void blit_post_process_delete(struct BlitPostProcess* blit_post_process, struct GPUAPI* gpu_api);
+int blit_post_process_render(struct BlitPostProcess* blit_post_, struct GPUAPI* gpu_api);
 
 #endif  // POST_PROCESS_H

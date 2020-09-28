@@ -6,8 +6,8 @@
 //
 #include <stb_image.h>
 
+#include "mana/core/gpuapi.h"
 #include "mana/graphics/graphicscommon.h"
-#include "mana/graphics/render/vulkanrenderer.h"
 #include "mana/graphics/utilities/graphicsutils.h"
 
 struct VulkanState;
@@ -35,8 +35,8 @@ struct Texture {
   //VkFilter filter_type;
 };
 
-int texture_init(struct Texture *texture, struct VulkanState *vulkan_renderer, struct TextureSettings texture_settings);
-void texture_delete(struct Texture *texture, struct VulkanState *vulkan_renderer);
-void texture_copy_buffer_to_image(struct VulkanState *vulkan_renderer, VkBuffer *buffer, VkImage *image, uint32_t width, uint32_t height);
+int texture_init(struct Texture *texture, struct GPUAPI *gpu_api, struct TextureSettings texture_settings);
+void texture_delete(struct Texture *texture, struct GPUAPI *gpu_api);
+void texture_copy_buffer_to_image(struct GPUAPI *gpu_api, VkBuffer *buffer, VkImage *image, uint32_t width, uint32_t height);
 
 #endif  // TEXTURE_H

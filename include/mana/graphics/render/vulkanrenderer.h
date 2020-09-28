@@ -15,14 +15,11 @@
 #include "mana/core/corecommon.h"
 #include "mana/core/graphicslibrary.h"
 #include "mana/core/vulkancore.h"
-#include "mana/graphics/entities/model.h"
 #include "mana/graphics/graphicscommon.h"
 #include "mana/graphics/render/gbuffer.h"
 #include "mana/graphics/render/postprocess.h"
 #include "mana/graphics/render/swapchain.h"
 #include "mana/graphics/utilities/graphicsutils.h"
-#include "mana/graphics/utilities/mesh.h"
-#include "mana/graphics/utilities/texture.h"
 
 struct GraphicsLibrary;
 
@@ -46,8 +43,8 @@ enum VULKAN_RENDERER_STATUS {
   VULKAN_RENDERER_LAST_ERROR
 };
 
-int vulkan_renderer_init(struct VulkanState* vulkan_state, int width, int height);
-void vulkan_renderer_delete(struct VulkanState* vulkan_state);
-void vulkan_renderer_recreate_swap_chain(struct VulkanState* vulkan_state, struct GraphicsLibrary* graphics_library, int* width_handle, int* height_handle);
+int vulkan_renderer_init(struct GPUAPI* gpu_api, int width, int height);
+void vulkan_renderer_delete(struct GPUAPI* gpu_api);
+void vulkan_renderer_recreate_swap_chain(struct GPUAPI* gpu_api, struct GraphicsLibrary* graphics_library, int* width_handle, int* height_handle);
 
 #endif  // VULKAN_RENDERER_H

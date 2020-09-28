@@ -25,6 +25,10 @@ struct VertexQuad {
   vec3 position;
 };
 
+struct VertexTriangle {
+  vec3 position;
+};
+
 struct VertexModel {
   vec3 position;
   vec3 normal;
@@ -68,6 +72,11 @@ static inline void mesh_quad_init(struct Mesh* mesh);
 static inline void mesh_quad_assign_vertex(struct Vector* vector, float x, float y, float z);
 static inline VkVertexInputBindingDescription mesh_quad_get_binding_description();
 static inline void mesh_quad_get_attribute_descriptions(VkVertexInputAttributeDescription* attribute_descriptions);
+
+static inline void mesh_triangle_init(struct Mesh* mesh);
+static inline void mesh_triangle_assign_vertex(struct Vector* vector, float x, float y, float z);
+static inline VkVertexInputBindingDescription mesh_triangle_get_binding_description();
+static inline void mesh_triangle_get_attribute_descriptions(VkVertexInputAttributeDescription* attribute_descriptions);
 
 static inline void mesh_model_init(struct Mesh* mesh);
 static inline void mesh_model_assign_vertex(struct Vector* vector, float x, float y, float z, float r1, float g1, float b1, float u, float v, float r2, float g2, float b2, int joint_id_x, int joint_id_y, int joint_id_z, float weight_x, float weight_y, float weight_z);
@@ -183,6 +192,49 @@ static inline void mesh_quad_get_attribute_descriptions(VkVertexInputAttributeDe
   attribute_descriptions[0].location = 0;
   attribute_descriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
   attribute_descriptions[0].offset = offsetof(struct VertexQuad, position);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+
+static inline void mesh_triangle_init(struct Mesh* mesh) {
+  mesh->vertices = calloc(1, sizeof(struct Vector));
+  vector_init(mesh->vertices, sizeof(struct VertexTriangle));
+
+  mesh->indices = calloc(1, sizeof(struct Vector));
+  vector_init(mesh->indices, sizeof(uint32_t));
+
+  mesh_triangle_assign_vertex(mesh->vertices, -1.0f, 1.0f, 0.0f);
+  mesh_triangle_assign_vertex(mesh->vertices, -1.0f, -2.0f, 0.0f);
+  mesh_triangle_assign_vertex(mesh->vertices, 2.0f, 1.0f, 0.0f);
+
+  mesh_assign_indice(mesh->indices, 0);
+  mesh_assign_indice(mesh->indices, 1);
+  mesh_assign_indice(mesh->indices, 2);
+}
+
+static inline void mesh_triangle_assign_vertex(struct Vector* vector, float x, float y, float z) {
+  struct VertexSprite vertex = {{0}};
+  vertex.position.x = x;
+  vertex.position.y = y;
+  vertex.position.z = z;
+
+  vector_push_back(vector, &vertex);
+}
+
+static inline VkVertexInputBindingDescription mesh_triangle_get_binding_description() {
+  VkVertexInputBindingDescription binding_description = {0};
+  binding_description.binding = 0;
+  binding_description.stride = sizeof(struct VertexSprite);
+  binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+  return binding_description;
+}
+
+static inline void mesh_triangle_get_attribute_descriptions(VkVertexInputAttributeDescription* attribute_descriptions) {
+  attribute_descriptions[0].binding = 0;
+  attribute_descriptions[0].location = 0;
+  attribute_descriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+  attribute_descriptions[0].offset = offsetof(struct VertexTriangle, position);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

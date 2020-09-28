@@ -2,7 +2,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-int texture_init(struct Texture *texture, struct VulkanState *vulkan_renderer, struct TextureSettings texture_settings) {
+int texture_init(struct Texture *texture, struct GPUAPI *gpu_api, struct TextureSettings texture_settings) {
   VkFilter filter = (texture_settings.filter_type == FILTER_NEAREST) ? VK_FILTER_NEAREST : VK_FILTER_LINEAR;
   //texture->filter_type = filter;
   texture->path = strdup(texture_settings.path);
@@ -49,39 +49,39 @@ int texture_init(struct Texture *texture, struct VulkanState *vulkan_renderer, s
 
   VkBuffer staging_buffer = {0};
   VkDeviceMemory staging_buffer_memory = {0};
-  graphics_utils_create_buffer(vulkan_renderer->device, vulkan_renderer->physical_device, image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &staging_buffer, &staging_buffer_memory);
+  graphics_utils_create_buffer(gpu_api->vulkan_state->device, gpu_api->vulkan_state->physical_device, image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &staging_buffer, &staging_buffer_memory);
 
   void *data;
-  vkMapMemory(vulkan_renderer->device, staging_buffer_memory, 0, image_size, 0, &data);
+  vkMapMemory(gpu_api->vulkan_state->device, staging_buffer_memory, 0, image_size, 0, &data);
   memcpy(data, pixels, image_size);
-  vkUnmapMemory(vulkan_renderer->device, staging_buffer_memory);
+  vkUnmapMemory(gpu_api->vulkan_state->device, staging_buffer_memory);
 
   stbi_image_free(pixels);
 
   uint32_t mip_levels = (uint32_t)(floor(log2(MAX(tex_width, tex_height))));
 
-  graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, tex_width, tex_height, mip_levels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &texture->texture_image, &texture->texture_image_memory);
+  graphics_utils_create_image(gpu_api->vulkan_state->device, gpu_api->vulkan_state->physical_device, tex_width, tex_height, mip_levels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &texture->texture_image, &texture->texture_image_memory);
 
-  graphics_utils_transition_image_layout(vulkan_renderer->device, vulkan_renderer->graphics_queue, vulkan_renderer->command_pool, texture->texture_image, VK_FORMAT_R16G16B16A16_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mip_levels);
-  graphics_utils_copy_buffer_to_image(vulkan_renderer->device, vulkan_renderer->graphics_queue, vulkan_renderer->command_pool, &staging_buffer, &texture->texture_image, tex_width, tex_height);
+  graphics_utils_transition_image_layout(gpu_api->vulkan_state->device, gpu_api->vulkan_state->graphics_queue, gpu_api->vulkan_state->command_pool, texture->texture_image, VK_FORMAT_R16G16B16A16_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mip_levels);
+  graphics_utils_copy_buffer_to_image(gpu_api->vulkan_state->device, gpu_api->vulkan_state->graphics_queue, gpu_api->vulkan_state->command_pool, &staging_buffer, &texture->texture_image, tex_width, tex_height);
 
-  vkDestroyBuffer(vulkan_renderer->device, staging_buffer, NULL);
-  vkFreeMemory(vulkan_renderer->device, staging_buffer_memory, NULL);
+  vkDestroyBuffer(gpu_api->vulkan_state->device, staging_buffer, NULL);
+  vkFreeMemory(gpu_api->vulkan_state->device, staging_buffer_memory, NULL);
 
-  graphics_utils_generate_mipmaps(vulkan_renderer->device, vulkan_renderer->physical_device, vulkan_renderer->graphics_queue, vulkan_renderer->command_pool, texture->texture_image, VK_FORMAT_R16G16B16A16_UNORM, tex_width, tex_height, mip_levels);
+  graphics_utils_generate_mipmaps(gpu_api->vulkan_state->device, gpu_api->vulkan_state->physical_device, gpu_api->vulkan_state->graphics_queue, gpu_api->vulkan_state->command_pool, texture->texture_image, VK_FORMAT_R16G16B16A16_UNORM, tex_width, tex_height, mip_levels);
 
-  graphics_utils_create_image_view(vulkan_renderer->device, texture->texture_image, VK_FORMAT_R16G16B16A16_UNORM, VK_IMAGE_ASPECT_COLOR_BIT, mip_levels, &texture->texture_image_view);
-  graphics_utils_create_sampler(vulkan_renderer->device, &texture->texture_sampler, mip_levels, filter);
+  graphics_utils_create_image_view(gpu_api->vulkan_state->device, texture->texture_image, VK_FORMAT_R16G16B16A16_UNORM, VK_IMAGE_ASPECT_COLOR_BIT, mip_levels, &texture->texture_image_view);
+  graphics_utils_create_sampler(gpu_api->vulkan_state->device, &texture->texture_sampler, mip_levels, filter);
 
   return 0;
 }
 
-void texture_delete(struct Texture *texture, struct VulkanState *vulkan_renderer) {
-  vkDestroySampler(vulkan_renderer->device, texture->texture_sampler, NULL);
-  vkDestroyImageView(vulkan_renderer->device, texture->texture_image_view, NULL);
+void texture_delete(struct Texture *texture, struct GPUAPI *gpu_api) {
+  vkDestroySampler(gpu_api->vulkan_state->device, texture->texture_sampler, NULL);
+  vkDestroyImageView(gpu_api->vulkan_state->device, texture->texture_image_view, NULL);
 
-  vkDestroyImage(vulkan_renderer->device, texture->texture_image, NULL);
-  vkFreeMemory(vulkan_renderer->device, texture->texture_image_memory, NULL);
+  vkDestroyImage(gpu_api->vulkan_state->device, texture->texture_image, NULL);
+  vkFreeMemory(gpu_api->vulkan_state->device, texture->texture_image_memory, NULL);
 
   free(texture->path);
   free(texture->name);

@@ -7,7 +7,6 @@
 #include <vulkan/vulkan.h>
 
 #include "mana/core/vulkancore.h"
-#include "mana/graphics/render/vulkanrenderer.h"
 
 struct GraphicsLibrary;
 

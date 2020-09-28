@@ -9,14 +9,14 @@
 #include "mana/graphics/graphicscommon.h"
 #include "mana/graphics/render/vulkanrenderer.h"
 #include "mana/graphics/shaders/shader.h"
-#include "mana/graphics/utilities/fullscreenquad.h"
+#include "mana/graphics/utilities/fullscreentriangle.h"
 
 // Effect for full screen anti-aliasing
 
 struct FXAAShader {
   struct Shader* shader;
   VkDescriptorSet descriptor_sets[2];
-  struct FullscreenQuad* fullscreen_quad;
+  struct FullscreenTriangle* fullscreen_triangle;
 };
 
 int fxaa_shader_init(struct FXAAShader* fxaa_shader, struct GPUAPI* gpu_api);

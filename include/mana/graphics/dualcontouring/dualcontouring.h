@@ -7,6 +7,7 @@
 #include "mana/core/corecommon.h"
 #include "mana/graphics/dualcontouring/octree.h"
 #include "mana/graphics/graphicscommon.h"
+#include "mana/graphics/shaders/shader.h"
 #include "mana/graphics/utilities/mesh.h"
 
 struct DualContouringUniformBufferObject {

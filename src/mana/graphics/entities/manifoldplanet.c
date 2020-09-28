@@ -4,7 +4,7 @@ void manifold_planet_init(struct ManifoldPlanet* planet, struct GPUAPI* gpu_api,
   planet->planet_type = MANIFOLD_ROUND_PLANET;
   planet->terrain_shader = shader;
   planet->position = position;
-  manifold_dual_contouring_init(&planet->manifold_dual_contouring, gpu_api, shader, 64, 14);
+  manifold_dual_contouring_init(&planet->manifold_dual_contouring, gpu_api, shader, 32, 14);
   manifold_dual_contouring_contour(&planet->manifold_dual_contouring, gpu_api, 0.0f);
 }
 

@@ -45,10 +45,8 @@ int sprite_init(struct Sprite* sprite, struct GPUAPI* gpu_api, struct Shader* sh
   graphics_utils_setup_descriptor(gpu_api->vulkan_state, shader->descriptor_set_layout, shader->descriptor_pool, &sprite->descriptor_set);
 
   VkWriteDescriptorSet dcs[2] = {0};
-
   graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 0, &sprite->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(sizeof(struct SpriteUniformBufferObject), &sprite->uniform_buffer)});
   graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 1, &sprite->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&sprite->image_texture->texture_image_view, &sprite->image_texture->texture_sampler)});
-
   vkUpdateDescriptorSets(gpu_api->vulkan_state->device, 2, dcs, 0, NULL);
 
   return SPRITE_SUCCESS;

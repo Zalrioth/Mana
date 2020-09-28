@@ -64,7 +64,7 @@ void manifold_dual_contouring_contour(struct ManifoldDualContouring* manifold_du
   manifold_dual_contouring->tree = calloc(1, sizeof(struct ManifoldOctreeNode));
 
   double start_time = engine_get_time();
-  manifold_octree_construct_base(manifold_dual_contouring->tree, 64, 0);
+  manifold_octree_construct_base(manifold_dual_contouring->tree, manifold_dual_contouring->resolution, 0);
   double end_time = engine_get_time();
   printf("Total time taken: %lf\n", end_time - start_time);
   manifold_octree_cluster_cell_base(manifold_dual_contouring->tree, 0);

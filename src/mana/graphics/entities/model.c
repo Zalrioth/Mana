@@ -277,11 +277,9 @@ struct Model* model_get_clone(struct Model* model, struct GPUAPI* gpu_api) {
   graphics_utils_setup_descriptor(gpu_api->vulkan_state, new_model->shader_handle->descriptor_set_layout, new_model->shader_handle->descriptor_pool, &new_model->descriptor_set);
 
   VkWriteDescriptorSet dcs[3] = {0};
-
   graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 0, &new_model->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(new_model->ubo_buffer_size, &new_model->uniform_buffer)});
   graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 1, &new_model->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(sizeof(struct LightingUniformBufferObject), &new_model->lighting_uniform_buffer)});
   graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 2, &new_model->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&new_model->model_texture->texture_image_view, &new_model->model_texture->texture_sampler)});
-
   vkUpdateDescriptorSets(gpu_api->vulkan_state->device, 3, dcs, 0, NULL);
 
   return new_model;
@@ -339,11 +337,9 @@ void model_recreate(struct Model* model, struct GPUAPI* gpu_api) {
   graphics_utils_setup_descriptor(gpu_api->vulkan_state, model->shader_handle->descriptor_set_layout, model->shader_handle->descriptor_pool, &model->descriptor_set);
 
   VkWriteDescriptorSet dcs[3] = {0};
-
   graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 0, &model->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(model->ubo_buffer_size, &model->uniform_buffer)});
   graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 1, &model->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(sizeof(struct LightingUniformBufferObject), &model->lighting_uniform_buffer)});
   graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 2, &model->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&model->model_texture->texture_image_view, &model->model_texture->texture_sampler)});
-
   vkUpdateDescriptorSets(gpu_api->vulkan_state->device, 3, dcs, 0, NULL);
 }
 

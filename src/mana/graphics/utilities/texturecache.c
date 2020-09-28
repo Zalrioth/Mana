@@ -10,7 +10,7 @@ void texture_cache_delete(struct TextureCache* texture_cache, struct GPUAPI* gpu
   struct MapIter texture_iter = map_iter();
   while ((texture_key = map_next(&texture_cache->textures, &texture_iter))) {
     struct Texture* texture = *(struct Texture**)map_get(&texture_cache->textures, texture_key);
-    texture_delete(texture, gpu_api->vulkan_state);
+    texture_delete(texture, gpu_api);
     free(texture);
   }
 
@@ -24,7 +24,7 @@ void texture_cache_add(struct TextureCache* texture_cache, struct GPUAPI* gpu_ap
   while (n_textures-- > 0) {
     struct TextureSettings texture_settings = va_arg(args, struct TextureSettings);
     struct Texture* texture = malloc(sizeof(struct Texture));
-    texture_init(texture, gpu_api->vulkan_state, texture_settings);
+    texture_init(texture, gpu_api, texture_settings);
     map_set(&texture_cache->textures, texture_settings.path, &texture);  // Store full path in case of models having same texture name like diffuse
   }
 

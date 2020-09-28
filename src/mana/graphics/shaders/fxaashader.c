@@ -83,8 +83,7 @@ int fxaa_shader_init(struct FXAAShader* fxaa_shader, struct GPUAPI* gpu_api) {
     image_info.imageView = gpu_api->vulkan_state->post_process->color_image_views[ping_pong_target];
     image_info.sampler = gpu_api->vulkan_state->post_process->texture_sampler;
 
-    VkWriteDescriptorSet dc;
-    memset(&dc, 0, sizeof(dc));
+    VkWriteDescriptorSet dc = {0};
 
     dc.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     dc.dstSet = fxaa_shader->descriptor_sets[ping_pong_target];
@@ -97,30 +96,30 @@ int fxaa_shader_init(struct FXAAShader* fxaa_shader, struct GPUAPI* gpu_api) {
     vkUpdateDescriptorSets(gpu_api->vulkan_state->device, 1, &dc, 0, NULL);
   }
 
-  fxaa_shader->fullscreen_quad = calloc(1, sizeof(struct FullscreenQuad));
-  fullscreen_quad_init(fxaa_shader->fullscreen_quad, gpu_api->vulkan_state);
+  fxaa_shader->fullscreen_triangle = calloc(1, sizeof(struct FullscreenTriangle));
+  fullscreen_triangle_init(fxaa_shader->fullscreen_triangle, gpu_api);
 
   return 0;
 }
 
 void fxaa_shader_delete(struct FXAAShader* fxaa_shader, struct GPUAPI* gpu_api) {
-  fullscreen_quad_delete(fxaa_shader->fullscreen_quad, gpu_api->vulkan_state);
-  free(fxaa_shader->fullscreen_quad);
+  fullscreen_triangle_delete(fxaa_shader->fullscreen_triangle, gpu_api);
+  free(fxaa_shader->fullscreen_triangle);
   vkDestroyDescriptorPool(gpu_api->vulkan_state->device, fxaa_shader->shader->descriptor_pool, NULL);
   shader_delete(fxaa_shader->shader, gpu_api->vulkan_state);
   free(fxaa_shader->shader);
 }
 
 void fxaa_shader_render(struct FXAAShader* fxaa_shader, struct GPUAPI* gpu_api) {
-  post_process_start(gpu_api->vulkan_state->post_process, gpu_api->vulkan_state);
+  post_process_start(gpu_api->vulkan_state->post_process, gpu_api);
 
   vkCmdBindPipeline(gpu_api->vulkan_state->post_process->post_process_command_buffers[gpu_api->vulkan_state->post_process->ping_pong], VK_PIPELINE_BIND_POINT_GRAPHICS, fxaa_shader->shader->graphics_pipeline);
-  VkBuffer vertex_buffers[] = {fxaa_shader->fullscreen_quad->vertex_buffer};
+  VkBuffer vertex_buffers[] = {fxaa_shader->fullscreen_triangle->vertex_buffer};
   VkDeviceSize offsets[] = {0};
   vkCmdBindVertexBuffers(gpu_api->vulkan_state->post_process->post_process_command_buffers[gpu_api->vulkan_state->post_process->ping_pong], 0, 1, vertex_buffers, offsets);
-  vkCmdBindIndexBuffer(gpu_api->vulkan_state->post_process->post_process_command_buffers[gpu_api->vulkan_state->post_process->ping_pong], fxaa_shader->fullscreen_quad->index_buffer, 0, VK_INDEX_TYPE_UINT32);
+  vkCmdBindIndexBuffer(gpu_api->vulkan_state->post_process->post_process_command_buffers[gpu_api->vulkan_state->post_process->ping_pong], fxaa_shader->fullscreen_triangle->index_buffer, 0, VK_INDEX_TYPE_UINT32);
   vkCmdBindDescriptorSets(gpu_api->vulkan_state->post_process->post_process_command_buffers[gpu_api->vulkan_state->post_process->ping_pong], VK_PIPELINE_BIND_POINT_GRAPHICS, fxaa_shader->shader->pipeline_layout, 0, 1, &fxaa_shader->descriptor_sets[gpu_api->vulkan_state->post_process->ping_pong ^ true], 0, NULL);
-  vkCmdDrawIndexed(gpu_api->vulkan_state->post_process->post_process_command_buffers[gpu_api->vulkan_state->post_process->ping_pong], fxaa_shader->fullscreen_quad->mesh->indices->size, 1, 0, 0, 0);
+  vkCmdDrawIndexed(gpu_api->vulkan_state->post_process->post_process_command_buffers[gpu_api->vulkan_state->post_process->ping_pong], fxaa_shader->fullscreen_triangle->mesh->indices->size, 1, 0, 0, 0);
 
-  post_process_stop(gpu_api->vulkan_state->post_process, gpu_api->vulkan_state);
+  post_process_stop(gpu_api->vulkan_state->post_process, gpu_api);
 }

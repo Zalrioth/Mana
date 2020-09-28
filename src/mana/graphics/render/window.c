@@ -32,7 +32,7 @@ int window_init(struct Window *window, struct Engine *engine, int width, int hei
 
   switch (engine->gpu_api.type) {
     case (VULKAN_API):
-      switch (vulkan_renderer_init(engine->gpu_api.vulkan_state, width, height)) {
+      switch (vulkan_renderer_init(&engine->gpu_api, width, height)) {
         default:
           return WINDOW_SUCCESS;
           break;
@@ -74,7 +74,7 @@ int window_init(struct Window *window, struct Engine *engine, int width, int hei
 void window_delete(struct Window *window) {
   switch (window->engine->gpu_api.type) {
     case (VULKAN_API):
-      vulkan_renderer_delete(window->engine->gpu_api.vulkan_state);
+      vulkan_renderer_delete(&window->engine->gpu_api);
       break;
   }
 
@@ -161,7 +161,7 @@ void window_end_frame(struct Window *window) {
   if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || vulkan_core->framebuffer_resized) {
     vulkan_core->framebuffer_resized = false;
     vulkan_core->reset_shaders = true;
-    vulkan_renderer_recreate_swap_chain(vulkan_core, &window->engine->graphics_library, &window->width, &window->height);
+    vulkan_renderer_recreate_swap_chain(&window->engine->gpu_api, &window->engine->graphics_library, &window->width, &window->height);
   } else if (result != VK_SUCCESS)
     fprintf(stderr, "failed to present swap chain image!\n");
 

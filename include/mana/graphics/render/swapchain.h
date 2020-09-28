@@ -8,7 +8,7 @@
 #include "mana/graphics/render/vulkanrenderer.h"
 #include "mana/graphics/shaders/blitshader.h"
 #include "mana/graphics/shaders/shader.h"
-#include "mana/graphics/utilities/fullscreenquad.h"
+#include "mana/graphics/utilities/fullscreentriangle.h"
 
 struct VulkanState;
 
@@ -21,7 +21,7 @@ struct SwapChainSupportDetails {
 struct BlitSwapChain {
   struct BlitShader* blit_shader;
   VkDescriptorSet descriptor_sets[2];
-  struct FullscreenQuad* fullscreen_quad;
+  struct FullscreenTriangle* fullscreen_triangle;
 };
 
 struct SwapChain {
@@ -43,13 +43,13 @@ struct SwapChain {
   struct BlitSwapChain* blit_swap_chain;
 };
 
-int swap_chain_init(struct SwapChain* swap_chain, struct VulkanState* vulkan_renderer, int width, int height);
-void swap_chain_delete(struct SwapChain* swap_chain, struct VulkanState* vulkan_renderer);
-int swap_chain_start(struct SwapChain* swap_chain, struct VulkanState* vulkan_renderer, int swap_chain_num);
-int swap_chain_stop(struct SwapChain* swap_chain, struct VulkanState* vulkan_renderer, int swap_chain_num);
+int swap_chain_init(struct SwapChain* swap_chain, struct GPUAPI* gpu_api, int width, int height);
+void swap_chain_delete(struct SwapChain* swap_chain, struct GPUAPI* gpu_api);
+int swap_chain_start(struct SwapChain* swap_chain, struct GPUAPI* gpu_api, int swap_chain_num);
+int swap_chain_stop(struct SwapChain* swap_chain, struct GPUAPI* gpu_api, int swap_chain_num);
 
-int blit_swap_chain_init(struct BlitSwapChain* blit_swap_chain, struct VulkanState* vulkan_renderer);
-void blit_swap_chain_delete(struct BlitSwapChain* blit_swap_chain, struct VulkanState* vulkan_renderer);
-void blit_swap_chain_render(struct BlitSwapChain* blit_swap_chain, struct VulkanState* vulkan_renderer);
+int blit_swap_chain_init(struct BlitSwapChain* blit_swap_chain, struct GPUAPI* gpu_api);
+void blit_swap_chain_delete(struct BlitSwapChain* blit_swap_chain, struct GPUAPI* gpu_api);
+void blit_swap_chain_render(struct BlitSwapChain* blit_swap_chain, struct GPUAPI* gpu_api);
 
 #endif  // SWAP_CHAIN_H
