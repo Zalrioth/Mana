@@ -93,8 +93,8 @@ static inline int graphics_utils_create_buffer(struct VkDevice_T *device, struct
   buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
   if (vkCreateBuffer(device, &buffer_info, NULL, buffer) != VK_SUCCESS) {
-    return -1;
     fprintf(stderr, "failed to create buffer!\n");
+    return -1;
   }
 
   VkMemoryRequirements mem_requirements;
@@ -106,8 +106,8 @@ static inline int graphics_utils_create_buffer(struct VkDevice_T *device, struct
   alloc_info.memoryTypeIndex = graphics_utils_find_memory_type(physical_device, mem_requirements.memoryTypeBits, properties);
 
   if (vkAllocateMemory(device, &alloc_info, NULL, buffer_memory) != VK_SUCCESS) {
-    return -1;
     fprintf(stderr, "failed to allocate buffer memory!\n");
+    return -1;
   }
 
   vkBindBufferMemory(device, *buffer, *buffer_memory, 0);
@@ -224,8 +224,8 @@ static inline int graphics_utils_create_sampler(struct VkDevice_T *device, VkSam
   sampler_info.mipLodBias = 0;
 
   if (vkCreateSampler(device, &sampler_info, NULL, texture_sampler) != VK_SUCCESS) {
-    return -1;
     printf("failed to create texture sampler!\n");
+    return -1;
   }
 
   return 0;

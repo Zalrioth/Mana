@@ -7,12 +7,14 @@
 #include "mana/core/corecommon.h"
 #include "mana/graphics/render/vulkanrenderer.h"
 
+// NOTE: Will only read binary file
 static inline char* read_file(const char* filename, int* file_length) {
   FILE* fp = fopen(filename, "rb");
+  char* result = NULL;
 
   // Could not open file
   if (fp == NULL)
-    return NULL;
+    goto file_io_cleanup;
 
   fseek(fp, 0, SEEK_END);
   long int size = ftell(fp);
@@ -20,27 +22,17 @@ static inline char* read_file(const char* filename, int* file_length) {
 
   // Could not reach end of file
   if (size == -1)
-    return NULL;
+    goto file_io_cleanup;
 
   *file_length = size;
 
-  char* result = (char*)malloc(size);
+  result = (char*)calloc(1, size);
 
-  int index = 0;
-  int c;
-  while ((c = getc(fp)) != EOF) {
-    // Guard against writing over buffer
-    if (index == size) {
-      result[size - 1] = '\0';
-      break;
-    }
+  if (fread(result, size, 1, fp) != 1)
+    free(result);
 
-    result[index] = c;
-    index++;
-  }
-
+file_io_cleanup:
   fclose(fp);
-
   return result;
 }
 

@@ -57,7 +57,6 @@ struct XmlNode* xml_parser_load_node(char** scanner) {
   struct XmlNode* xml_node = calloc(1, sizeof(struct XmlNode));
   char* node_name = strdup((char*)array_list_get(&tag_parts, 0));
   char* check_slash = strchr(node_name, '/');
-
   // Everything after slash move left one
   if (check_slash != NULL)
     memmove_s(check_slash, strnlen(node_name, 9001), check_slash + 1, strnlen(check_slash, 9001));

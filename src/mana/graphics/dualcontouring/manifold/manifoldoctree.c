@@ -416,7 +416,6 @@ void manifold_octree_cluster_cell(struct ManifoldOctreeNode* octree_node, float 
     }
   }
 
-  int clustered_count = 0;
   if (array_list_size(&collected_vertices) > 0) {
     for (int i = 0; i <= highest_index; i++) {
       struct QefSolver qef = {0};
@@ -476,15 +475,11 @@ void manifold_octree_cluster_cell(struct ManifoldOctreeNode* octree_node, float 
       float err = qef_solver_get_error(&qef);
       new_vertex->collapsible = err <= error;
       new_vertex->error = err;
-      clustered_count++;
 
-      bool assigned = false;
       for (int vertice_num = 0; vertice_num < array_list_size(&collected_vertices); vertice_num++) {
         struct Vertex* v = (struct Vertex*)array_list_get(&collected_vertices, vertice_num);
-        if (v->surface_index == i) {
+        if (v->surface_index == i)
           v->parent = new_vertex;
-          assigned = true;
-        }
       }
     }
   } else {

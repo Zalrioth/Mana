@@ -133,27 +133,25 @@ void geometry_loader_read_colors(struct ModelData* model_data, struct XmlNode* m
   char* raw_data = strdup(xml_node_get_data(colors_data));
   char* raw_part = strtok(raw_data, " ");
   while (raw_part != NULL) {
-    float r = 0.0f, g = 0.0f, b = 0.0f, a = 0.0f;
-
+    vec4 color = {0};
     for (int type_num = 0; type_num < stride; type_num++) {
       switch (type_num) {
         case 0:
-          r = atof(raw_part);
+          color.r = atof(raw_part);
           break;
         case 1:
-          g = atof(raw_part);
+          color.g = atof(raw_part);
           break;
         case 2:
-          b = atof(raw_part);
+          color.b = atof(raw_part);
           break;
         case 3:
-          a = atof(raw_part);
+          color.a = atof(raw_part);
           break;
       }
       raw_part = strtok(NULL, " ");
     }
 
-    vec3 color = (vec3){.r = r, .g = g, .b = b};
     vector_push_back(model_data->colors, &color);
   }
   free(raw_data);

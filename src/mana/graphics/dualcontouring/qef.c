@@ -335,7 +335,7 @@ float qef_solver_solve(struct QefSolver *qef_solver, vec3 *outx, const float svd
   qef_solver->x = VEC3_ZERO;
 
   // Solve symmetric
-  mat3 mtmp = MAT3_ZERO, pinv = MAT3_ZERO, v = MAT3_IDENTITY;
+  mat3 pinv = MAT3_ZERO, v = MAT3_IDENTITY;
   mat3 vtav = MAT3_ZERO;
 
   vtav.vecs[0].data[0] = qef_solver->data.ata_00;
