@@ -242,39 +242,39 @@ void rot01_post(mat3 *m, const float c, const float s) {
 
   (*m).vecs[0].data[0] = c * m00 - s * m01;
   (*m).vecs[0].data[1] = s * m00 + c * m01;
-  (*m).vecs[0].data[2] = (*m).vecs[0].data[2];
+  //(*m).vecs[0].data[2] = (*m).vecs[0].data[2];
   (*m).vecs[1].data[0] = c * m10 - s * m11;
   (*m).vecs[1].data[1] = s * m10 + c * m11;
-  (*m).vecs[1].data[2] = (*m).vecs[1].data[2];
+  //(*m).vecs[1].data[2] = (*m).vecs[1].data[2];
   (*m).vecs[2].data[0] = c * m20 - s * m21;
   (*m).vecs[2].data[1] = s * m20 + c * m21;
-  (*m).vecs[2].data[2] = (*m).vecs[2].data[2];
+  //(*m).vecs[2].data[2] = (*m).vecs[2].data[2];
 }
 
 void rot02_post(mat3 *m, const float c, const float s) {
   const float m00 = (*m).vecs[0].data[0], m02 = (*m).vecs[0].data[2], m10 = (*m).vecs[1].data[0], m12 = (*m).vecs[1].data[2], m20 = (*m).vecs[2].data[0], m22 = (*m).vecs[2].data[2];
 
   (*m).vecs[0].data[0] = c * m00 - s * m02;
-  (*m).vecs[0].data[1] = (*m).vecs[0].data[1];
+  //(*m).vecs[0].data[1] = (*m).vecs[0].data[1];
   (*m).vecs[0].data[2] = s * m00 + c * m02;
   (*m).vecs[1].data[0] = c * m10 - s * m12;
-  (*m).vecs[1].data[1] = (*m).vecs[1].data[1];
+  //(*m).vecs[1].data[1] = (*m).vecs[1].data[1];
   (*m).vecs[1].data[2] = s * m10 + c * m12;
   (*m).vecs[2].data[0] = c * m20 - s * m22;
-  (*m).vecs[2].data[1] = (*m).vecs[2].data[1];
+  //(*m).vecs[2].data[1] = (*m).vecs[2].data[1];
   (*m).vecs[2].data[2] = s * m20 + c * m22;
 }
 
 void rot12_post(mat3 *m, const float c, const float s) {
   const float m01 = (*m).vecs[0].data[1], m02 = (*m).vecs[0].data[2], m11 = (*m).vecs[1].data[1], m12 = (*m).vecs[1].data[2], m21 = (*m).vecs[2].data[1], m22 = (*m).vecs[2].data[2];
 
-  (*m).vecs[0].data[0] = (*m).vecs[0].data[0];
+  //(*m).vecs[0].data[0] = (*m).vecs[0].data[0];
   (*m).vecs[0].data[1] = c * m01 - s * m02;
   (*m).vecs[0].data[2] = s * m01 + c * m02;
-  (*m).vecs[1].data[0] = (*m).vecs[1].data[0];
+  //(*m).vecs[1].data[0] = (*m).vecs[1].data[0];
   (*m).vecs[1].data[1] = c * m11 - s * m12;
   (*m).vecs[1].data[2] = s * m11 + c * m12;
-  (*m).vecs[2].data[0] = (*m).vecs[2].data[0];
+  //(*m).vecs[2].data[0] = (*m).vecs[2].data[0];
   (*m).vecs[2].data[1] = c * m21 - s * m22;
   (*m).vecs[2].data[2] = s * m21 + c * m22;
 }

@@ -84,7 +84,6 @@ struct SkinningData* skin_loader_extract_skin_data(struct XmlNode* skinning_data
 struct Vector* skin_loader_load_joints_list(struct XmlNode* skinning_data) {
   struct XmlNode* input_node = xml_node_get_child(skinning_data, "vertex_weights");
   char* joint_data_id = xml_node_get_attribute(xml_node_get_child_with_attribute(input_node, "input", "semantic", "JOINT"), "source") + 1;
-  char* weights_data_id = xml_node_get_attribute(xml_node_get_child_with_attribute(input_node, "input", "semantic", "WEIGHT"), "source") + 1;
   struct XmlNode* joint_node = xml_node_get_child(xml_node_get_child_with_attribute(skinning_data, "source", "id", joint_data_id), "Name_array");
 
   char* raw_data = strdup(xml_node_get_data(joint_node));

@@ -88,24 +88,24 @@ void manifold_dual_contouring_contour(struct ManifoldDualContouring* manifold_du
   }
 }
 
-void manifold_dual_contouring_construct_tree_grid(struct ManifoldOctreeNode* node) {
-  if (node == NULL)
-    return;
-
-  int x = (int)node->position.x;
-  int y = (int)node->position.y;
-  int z = (int)node->position.z;
-  vec3 c = {.r = 0.0f, .g = 0.2f, .b = 0.8f};
-  vec3 v = {.r = 1.0f, .g = 0.0f, .b = 0.0f};
-
-  float size = node->size;
-
-  if (node->type == MANIFOLD_NODE_INTERNAL && array_list_size(node->vertices) == 0) {
-    for (int i = 0; i < 8; i++) {
-      manifold_dual_contouring_construct_tree_grid(node->children[i]);
-    }
-  }
-}
+//void manifold_dual_contouring_construct_tree_grid(struct ManifoldOctreeNode* node) {
+//  if (node == NULL)
+//    return;
+//
+//  int x = (int)node->position.x;
+//  int y = (int)node->position.y;
+//  int z = (int)node->position.z;
+//  vec3 c = {.r = 0.0f, .g = 0.2f, .b = 0.8f};
+//  vec3 v = {.r = 1.0f, .g = 0.0f, .b = 0.0f};
+//
+//  float size = node->size;
+//
+//  if (node->type == MANIFOLD_NODE_INTERNAL && array_list_size(node->vertices) == 0) {
+//    for (int i = 0; i < 8; i++) {
+//      manifold_dual_contouring_construct_tree_grid(node->children[i]);
+//    }
+//  }
+//}
 
 void manifold_dual_contouring_calculate_indexes(struct ManifoldDualContouring* manifold_dual_contouring, float threshold) {
   //vector_clear(manifold_dual_contouring->mesh->indices);

@@ -25,9 +25,7 @@ struct XmlNode* xml_parser_load_node(char** scanner) {
   if (line_length == 0)
     return NULL;
   char* line = malloc(sizeof(char) * (line_length + 1));
-  strncpy(line, *scanner, line_length);
-  line[line_length] = '\0';
-
+  snprintf(line, line_length + 1, "%s", *scanner);
   *scanner += line_length + 1;
 
   // Trim whitespace
@@ -44,8 +42,7 @@ struct XmlNode* xml_parser_load_node(char** scanner) {
   char* tag_end = strchr(remove_whitespace_line, '>');
   size_t tag_length = tag_end - (remove_whitespace_line + 1);
   char* tag = malloc(sizeof(char) * (tag_length + 1));
-  strncpy(tag, remove_whitespace_line + 1, tag_length);
-  tag[tag_length] = '\0';
+  snprintf(tag, tag_length + 1, "%s", remove_whitespace_line + 1);
 
   // Split tag elements
   struct ArrayList tag_parts = {0};
@@ -56,28 +53,23 @@ struct XmlNode* xml_parser_load_node(char** scanner) {
     tag_part = strtok(NULL, " ");
   }
 
-  //printf("DAT: %s\n", remove_whitespace_line);
-  //for (int tag_num = 0; tag_num < array_list_size(&tag_parts); tag_num++)
-  //  printf("Tag num: %d is %s\n", tag_num, (char*)array_list_get(&tag_parts, tag_num));
-
   // Remove slash
   struct XmlNode* xml_node = calloc(1, sizeof(struct XmlNode));
   char* node_name = strdup((char*)array_list_get(&tag_parts, 0));
   char* check_slash = strchr(node_name, '/');
   if (check_slash != NULL)
-    memmove(check_slash, check_slash + 1, strlen(check_slash));
+    check_slash++;
   xml_node_init(xml_node, node_name);
 
   // Add attributes
   for (int tag_num = 0; tag_num < array_list_size(&tag_parts); tag_num++) {
     char* tag_text = (char*)array_list_get(&tag_parts, tag_num);
-    size_t tag_text_length = strlen(tag_text);
+    size_t tag_text_length = strnlen(tag_text, 9001);
     char* tag_contains_equal = strchr(tag_text, '=');
     if (tag_contains_equal != NULL) {
       size_t tag_equal_length = tag_contains_equal - tag_text;
       char* tag_equal_text = malloc(sizeof(char) * (tag_equal_length + 1));
-      strncpy(tag_equal_text, tag_text, tag_equal_length);
-      tag_equal_text[tag_equal_length] = '\0';
+      snprintf(tag_equal_text, tag_equal_length + 1, "%s", tag_text);
 
       //TODO: Add support for " " name tags like line 2242 of model
       char* tag_attr_start = tag_text + tag_equal_length + 2;
@@ -89,8 +81,7 @@ struct XmlNode* xml_parser_load_node(char** scanner) {
         tag_attr_end = strchr(tag_attr_start, '\"');
       size_t tag_value_length = tag_attr_end - tag_attr_start;
       char* tag_value = malloc(sizeof(char) * (tag_value_length + 1));
-      strncpy(tag_value, tag_attr_start, tag_value_length);
-      tag_value[tag_value_length] = '\0';
+      snprintf(tag_value, tag_value_length + 1, "%s", tag_attr_start);
 
       xml_node_add_attribute(xml_node, tag_equal_text, tag_value);
       free(tag_equal_text);
@@ -105,8 +96,7 @@ struct XmlNode* xml_parser_load_node(char** scanner) {
   if (data_end != NULL) {
     size_t data_length = data_end - data_start;
     char* data_value = malloc(sizeof(char) * (data_length + 1));
-    strncpy(data_value, data_start, data_length);
-    data_value[data_length] = '\0';
+    snprintf(data_value, data_length + 1, "%s", data_start);
 
     xml_node_set_data(xml_node, data_value);
   }

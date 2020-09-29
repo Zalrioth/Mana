@@ -39,18 +39,17 @@ void geometry_loader_read_positions(struct ModelData* model_data, struct XmlNode
   char* positions_id = xml_node_get_attribute(xml_node_get_child(xml_node_get_child(mesh_data, "vertices"), "input"), "source") + 1;
   struct XmlNode* positions_data = xml_node_get_child(xml_node_get_child_with_attribute(mesh_data, "source", "id", positions_id), "float_array");
   int count = atoi(xml_node_get_attribute(positions_data, "count"));
+  int stride = atoi(xml_node_get_attribute(xml_node_get_child(xml_node_get_child(xml_node_get_child_with_attribute(mesh_data, "source", "id", positions_id), "technique_common"), "accessor"), "stride"));
 
   char* raw_data = strdup(xml_node_get_data(positions_data));
   char* raw_part = strtok(raw_data, " ");
-  while (raw_part != NULL) {
-    float x_pos = atof(raw_part);
-    raw_part = strtok(NULL, " ");
-    float y_pos = atof(raw_part);
-    raw_part = strtok(NULL, " ");
-    float z_pos = atof(raw_part);
-    raw_part = strtok(NULL, " ");
+  for (int position_num = 0; position_num < count && raw_part != NULL; position_num++) {
+    vec4 position = {0};
+    for (int dim_num = 0; dim_num < stride; dim_num++) {
+      position.data[dim_num] = atof(raw_part);
+      raw_part = strtok(NULL, " ");
+    }
 
-    vec4 position = (vec4){.x = x_pos, .y = y_pos, .z = z_pos, .w = 1.0f};
     mat4 correction = mat4_rotate(MAT4_IDENTITY, degree_to_radian(-90.0f), (vec3){.data[0] = 1.0f, .data[1] = 0.0f, .data[2] = 0.0f});
     position = mat4_mul_vec4(correction, position);
     vec3 position_corrected = (vec3){.data[0] = position.data[0], .data[1] = position.data[1], .data[2] = position.data[2]};
@@ -61,6 +60,7 @@ void geometry_loader_read_positions(struct ModelData* model_data, struct XmlNode
       raw_vertex_model_init(&raw_vertex, vector_size(model_data->vertices), position_corrected, NULL);
     vector_push_back(model_data->vertices, &raw_vertex);
   }
+
   free(raw_data);
 }
 
@@ -71,23 +71,23 @@ void geometry_loader_read_normals(struct ModelData* model_data, struct XmlNode* 
   char* normals_id = xml_node_get_attribute(xml_node_get_child_with_attribute(material_node, "input", "semantic", "NORMAL"), "source") + 1;
   struct XmlNode* normals_data = xml_node_get_child(xml_node_get_child_with_attribute(mesh_data, "source", "id", normals_id), "float_array");
   int count = atoi(xml_node_get_attribute(normals_data, "count"));
+  int stride = atoi(xml_node_get_attribute(xml_node_get_child(xml_node_get_child(xml_node_get_child_with_attribute(mesh_data, "source", "id", normals_id), "technique_common"), "accessor"), "stride"));
 
   char* raw_data = strdup(xml_node_get_data(normals_data));
   char* raw_part = strtok(raw_data, " ");
-  while (raw_part != NULL) {
-    float x_norm = atof(raw_part);
-    raw_part = strtok(NULL, " ");
-    float y_norm = atof(raw_part);
-    raw_part = strtok(NULL, " ");
-    float z_norm = atof(raw_part);
-    raw_part = strtok(NULL, " ");
+  for (int normal_num = 0; normal_num < count && raw_part != NULL; normal_num++) {
+    vec4 normal = {0};
+    for (int dim_num = 0; dim_num < stride; dim_num++) {
+      normal.data[dim_num] = atof(raw_part);
+      raw_part = strtok(NULL, " ");
+    }
 
-    vec4 normal = (vec4){.data[0] = x_norm, .data[1] = y_norm, .data[2] = z_norm, .data[3] = 0.0f};
     mat4 correction = mat4_rotate(MAT4_IDENTITY, degree_to_radian(-90.0f), (vec3){.data[0] = 1.0f, .data[1] = 0.0f, .data[2] = 0.0f});
     normal = mat4_mul_vec4(correction, normal);
     vec3 normal_corrected = (vec3){.data[0] = normal.data[0], .data[1] = normal.data[1], .data[2] = normal.data[2]};
     vector_push_back(model_data->normals, &normal_corrected);
   }
+
   free(raw_data);
 }
 
@@ -98,18 +98,20 @@ void geometry_loader_read_texture_coordinates(struct ModelData* model_data, stru
   char* tex_coords_id = xml_node_get_attribute(xml_node_get_child_with_attribute(material_node, "input", "semantic", "TEXCOORD"), "source") + 1;
   struct XmlNode* tex_coords_data = xml_node_get_child(xml_node_get_child_with_attribute(mesh_data, "source", "id", tex_coords_id), "float_array");
   int count = atoi(xml_node_get_attribute(tex_coords_data, "count"));
+  int stride = atoi(xml_node_get_attribute(xml_node_get_child(xml_node_get_child(xml_node_get_child_with_attribute(mesh_data, "source", "id", tex_coords_id), "technique_common"), "accessor"), "stride"));
 
   char* raw_data = strdup(xml_node_get_data(tex_coords_data));
   char* raw_part = strtok(raw_data, " ");
-  while (raw_part != NULL) {
-    float s = atof(raw_part);
-    raw_part = strtok(NULL, " ");
-    float t = atof(raw_part);
-    raw_part = strtok(NULL, " ");
+  for (int tex_coord_num = 0; tex_coord_num < count && raw_part != NULL; tex_coord_num++) {
+    vec4 tex_coord = {0};
+    for (int dim_num = 0; dim_num < stride; dim_num++) {
+      tex_coord.data[dim_num] = atof(raw_part);
+      raw_part = strtok(NULL, " ");
+    }
 
-    vec2 tex_coord = (vec2){.s = s, .t = t};
     vector_push_back(model_data->tex_coords, &tex_coord);
   }
+
   free(raw_data);
 }
 

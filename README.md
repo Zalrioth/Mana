@@ -1,5 +1,6 @@
 # Mana - Mana's Also Not (an) Ancronym
 
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/b6e4007271734b0c9c40028dcbd44e18)](https://www.codacy.com/gh/nickbedner/mana/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=nickbedner/mana&amp;utm_campaign=Badge_Grade)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Getting Started
@@ -20,14 +21,15 @@ Noise generation<br/>
 
 ### Acknowledgements
 
-Sascha Willems https://github.com/SaschaWillems
-John Chapman https://github.com/john-chapman
-Grant Kot https://github.com/kotsoft
-Nick Gildea https://github.com/nickgildea
-John Lin https://github.com/Lin20
-Doyub Kim https://github.com/doyubkim
-Ian Millington https://github.com/idmillington
-Patrick Cozzi https://github.com/pjcozzi
-Matthias Müller https://github.com/matthias-research
-Jason Bevins http://libnoise.sourceforge.net/
-Scott Schaefer, Tao Ju, and Joe Warren's Manifold DC
+Sascha Willems https://github.com/SaschaWillems<br/>
+John Chapman https://github.com/john-chapman<br/>
+Grant Kot https://github.com/kotsoft<br/>
+Nick Gildea https://github.com/nickgildea<br/>
+John Lin https://github.com/Lin20<br/>
+Doyub Kim https://github.com/doyubkim<br/>
+Ian Millington https://github.com/idmillington<br/>
+Patrick Cozzi https://github.com/pjcozzi<br/>
+Matthias Müller https://github.com/matthias-research<br/>
+Glenn Fiedler https://github.com/gafferongames<br/>
+Jason Bevins http://libnoise.sourceforge.net/<br/>
+Scott Schaefer, Tao Ju, and Joe Warren's Manifold DC<br/>

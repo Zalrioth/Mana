@@ -252,7 +252,6 @@ void manifold_octree_process_edge(struct ManifoldOctreeNode* nodes[4], int direc
 
 void manifold_octree_process_indexes(struct ManifoldOctreeNode* nodes[4], int direction, struct Vector* indexes, float threshold) {
   int min_size = 10000000;
-  int min_index = 0;
   int indices[4] = {-1, -1, -1, -1};
   bool flip = false;
   bool sign_changed = false;
@@ -268,7 +267,6 @@ void manifold_octree_process_indexes(struct ManifoldOctreeNode* nodes[4], int di
 
     if (nodes[i]->size < min_size) {
       min_size = nodes[i]->size;
-      min_index = i;
       flip = m1 == 1;
       sign_changed = ((m1 == 0 && m2 != 0) || (m1 != 0 && m2 == 0));
     }
@@ -298,10 +296,6 @@ void manifold_octree_process_indexes(struct ManifoldOctreeNode* nodes[4], int di
     struct Vertex* v = (struct Vertex*)array_list_get(nodes[i]->vertices, index);
     struct Vertex* highest = v;
     while (highest->parent != NULL) {
-      //if ((highest->parent->error <= threshold && (!true || (highest->parent->euler == 1 && highest->parent->face_prop2))))
-      //  highest = v = highest->parent;
-      //else
-      //  highest = highest->parent;
       if (highest->parent->error <= threshold && (highest->parent->euler == 1 && highest->parent->face_prop2))
         highest = v = highest->parent;
       else
@@ -312,40 +306,29 @@ void manifold_octree_process_indexes(struct ManifoldOctreeNode* nodes[4], int di
   }
 
   if (sign_changed) {
-    int count = 0;
     if (!flip) {
       if (indices[0] != -1 && indices[1] != -1 && indices[2] != -1 && indices[0] != indices[1] && indices[1] != indices[3]) {
         mesh_assign_indice(indexes, indices[0]);
         mesh_assign_indice(indexes, indices[1]);
         mesh_assign_indice(indexes, indices[3]);
-        count++;
       }
 
       if (indices[0] != -1 && indices[2] != -1 && indices[3] != -1 && indices[0] != indices[2] && indices[2] != indices[3]) {
         mesh_assign_indice(indexes, indices[0]);
         mesh_assign_indice(indexes, indices[3]);
         mesh_assign_indice(indexes, indices[2]);
-        count++;
       }
     } else {
       if (indices[0] != -1 && indices[3] != -1 && indices[1] != -1 && indices[0] != indices[1] && indices[1] != indices[3]) {
-        //mesh_assign_indice(indexes, 0x10000000 | indices[0]);
-        //mesh_assign_indice(indexes, 0x10000000 | indices[3]);
-        //mesh_assign_indice(indexes, 0x10000000 | indices[1]);
         mesh_assign_indice(indexes, indices[0]);
         mesh_assign_indice(indexes, indices[3]);
         mesh_assign_indice(indexes, indices[1]);
-        count++;
       }
 
       if (indices[0] != -1 && indices[2] != -1 && indices[3] != -1 && indices[0] != indices[2] && indices[2] != indices[3]) {
-        //mesh_assign_indice(indexes, 0x10000000 | indices[0]);
-        //mesh_assign_indice(indexes, 0x10000000 | indices[2]);
-        //mesh_assign_indice(indexes, 0x10000000 | indices[3]);
         mesh_assign_indice(indexes, indices[0]);
         mesh_assign_indice(indexes, indices[2]);
         mesh_assign_indice(indexes, indices[3]);
-        count++;
       }
     }
   }
@@ -364,25 +347,18 @@ void manifold_octree_cluster_cell_base(struct ManifoldOctreeNode* octree_node, f
 }
 
 void manifold_octree_cluster_cell(struct ManifoldOctreeNode* octree_node, float error) {
-  //static int counter = 0;
-  //counter++;
-  //printf("Numb: %d\n", counter);
-
   if (octree_node->type != MANIFOLD_NODE_INTERNAL)
     return;
 
   int signs[8] = {-1, -1, -1, -1, -1, -1, -1, -1};
   int mid_sign = -1;
 
-  bool is_collapsible = true;
   for (int i = 0; i < 8; i++) {
     if (octree_node->children[i] == NULL)
       continue;
 
     manifold_octree_cluster_cell(octree_node->children[i], error);
-    if (octree_node->children[i]->type == MANIFOLD_NODE_INTERNAL)
-      is_collapsible = false;
-    else {
+    if (octree_node->children[i]->type != MANIFOLD_NODE_INTERNAL) {
       mid_sign = (octree_node->children[i]->corners >> (7 - i)) & 1;
       signs[i] = (octree_node->children[i]->corners >> i) & 1;
     }
