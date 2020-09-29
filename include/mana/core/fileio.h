@@ -28,8 +28,11 @@ static inline char* read_file(const char* filename, int* file_length) {
 
   result = (char*)calloc(1, size);
 
-  if (fread(result, size, 1, fp) != 1)
+  // Could not read chunk of binary data
+  if (fread(result, size, 1, fp) != 1) {
     free(result);
+    result = NULL;
+  }
 
 file_io_cleanup:
   fclose(fp);
