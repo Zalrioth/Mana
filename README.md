@@ -11,7 +11,7 @@ Mana is a WIP cross platform 2D and 3D rendering engine written in C. Fast compi
 
 ### Setting Up a Project
 
-`git clone --recursive https://github.com/nickbedner/mana`@cr
+`git clone --recursive https://github.com/nickbedner/mana`  
 Tested with Clang 10.0.0 on Windows.
 
 ### Features
@@ -24,15 +24,15 @@ Tested with Clang 10.0.0 on Windows.
 
 ### Acknowledgements
 
-Sascha Willems <https://github.com/SaschaWillems>@cr
-John Chapman <https://github.com/john-chapman>@cr
-Grant Kot <https://github.com/kotsoft>@cr
-Nick Gildea <https://github.com/nickgildea>@cr
-John Lin <https://github.com/Lin20>@cr
-Doyub Kim <https://github.com/doyubkim>@cr
-Ian Millington <https://github.com/idmillington>@cr
-Patrick Cozzi <https://github.com/pjcozzi>@cr
-Matthias Müller <https://github.com/matthias-research>@cr
-Glenn Fiedler <https://github.com/gafferongames>@cr
-Jason Bevins <http://libnoise.sourceforge.net/>@cr
+Sascha Willems <https://github.com/SaschaWillems>  
+John Chapman <https://github.com/john-chapman>  
+Grant Kot <https://github.com/kotsoft>  
+Nick Gildea <https://github.com/nickgildea>  
+John Lin <https://github.com/Lin20>  
+Doyub Kim <https://github.com/doyubkim>  
+Ian Millington <https://github.com/idmillington>  
+Patrick Cozzi <https://github.com/pjcozzi>  
+Matthias Müller <https://github.com/matthias-research>  
+Glenn Fiedler <https://github.com/gafferongames>  
+Jason Bevins <http://libnoise.sourceforge.net/>  
 Scott Schaefer, Tao Ju, and Joe Warren's Manifold DC
