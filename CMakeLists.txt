@@ -24,7 +24,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx -mavx2")
 # /MDd
 if (WIN32)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Xclang -fopenmp")
-endif (WIN32)
+endif ()
 
 # -fsanitize=address
 if(APPLE)
@@ -44,6 +44,11 @@ if(UNIX AND NOT APPLE)
 endif()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")
+
+set(VULKAN_HEADERS_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/Vulkan-Headers/include)
+set(VulkanRegistry_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/Vulkan-Headers/include)
+set(VulkanHeaders_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/Vulkan-Headers/include)
+add_subdirectory(lib/Vulkan-Loader buildvulkan)
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
@@ -65,13 +70,19 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-deprecated-declarations")
 # TODO: Link properly on Apple and Linux
 # On Windows link mimalloc statically for performance and dynamically for stability
 # Unix-like can static override instead
-target_link_libraries(mana
-        ${CMAKE_CURRENT_SOURCE_DIR}/lib/VulkanSDK/1.1.101.0/Lib/vulkan-1.lib
-        ${CMAKE_CURRENT_SOURCE_DIR}/lib/openmp/libomp.lib
+set(MANA_BUILD_LIBRARIES mana
+        vulkan
         glfw
         chaos
         #mimalloc
         mimalloc-static)
+
+if (WIN32 AND CMAKE_C_COMPILER_ID MATCHES "Clang")
+        STRING(REPLACE " " "\ " PATH_NO_SPACE "$ENV{ProgramFiles}")
+        set(MANA_BUILD_LIBRARIES ${MANA_BUILD_LIBRARIES} "${PATH_NO_SPACE}/LLVM/lib/libomp.lib")
+endif ()
+
+target_link_libraries(${MANA_BUILD_LIBRARIES})
 
 set(includeList
         ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -81,8 +92,8 @@ set(includeList
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/uber-math/include/ubermath
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/stb
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/glfw/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/lib/VulkanSDK/1.1.101.0/Include
-        ${CMAKE_CURRENT_SOURCE_DIR}/lib/Chaos/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/Vulkan-Headers/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/chaos/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/mimalloc/include
         ${OpenMP_CXX_LIBRARIES})
 

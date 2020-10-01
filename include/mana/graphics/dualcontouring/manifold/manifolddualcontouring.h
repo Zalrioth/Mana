@@ -14,6 +14,8 @@
 #include "mana/graphics/dualcontouring/qef.h"
 #include "mana/graphics/utilities/mesh.h"
 
+#define MANIFOLD_BENCHMARK true
+
 struct ManifoldDualContouringUniformBufferObject {
   alignas(32) mat4 model;
   alignas(32) mat4 view;
@@ -45,7 +47,6 @@ void manifold_dual_contouring_delete(struct ManifoldDualContouring* manifold_dua
 void manifold_dual_contouring_recreate(struct ManifoldDualContouring* manifold_dual_contouring, struct GPUAPI* gpu_api);
 void manifold_dual_contouring_contour(struct ManifoldDualContouring* manifold_dual_contouring, struct GPUAPI* gpu_api, float threshold);
 void manifold_dual_contouring_construct_tree_grid(struct ManifoldOctreeNode* node);
-void manifold_dual_contouring_calculate_indexes(struct ManifoldDualContouring* manifold_dual_contouring, float threshold);
 vec3 manifold_dual_contouring_get_normal_q(struct Vector* verts, int indexes[6], int index_length);
 
 #endif  // MANIFOLD_DUAL_CONTOURING_H

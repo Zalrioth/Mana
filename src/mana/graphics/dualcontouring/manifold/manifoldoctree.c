@@ -468,7 +468,6 @@ void manifold_octree_cluster_cell(struct ManifoldOctreeNode* octree_node, float 
       new_vertex->in_cell = octree_node->child_index;
       new_vertex->face_prop2 = face_prop2;
       array_list_add(new_vertices, new_vertex);
-      //array_list_add(vertices, new_vertex);
 
       vec3 buf_extra = VEC3_ZERO;
       qef_solver_solve(&qef, &buf_extra, 1e-6f, 4, 1e-6f);
@@ -489,7 +488,6 @@ void manifold_octree_cluster_cell(struct ManifoldOctreeNode* octree_node, float 
     return;
   }
 
-  //foreach (Vertex v2 in collected_vertices) {
   for (int vertice_num = 0; vertice_num < array_list_size(&collected_vertices); vertice_num++) {
     struct Vertex* v2 = (struct Vertex*)array_list_get(&collected_vertices, vertice_num);
     v2->surface_index = -1;
@@ -523,7 +521,6 @@ void manifold_octree_cluster_face(struct ManifoldOctreeNode* nodes[2], int direc
   if (nodes[0]->type != MANIFOLD_NODE_LEAF || nodes[1]->type != MANIFOLD_NODE_LEAF) {
     for (int i = 0; i < 4; i++) {
       struct ManifoldOctreeNode* face_nodes[2] = {NULL};
-
       for (int j = 0; j < 2; j++) {
         if (nodes[j] == NULL)
           continue;
@@ -541,9 +538,6 @@ void manifold_octree_cluster_face(struct ManifoldOctreeNode* nodes[2], int direc
 
   for (int i = 0; i < 4; i++) {
     struct ManifoldOctreeNode* edge_nodes[4] = {NULL};
-    //for (int octree_num = 0; octree_num < 4; octree_num++)
-    //  octree_node_init(&edge_nodes[octree_num]);
-
     for (int j = 0; j < 4; j++) {
       if (nodes[orders[TFaceProcEdgeMask[direction][i][0]][j]] == NULL)
         continue;
@@ -563,9 +557,6 @@ void manifold_octree_cluster_edge(struct ManifoldOctreeNode* nodes[4], int direc
   } else {
     for (int i = 0; i < 2; i++) {
       struct ManifoldOctreeNode* edge_nodes[4] = {NULL};
-      //for (int octree_num = 0; octree_num < 4; octree_num++)
-      //  octree_node_init(&edge_nodes[octree_num]);
-
       for (int j = 0; j < 4; j++) {
         if (nodes[j] == NULL)
           continue;
@@ -585,9 +576,6 @@ void manifold_octree_cluster_indexes(struct ManifoldOctreeNode* nodes[8], int di
     return;
 
   struct Vertex* vertices[4] = {NULL};
-  //for (int vertex_num = 0; vertex_num < 4; vertex_num++)
-  //  vertex_init(&vertices[vertex_num]);
-
   int v_count = 0;
   int node_count = 0;
 
