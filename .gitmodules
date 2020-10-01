@@ -22,3 +22,9 @@
 [submodule "lib/cthreads"]
 	path = lib/cthreads
 	url = https://github.com/Zalrioth/cthreads
+[submodule "lib/Vulkan-Headers"]
+	path = lib/Vulkan-Headers
+	url = https://github.com/KhronosGroup/Vulkan-Headers
+[submodule "lib/Vulkan-Loader"]
+	path = lib/Vulkan-Loader
+	url = https://github.com/KhronosGroup/Vulkan-Loader
