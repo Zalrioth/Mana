@@ -3,7 +3,7 @@ project(HelloWorld LANGUAGES C VERSION 0.1.0)
 
 set(ignoreMe "${CMAKE_CXX_COMPILER}")
 
-file(GLOB hello_world_SRC *.c)
+file(GLOB hello_world_SRC helloworld.c)
 
 add_executable(HelloWorld ${hello_world_SRC})
 
