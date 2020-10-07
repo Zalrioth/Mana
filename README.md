@@ -2,6 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/b6e4007271734b0c9c40028dcbd44e18)](https://www.codacy.com/gh/nickbedner/mana/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=nickbedner/mana&amp;utm_campaign=Badge_Grade)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/nickbedner/mana.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/nickbedner/mana/alerts/)
 [![Lines of Code](https://tokei.rs/b1/github/nickbedner/mana?category=lines)](https://github.com/XAMPPRocky/tokei)
 [![Number of Files](https://tokei.rs/b1/github/nickbedner/mana?category=files)](https://github.com/XAMPPRocky/tokei)
 
