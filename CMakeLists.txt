@@ -13,6 +13,14 @@ file(GLOB_RECURSE mana_SRC
 
 add_library(mana STATIC ${mana_SRC})
 
+message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+        add_definitions(-DCHECK_MEMORY_LEAKS=1)
+        message("Debug build.")
+else()
+        add_definitions(-DCUSTOM_ALLOCATOR=1)
+endif()
+
 set_target_properties(mana
         PROPERTIES
         ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build
@@ -42,6 +50,15 @@ if(UNIX AND NOT APPLE)
                 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
         endif()
 endif()
+
+#if(CMAKE_BUILD_TYPE MATCHES Debug)
+#        add_definitions(-DDEBUG)
+#        message("Debug build.")
+#elseif(CMAKE_BUILD_TYPE MATCHES Release)
+#        message("Release build.")
+#else()
+#        message("Some other build type.")
+#endif()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")
 
