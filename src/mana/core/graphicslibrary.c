@@ -5,11 +5,12 @@ static void glfw_delete();
 
 int graphics_library_init(struct GraphicsLibrary* graphics_library, enum GraphicsLibraryType graphics_library_type, const char** graphics_lbrary_extensions, uint32_t* graphics_library_extension_count) {
   graphics_library->type = graphics_library_type;
+  int glfw_library_error_code;
   switch (graphics_library->type) {
     case (NO_LIBRARY):
       break;
     case (GLFW_LIBRARY):
-      int glfw_library_error_code = glfw_library_init(graphics_lbrary_extensions, graphics_library_extension_count);
+      glfw_library_error_code = glfw_library_init(graphics_lbrary_extensions, graphics_library_extension_count);
       switch (glfw_library_error_code) {
         case (GLFW_SUCCESS):
           break;
