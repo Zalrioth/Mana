@@ -1,5 +1,8 @@
 #include "mana/graphics/dualcontouring/manifold/manifoldoctree.h"
 
+static inline bool manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, int threads);
+static inline bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* octree_node);
+
 void manifold_octree_construct_base(struct ManifoldOctreeNode* octree_node, int size, float error) {
   octree_node->index = 0;
   octree_node->position = VEC3_ZERO;
@@ -61,7 +64,9 @@ void manifold_octree_generate_vertex_buffer(struct ManifoldOctreeNode* octree_no
   }
 }
 
-bool manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, int threads) {
+// TODO: Optimize below as much as possible
+
+static inline bool manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, int threads) {
   if (octree_node->size == 1)
     return manifold_octree_construct_leaf(octree_node);
 
@@ -88,17 +93,31 @@ bool manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, int
   return has_children;
 }
 
-bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* octree_node) {
+static inline bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* octree_node) {
   if (octree_node->size != 1)
     return false;
 
   octree_node->type = MANIFOLD_NODE_LEAF;
   int corners = 0;
   float samples[8] = {0};
+
+  // TODO: Will need to keep this for ifdef non avx/sse
+  //for (int i = 0; i < 8; i++) {
+  //  if ((samples[i] = Sphere(vec3_add(octree_node->position, TCornerDeltas[i]))) < 0)
+  //    corners |= 1 << i;
+  //}
+
+  float poss[8][3] = {0};
   for (int i = 0; i < 8; i++) {
-    if ((samples[i] = Sphere(vec3_add(octree_node->position, TCornerDeltas[i]))) < 0)
+    vec3 npos = vec3_add(octree_node->position, TCornerDeltas[i]);
+    memcpy(poss[i], &npos, sizeof(vec3));
+  }
+  SphereSamples(poss, samples);
+  for (int i = 0; i < 8; i++) {
+    if (samples[i] < 0)
       corners |= 1 << i;
   }
+
   octree_node->corners = (unsigned char)corners;
 
   if (corners == 0 || corners == 255)
@@ -165,6 +184,8 @@ bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* octree_node) {
 
   return true;
 }
+
+// TODO: Optimize above as much as possible
 
 void manifold_octree_process_cell(struct ManifoldOctreeNode* octree_node, struct Vector* indexes, float threshold) {
   if (octree_node->type == MANIFOLD_NODE_INTERNAL) {

@@ -68,17 +68,38 @@ void manifold_dual_contouring_contour(struct ManifoldDualContouring* manifold_du
   manifold_dual_contouring->tree = calloc(1, sizeof(struct ManifoldOctreeNode));
 
 #if MANIFOLD_BENCHMARK
-  double start_time = engine_get_time();
+  double start_time, end_time;
+  start_time = engine_get_time();
   manifold_octree_construct_base(manifold_dual_contouring->tree, manifold_dual_contouring->resolution, 0);
-  double end_time = engine_get_time();
-  printf("Total time taken: %lf\n", end_time - start_time);
+  end_time = engine_get_time();
+  printf("Construct base time taken: %lf\n", end_time - start_time);
+  // ~1.0 start
+  // 0.119
+  // 0.117
+  // 0.075
+  // Above is for 32 ^ 3 new standard is 64 ^ 3
+  // 0.5
+
+  start_time = engine_get_time();
+  manifold_octree_cluster_cell_base(manifold_dual_contouring->tree, 0);
+  end_time = engine_get_time();
+  printf("Cluster cell base time taken: %lf\n", end_time - start_time);
+
+  start_time = engine_get_time();
+  manifold_octree_generate_vertex_buffer(manifold_dual_contouring->tree, manifold_dual_contouring->mesh->vertices);
+  end_time = engine_get_time();
+  printf("Generate vertex buffer time taken: %lf\n", end_time - start_time);
+
+  start_time = engine_get_time();
+  manifold_octree_process_cell(manifold_dual_contouring->tree, manifold_dual_contouring->mesh->indices, threshold);
+  end_time = engine_get_time();
+  printf("Process cell time taken: %lf\n", end_time - start_time);
 #else
   manifold_octree_construct_base(manifold_dual_contouring->tree, manifold_dual_contouring->resolution, 0);
-#endif
   manifold_octree_cluster_cell_base(manifold_dual_contouring->tree, 0);
-
   manifold_octree_generate_vertex_buffer(manifold_dual_contouring->tree, manifold_dual_contouring->mesh->vertices);
   manifold_octree_process_cell(manifold_dual_contouring->tree, manifold_dual_contouring->mesh->indices, threshold);
+#endif
 
   if (vector_size(manifold_dual_contouring->mesh->vertices) > 0)
     manifold_dual_contouring_setup_buffers(manifold_dual_contouring, gpu_api);

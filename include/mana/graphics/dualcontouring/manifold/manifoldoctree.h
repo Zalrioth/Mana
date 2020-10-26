@@ -77,7 +77,19 @@ static inline float Sphere(vec3 pos) {
   return ridged_fractal_noise_eval_3d_single(&noise, pos.x, pos.y, pos.z);
 }
 
-static inline void SphereNormals(vec3 v, float dest[6]) {
+static inline void SphereSamples(float poss[8][3], float dest[8]) {
+  float STEP = 1.0 / 64.0f;
+  struct RidgedFractalNoise noise = {0};
+  ridged_fractal_noise_init(&noise);
+  noise.octave_count = 4;
+  noise.frequency = 1.0;
+  noise.lacunarity = 2.2324f;
+  noise.step = STEP;
+
+  ridged_fractal_noise_eval_custom(&noise, poss, dest);
+}
+
+static inline void SphereNormals(vec3 v, float dest[8]) {
   float STEP = 1.0 / 64.0f;
   struct RidgedFractalNoise noise = {0};
   ridged_fractal_noise_init(&noise);
@@ -87,8 +99,8 @@ static inline void SphereNormals(vec3 v, float dest[6]) {
   noise.step = STEP;
 
   float h = 0.001f;
-  float poss[6][3] = {{v.x + h, v.y, v.z}, {v.x - h, v.y, v.z}, {v.x, v.y + h, v.z}, {v.x, v.y - h, v.z}, {v.x, v.y, v.z + h}, {v.x, v.y, v.z - h}};
-  ridged_fractal_noise_eval_normals(&noise, poss, dest);
+  float poss[8][3] = {{v.x + h, v.y, v.z}, {v.x - h, v.y, v.z}, {v.x, v.y + h, v.z}, {v.x, v.y - h, v.z}, {v.x, v.y, v.z + h}, {v.x, v.y, v.z - h}, {0}, {0}};
+  ridged_fractal_noise_eval_custom(&noise, poss, dest);
 }
 
 static inline vec3 GetIntersection(vec3 p1, vec3 p2, float d1, float d2) {
@@ -100,7 +112,7 @@ static inline vec3 GetIntersection(vec3 p1, vec3 p2, float d1, float d2) {
 #define FAST_NORMALS_AVX2 true
 static inline vec3 GetNormal(vec3 v) {
 #if FAST_NORMALS_AVX2
-  float dest[6] = {0};
+  float dest[8] = {0};
   SphereNormals(v, dest);
   vec3 gradient = (vec3){.x = dest[0] - dest[1], .y = dest[2] - dest[3], .z = dest[4] - dest[5]};
   gradient = vec3_old_skool_normalise(gradient);
@@ -122,8 +134,6 @@ static inline vec3 GetNormal(vec3 v) {
 void manifold_octree_construct_base(struct ManifoldOctreeNode* octree_node, int size, float error);
 void manifold_octree_destroy_octree(struct ManifoldOctreeNode* octree_node, struct Map* vertice_map);
 void manifold_octree_generate_vertex_buffer(struct ManifoldOctreeNode* octree_node, struct Vector* vertices);
-bool manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, int threads);
-bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* octree_node);
 void manifold_octree_process_cell(struct ManifoldOctreeNode* octree_node, struct Vector* indexes, float threshold);
 void manifold_octree_process_face(struct ManifoldOctreeNode* nodes[2], int direction, struct Vector* indexes, float threshold);
 void manifold_octree_process_edge(struct ManifoldOctreeNode* nodes[4], int direction, struct Vector* indexes, float threshold);

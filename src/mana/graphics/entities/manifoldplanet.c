@@ -4,7 +4,8 @@ void manifold_planet_init(struct ManifoldPlanet* planet, struct GPUAPI* gpu_api,
   planet->planet_type = MANIFOLD_ROUND_PLANET;
   planet->terrain_shader = shader;
   planet->position = position;
-  manifold_dual_contouring_init(&planet->manifold_dual_contouring, gpu_api, shader, 32, 14);
+  // Think the 14 here for "size" is meant to represent matrix scaling but hasn't been added yet
+  manifold_dual_contouring_init(&planet->manifold_dual_contouring, gpu_api, shader, octree_size, 14);
   manifold_dual_contouring_contour(&planet->manifold_dual_contouring, gpu_api, 0.0f);
 }
 
