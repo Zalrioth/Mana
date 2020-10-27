@@ -88,8 +88,7 @@ void manifold_dual_contouring_contour(struct ManifoldDualContouring* manifold_du
   // 0.028
 
   start_time = engine_get_time();
-  //#pragma omp parallel num_threads(omp_get_max_threads())
-  manifold_octree_generate_vertex_buffer(manifold_dual_contouring->tree, manifold_dual_contouring->mesh->vertices, omp_get_max_threads());
+  Optimized manifold_octree_generate_vertex_buffer(manifold_dual_contouring->tree, manifold_dual_contouring->mesh->vertices);
   end_time = engine_get_time();
   printf("Generate vertex buffer time taken: %lf\n", end_time - start_time);
   // 0.063 start
@@ -100,6 +99,8 @@ void manifold_dual_contouring_contour(struct ManifoldDualContouring* manifold_du
   manifold_octree_process_cell(manifold_dual_contouring->tree, manifold_dual_contouring->mesh->indices, threshold);
   end_time = engine_get_time();
   printf("Process cell time taken: %lf\n", end_time - start_time);
+  // 0.027 start
+  // 0.009
 
   start_time = engine_get_time();
   //manifold_octree_process_cell(manifold_dual_contouring->tree, manifold_dual_contouring->mesh->indices, threshold);

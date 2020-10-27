@@ -52,11 +52,11 @@ int swap_chain_init(struct SwapChain* swap_chain, struct GPUAPI* gpu_api, int wi
   VkPresentModeKHR present_mode = {0};
 
   for (int swap_chain_present_num = 0; swap_chain_present_num < vector_size(&swap_chain_support.present_modes); swap_chain_present_num++) {
-    if ((enum VkPresentModeKHR)vector_get(&swap_chain_support.present_modes, swap_chain_present_num) == VK_PRESENT_MODE_MAILBOX_KHR) {
-      present_mode = (enum VkPresentModeKHR)vector_get(&swap_chain_support.present_modes, swap_chain_present_num);
+    if (*(enum VkPresentModeKHR*)vector_get(&swap_chain_support.present_modes, swap_chain_present_num) == VK_PRESENT_MODE_MAILBOX_KHR) {
+      present_mode = *(enum VkPresentModeKHR*)vector_get(&swap_chain_support.present_modes, swap_chain_present_num);
       break;
-    } else if ((enum VkPresentModeKHR)vector_get(&swap_chain_support.present_modes, swap_chain_present_num) == VK_PRESENT_MODE_IMMEDIATE_KHR)
-      present_mode = (enum VkPresentModeKHR)vector_get(&swap_chain_support.present_modes, swap_chain_present_num);
+    } else if (*(enum VkPresentModeKHR*)vector_get(&swap_chain_support.present_modes, swap_chain_present_num) == VK_PRESENT_MODE_IMMEDIATE_KHR)
+      present_mode = *(enum VkPresentModeKHR*)vector_get(&swap_chain_support.present_modes, swap_chain_present_num);
   }
 
   // Force Vsync

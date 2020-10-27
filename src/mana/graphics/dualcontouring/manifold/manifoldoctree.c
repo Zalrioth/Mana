@@ -46,11 +46,11 @@ struct VertexFound {
   struct Vertex* vertex_handle;
 };
 
-static inline void manifold_octree_generate_vertex_buffer_thread_split(struct ManifoldOctreeNode* octree_node, struct Vector* vertices, int threads) {
+static inline void manifold_octree_generate_vertex_buffer_thread_split(struct ManifoldOctreeNode* octree_node, struct Vector* vertices) {
   if (octree_node->type != MANIFOLD_NODE_LEAF) {
     for (int i = 0; i < 8; i++) {
       if (octree_node->children[i] != NULL)
-        manifold_octree_generate_vertex_buffer_thread_split(octree_node->children[i], vertices, 0);
+        manifold_octree_generate_vertex_buffer_thread_split(octree_node->children[i], vertices);
     }
   }
 
@@ -68,7 +68,7 @@ static inline void manifold_octree_generate_vertex_buffer_thread_split(struct Ma
   }
 }
 
-void manifold_octree_generate_vertex_buffer(struct ManifoldOctreeNode* octree_node, struct Vector* vertices, int threads) {
+void manifold_octree_generate_vertex_buffer(struct ManifoldOctreeNode* octree_node, struct Vector* vertices) {
   struct Vector vert_vectors[8] = {0};
   for (int vector_num = 0; vector_num < 8; vector_num++)
     vector_init(&vert_vectors[vector_num], sizeof(struct VertexFound));
@@ -78,7 +78,7 @@ void manifold_octree_generate_vertex_buffer(struct ManifoldOctreeNode* octree_no
 #pragma omp parallel for num_threads(omp_get_max_threads())
     for (int i = 0; i < 8; i++) {
       if (octree_node->children[i] != NULL)
-        manifold_octree_generate_vertex_buffer_thread_split(octree_node->children[i], &vert_vectors[i], 0);
+        manifold_octree_generate_vertex_buffer_thread_split(octree_node->children[i], &vert_vectors[i]);
     }
   }
 
@@ -218,11 +218,11 @@ static inline bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* oct
 
 // TODO: Optimize above as much as possible
 
-void manifold_octree_process_cell(struct ManifoldOctreeNode* octree_node, struct Vector* indexes, float threshold) {
+void manifold_octree_process_cell_split_threads(struct ManifoldOctreeNode* octree_node, struct Vector* indexes, float threshold) {
   if (octree_node->type == MANIFOLD_NODE_INTERNAL) {
     for (int i = 0; i < 8; i++) {
       if (octree_node->children[i] != NULL)
-        manifold_octree_process_cell(octree_node->children[i], indexes, threshold);
+        manifold_octree_process_cell_split_threads(octree_node->children[i], indexes, threshold);
     }
 
     for (int i = 0; i < 12; i++) {
@@ -243,6 +243,48 @@ void manifold_octree_process_cell(struct ManifoldOctreeNode* octree_node, struct
       manifold_octree_process_edge(edge_nodes, TCellProcEdgeMask[i][4], indexes, threshold);
     }
   }
+}
+
+void manifold_octree_process_cell(struct ManifoldOctreeNode* octree_node, struct Vector* indexes, float threshold) {
+  struct Vector index_vectors[8] = {0};
+  for (int index_num = 0; index_num < 8; index_num++)
+    vector_init(&index_vectors[index_num], sizeof(uint32_t));
+
+  // Spawn thread for each octree child
+  if (octree_node->type == MANIFOLD_NODE_INTERNAL) {
+#pragma omp parallel for num_threads(omp_get_max_threads())
+    for (int i = 0; i < 8; i++) {
+      if (octree_node->children[i] != NULL)
+        manifold_octree_process_cell_split_threads(octree_node->children[i], &index_vectors[i], threshold);
+    }
+
+    // Combine child indices
+    for (int vector_num = 0; vector_num < 8; vector_num++) {
+      for (int vert_num = 0; vert_num < vector_size(&index_vectors[vector_num]); vert_num++)
+        mesh_assign_indice(indexes, *(uint32_t*)vector_get(&index_vectors[vector_num], vert_num));
+    }
+
+    for (int i = 0; i < 12; i++) {
+      struct ManifoldOctreeNode* face_nodes[2] = {NULL};
+
+      int c1 = TEdgePairs[i][0];
+      int c2 = TEdgePairs[i][1];
+
+      face_nodes[0] = octree_node->children[c1];
+      face_nodes[1] = octree_node->children[c2];
+
+      manifold_octree_process_face(face_nodes, TEdgePairs[i][2], indexes, threshold);
+    }
+
+    for (int i = 0; i < 6; i++) {
+      struct ManifoldOctreeNode* edge_nodes[4] = {octree_node->children[TCellProcEdgeMask[i][0]], octree_node->children[TCellProcEdgeMask[i][1]], octree_node->children[TCellProcEdgeMask[i][2]], octree_node->children[TCellProcEdgeMask[i][3]]};
+
+      manifold_octree_process_edge(edge_nodes, TCellProcEdgeMask[i][4], indexes, threshold);
+    }
+  }
+
+  for (int index_num = 0; index_num < 8; index_num++)
+    vector_delete(&index_vectors[index_num]);
 }
 
 void manifold_octree_process_face(struct ManifoldOctreeNode* nodes[2], int direction, struct Vector* indexes, float threshold) {

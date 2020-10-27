@@ -13,7 +13,7 @@ Mana is a WIP cross platform 2D and 3D rendering engine written in C. Fast compi
 ### Setting Up a Project
 
 `git clone --recursive https://github.com/nickbedner/mana`  
-Tested with Clang 10.0.0 on Windows.
+Tested with Clang 11.0.0 on Windows.
 
 ### Features
 
