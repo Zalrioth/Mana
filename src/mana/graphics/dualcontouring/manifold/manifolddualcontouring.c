@@ -84,16 +84,37 @@ void manifold_dual_contouring_contour(struct ManifoldDualContouring* manifold_du
   manifold_octree_cluster_cell_base(manifold_dual_contouring->tree, 0);
   end_time = engine_get_time();
   printf("Cluster cell base time taken: %lf\n", end_time - start_time);
+  // 0.11 start
+  // 0.028
 
   start_time = engine_get_time();
-  manifold_octree_generate_vertex_buffer(manifold_dual_contouring->tree, manifold_dual_contouring->mesh->vertices);
+  //#pragma omp parallel num_threads(omp_get_max_threads())
+  manifold_octree_generate_vertex_buffer(manifold_dual_contouring->tree, manifold_dual_contouring->mesh->vertices, omp_get_max_threads());
   end_time = engine_get_time();
   printf("Generate vertex buffer time taken: %lf\n", end_time - start_time);
+  // 0.063 start
+  // 0.02 Note: Ranges from 0.035-0.015
+  // 0.014
 
   start_time = engine_get_time();
   manifold_octree_process_cell(manifold_dual_contouring->tree, manifold_dual_contouring->mesh->indices, threshold);
   end_time = engine_get_time();
   printf("Process cell time taken: %lf\n", end_time - start_time);
+
+  start_time = engine_get_time();
+  //manifold_octree_process_cell(manifold_dual_contouring->tree, manifold_dual_contouring->mesh->indices, threshold);
+  float STEP = 1.0 / 64.0f;
+  struct RidgedFractalNoise noise = {0};
+  ridged_fractal_noise_init(&noise);
+  noise.octave_count = 4;
+  noise.frequency = 1.0;
+  noise.lacunarity = 2.2324f;
+  noise.step = STEP;
+  //noise.parallel = true;
+  float* nopise = ridged_fractal_noise_eval_3d_avx2(&noise, 64, 64, 64);
+
+  end_time = engine_get_time();
+  printf("Gpu test: %lf\n", end_time - start_time);
 #else
   manifold_octree_construct_base(manifold_dual_contouring->tree, manifold_dual_contouring->resolution, 0);
   manifold_octree_cluster_cell_base(manifold_dual_contouring->tree, 0);

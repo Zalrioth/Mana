@@ -95,6 +95,7 @@ static inline void mesh_dual_contouring_get_attribute_descriptions(VkVertexInput
 
 static inline void mesh_manifold_dual_contouring_init(struct Mesh* mesh);
 static inline void mesh_manifold_dual_contouring_assign_vertex(struct Vector* vector, float x, float y, float z, float r, float g, float b, float nr1, float ng1, float nb1, float nr2, float ng2, float nb2);
+static inline void mesh_manifold_dual_contouring_assign_vertex_simple(struct Vector* vector, struct VertexManifoldDualContouring vertex);
 static inline VkVertexInputBindingDescription mesh_manifold_dual_contouring_get_binding_description();
 static inline void mesh_manifold_dual_contouring_get_attribute_descriptions(VkVertexInputAttributeDescription* attribute_descriptions);
 
@@ -451,6 +452,10 @@ static inline void mesh_manifold_dual_contouring_assign_vertex(struct Vector* ve
   vertex.normal2.g = ng2;
   vertex.normal2.b = nb2;
 
+  vector_push_back(vector, &vertex);
+}
+
+static inline void mesh_manifold_dual_contouring_assign_vertex_simple(struct Vector* vector, struct VertexManifoldDualContouring vertex) {
   vector_push_back(vector, &vertex);
 }
 

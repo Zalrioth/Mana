@@ -41,11 +41,16 @@ void manifold_octree_destroy_octree(struct ManifoldOctreeNode* octree_node, stru
   free(octree_node);
 }
 
-void manifold_octree_generate_vertex_buffer(struct ManifoldOctreeNode* octree_node, struct Vector* vertices) {
+struct VertexFound {
+  struct VertexManifoldDualContouring vertex_data;
+  struct Vertex* vertex_handle;
+};
+
+static inline void manifold_octree_generate_vertex_buffer_thread_split(struct ManifoldOctreeNode* octree_node, struct Vector* vertices, int threads) {
   if (octree_node->type != MANIFOLD_NODE_LEAF) {
     for (int i = 0; i < 8; i++) {
       if (octree_node->children[i] != NULL)
-        manifold_octree_generate_vertex_buffer(octree_node->children[i], vertices);
+        manifold_octree_generate_vertex_buffer_thread_split(octree_node->children[i], vertices, 0);
     }
   }
 
@@ -56,12 +61,38 @@ void manifold_octree_generate_vertex_buffer(struct ManifoldOctreeNode* octree_no
     struct Vertex* ver = (struct Vertex*)array_list_get(octree_node->vertices, i);
     if (ver == NULL)
       continue;
-    ver->index = vector_size(vertices);
     vec3 nc = vec3_old_skool_normalise(vec3_add(vec3_scale(ver->normal, 0.5f), vec3_scale(VEC3_ONE, 0.5f)));
     vec3 solved_x = VEC3_ZERO;
     qef_solver_solve(&ver->qef, &solved_x, 1e-6f, 4, 1e-6f);
-    mesh_manifold_dual_contouring_assign_vertex(vertices, solved_x.x, solved_x.y, solved_x.z, nc.r, nc.g, nc.b, ver->normal.r, ver->normal.g, ver->normal.b, ver->normal.r, ver->normal.g, ver->normal.b);
+    vector_push_back(vertices, (struct VertexFound[]){(struct VertexFound){.vertex_data = (struct VertexManifoldDualContouring){.position.x = solved_x.x, .position.y = solved_x.y, .position.z = solved_x.z, .color.r = nc.r, .color.g = nc.g, .color.b = nc.b, .normal1.r = ver->normal.r, .normal1.g = ver->normal.g, .normal1.b = ver->normal.b, .normal2.r = ver->normal.r, .normal2.g = ver->normal.g, .normal2.b = ver->normal.b}, .vertex_handle = ver}});
   }
+}
+
+void manifold_octree_generate_vertex_buffer(struct ManifoldOctreeNode* octree_node, struct Vector* vertices, int threads) {
+  struct Vector vert_vectors[8] = {0};
+  for (int vector_num = 0; vector_num < 8; vector_num++)
+    vector_init(&vert_vectors[vector_num], sizeof(struct VertexFound));
+
+  // Spawn thread for each octree child
+  if (octree_node->type != MANIFOLD_NODE_LEAF) {
+#pragma omp parallel for num_threads(omp_get_max_threads())
+    for (int i = 0; i < 8; i++) {
+      if (octree_node->children[i] != NULL)
+        manifold_octree_generate_vertex_buffer_thread_split(octree_node->children[i], &vert_vectors[i], 0);
+    }
+  }
+
+  // Combine child vectors
+  for (int vector_num = 0; vector_num < 8; vector_num++) {
+    for (int vert_num = 0; vert_num < vector_size(&vert_vectors[vector_num]); vert_num++) {
+      struct VertexFound* new_vertex = vector_get(&vert_vectors[vector_num], vert_num);
+      new_vertex->vertex_handle->index = vector_size(vertices);
+      mesh_manifold_dual_contouring_assign_vertex_simple(vertices, new_vertex->vertex_data);
+    }
+  }
+
+  for (int vector_num = 0; vector_num < 8; vector_num++)
+    vector_delete(&vert_vectors[vector_num]);
 }
 
 // TODO: Optimize below as much as possible
@@ -359,6 +390,7 @@ void manifold_octree_cluster_cell_base(struct ManifoldOctreeNode* octree_node, f
   if (octree_node->type != MANIFOLD_NODE_INTERNAL)
     return;
 
+#pragma omp parallel for num_threads(omp_get_max_threads())
   for (int i = 0; i < 8; i++) {
     if (octree_node->children[i] == NULL)
       continue;
@@ -367,7 +399,7 @@ void manifold_octree_cluster_cell_base(struct ManifoldOctreeNode* octree_node, f
   }
 }
 
-void manifold_octree_cluster_cell(struct ManifoldOctreeNode* octree_node, float error) {
+static inline void manifold_octree_cluster_cell(struct ManifoldOctreeNode* octree_node, float error) {
   if (octree_node->type != MANIFOLD_NODE_INTERNAL)
     return;
 
@@ -518,24 +550,7 @@ void manifold_octree_cluster_cell(struct ManifoldOctreeNode* octree_node, float 
   array_list_delete(&collected_vertices);
 }
 
-//void manifold_octree_gather_vertices(struct ManifoldOctreeNode* n, struct ArrayList* dest, int* surface_index) {
-//  if (n == NULL)
-//    return;
-//  if (n->size > 1) {
-//    for (int i = 0; i < 8; i++)
-//      manifold_octree_gather_vertices(n->children[i], dest, surface_index);
-//  } else {
-//    for (int vertex_num = 0; vertex_num < array_list_size(n->vertices); vertex_num++) {
-//      struct Vertex* ver = (struct Vertex*)array_list_get(n->vertices, vertex_num);
-//      if (ver->surface_index == -1) {
-//        ver->surface_index = (*surface_index)++;
-//        array_list_push_back(dest, ver);
-//      }
-//    }
-//  }
-//}
-
-void manifold_octree_cluster_face(struct ManifoldOctreeNode* nodes[2], int direction, int* surface_index, struct ArrayList* collected_vertices) {
+static inline void manifold_octree_cluster_face(struct ManifoldOctreeNode* nodes[2], int direction, int* surface_index, struct ArrayList* collected_vertices) {
   if (nodes[0] == NULL || nodes[1] == NULL)
     return;
 
@@ -572,7 +587,7 @@ void manifold_octree_cluster_face(struct ManifoldOctreeNode* nodes[2], int direc
   }
 }
 
-void manifold_octree_cluster_edge(struct ManifoldOctreeNode* nodes[4], int direction, int* surface_index, struct ArrayList* collected_vertices) {
+static inline void manifold_octree_cluster_edge(struct ManifoldOctreeNode* nodes[4], int direction, int* surface_index, struct ArrayList* collected_vertices) {
   if ((nodes[0] == NULL || nodes[0]->type != MANIFOLD_NODE_INTERNAL) && (nodes[1] == NULL || nodes[1]->type != MANIFOLD_NODE_INTERNAL) && (nodes[2] == NULL || nodes[2]->type != MANIFOLD_NODE_INTERNAL) && (nodes[3] == NULL || nodes[3]->type != MANIFOLD_NODE_INTERNAL)) {
     manifold_octree_cluster_indexes(nodes, direction, surface_index, collected_vertices);
   } else {
@@ -592,7 +607,7 @@ void manifold_octree_cluster_edge(struct ManifoldOctreeNode* nodes[4], int direc
   }
 }
 
-void manifold_octree_cluster_indexes(struct ManifoldOctreeNode* nodes[8], int direction, int* max_surface_index, struct ArrayList* collected_vertices) {
+static inline void manifold_octree_cluster_indexes(struct ManifoldOctreeNode* nodes[8], int direction, int* max_surface_index, struct ArrayList* collected_vertices) {
   if (nodes[0] == NULL && nodes[1] == NULL && nodes[2] == NULL && nodes[3] == NULL)
     return;
 
@@ -649,7 +664,11 @@ void manifold_octree_cluster_indexes(struct ManifoldOctreeNode* nodes[8], int di
 
     if (v->surface_index != -1) {
       if (surface_index != -1 && surface_index != v->surface_index) {
-        manifold_octree_assign_surface(collected_vertices, v->surface_index, surface_index);
+        for (int vertex_num = 0; vertex_num < array_list_size(collected_vertices); vertex_num++) {
+          struct Vertex* ver = (struct Vertex*)array_list_get(collected_vertices, vertex_num);
+          if (ver != NULL && ver->surface_index == v->surface_index)
+            ver->surface_index = surface_index;
+        }
       } else if (surface_index == -1)
         surface_index = v->surface_index;
     }
@@ -665,13 +684,5 @@ void manifold_octree_cluster_indexes(struct ManifoldOctreeNode* nodes[8], int di
     if (v->surface_index == -1)
       array_list_add(collected_vertices, v);
     v->surface_index = surface_index;
-  }
-}
-
-static void manifold_octree_assign_surface(struct ArrayList* vertices, int from, int to) {
-  for (int vertex_num = 0; vertex_num < array_list_size(vertices); vertex_num++) {
-    struct Vertex* ver = (struct Vertex*)array_list_get(vertices, vertex_num);
-    if (ver != NULL && ver->surface_index == from)
-      ver->surface_index = to;
   }
 }

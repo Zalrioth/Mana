@@ -13,8 +13,6 @@
 
 struct Engine;
 
-GLFWwindow* glfw_window;
-
 struct Window {
   int width;
   int height;
