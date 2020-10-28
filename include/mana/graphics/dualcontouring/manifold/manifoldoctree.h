@@ -65,7 +65,7 @@ static inline void octree_node_init(struct ManifoldOctreeNode* octree_node, vec3
   octree_node->type = type;
 }
 
-static inline float Sphere(vec3 pos) {
+/*static inline float Sphere(vec3 pos) {
   float STEP = 1.0 / 64.0f;
   struct RidgedFractalNoise noise = {0};
   ridged_fractal_noise_init(&noise);
@@ -75,45 +75,44 @@ static inline float Sphere(vec3 pos) {
   noise.step = STEP;
 
   return ridged_fractal_noise_eval_3d_single(&noise, pos.x, pos.y, pos.z);
+}*/
+
+// Note: The following aren't that slow something else is taking up cpu cycles
+// TODO: Build this into noise library
+static inline void planet_sample(float poss[8][3], float dest[8], struct Vector* noises, int scale) {
+  for (int noise_num = 0; noise_num < vector_size(noises); noise_num++) {
+    struct Noise* noise = vector_get(noises, noise_num);
+    switch (noise->noise_type) {
+      case (RIDGED_FRACTAL_NOISE):
+        noise->ridged_fractal_noise.step = 1.0f / scale;
+        ridged_fractal_noise_eval_custom(&noise->ridged_fractal_noise, poss, dest);
+        break;
+    }
+  }
 }
 
-static inline void SphereSamples(float poss[8][3], float dest[8]) {
-  float STEP = 1.0 / 64.0f;
-  struct RidgedFractalNoise noise = {0};
-  ridged_fractal_noise_init(&noise);
-  noise.octave_count = 4;
-  noise.frequency = 1.0;
-  noise.lacunarity = 2.2324f;
-  noise.step = STEP;
-
-  ridged_fractal_noise_eval_custom(&noise, poss, dest);
-}
-
-static inline void SphereNormals(vec3 v, float dest[8]) {
-  float STEP = 1.0 / 64.0f;
-  struct RidgedFractalNoise noise = {0};
-  ridged_fractal_noise_init(&noise);
-  noise.octave_count = 4;
-  noise.frequency = 1.0;
-  noise.lacunarity = 2.2324f;
-  noise.step = STEP;
-
+static inline void planet_normal_avx2(vec3 v, float dest[8], struct Vector* noises, int scale) {
   float h = 0.001f;
   float poss[8][3] = {{v.x + h, v.y, v.z}, {v.x - h, v.y, v.z}, {v.x, v.y + h, v.z}, {v.x, v.y - h, v.z}, {v.x, v.y, v.z + h}, {v.x, v.y, v.z - h}, {0}, {0}};
-  ridged_fractal_noise_eval_custom(&noise, poss, dest);
-}
 
-static inline vec3 GetIntersection(vec3 p1, vec3 p2, float d1, float d2) {
-  return vec3_add(p1, vec3_divs(vec3_scale(vec3_sub(p2, p1), -d1), d2 - d1));
+  for (int noise_num = 0; noise_num < vector_size(noises); noise_num++) {
+    struct Noise* noise = vector_get(noises, noise_num);
+    switch (noise->noise_type) {
+      case (RIDGED_FRACTAL_NOISE):
+        noise->ridged_fractal_noise.step = 1.0f / scale;
+        ridged_fractal_noise_eval_custom(&noise->ridged_fractal_noise, poss, dest);
+        break;
+    }
+  }
 }
 
 // TODO: Calculating normals can be much faster in a special noise function either by a single 8x1 array for SIMD with each position unique in 3D space
 // OR calculate bulk in chunky 8*8 kernel sorta thing
 #define FAST_NORMALS_AVX2 true
-static inline vec3 GetNormal(vec3 v) {
+static inline vec3 planet_normal(vec3 v, struct Vector* noises, int scale) {
 #if FAST_NORMALS_AVX2
   float dest[8] = {0};
-  SphereNormals(v, dest);
+  planet_normal_avx2(v, dest, noises, scale);
   vec3 gradient = (vec3){.x = dest[0] - dest[1], .y = dest[2] - dest[3], .z = dest[4] - dest[5]};
   gradient = vec3_old_skool_normalise(gradient);
   return gradient;
@@ -131,18 +130,10 @@ static inline vec3 GetNormal(vec3 v) {
 #endif
 }
 
-void manifold_octree_construct_base(struct ManifoldOctreeNode* octree_node, int size, float error);
+void manifold_octree_construct_base(struct ManifoldOctreeNode* octree_node, int size, struct Vector* noises);
 void manifold_octree_destroy_octree(struct ManifoldOctreeNode* octree_node, struct Map* vertice_map);
 void manifold_octree_generate_vertex_buffer(struct ManifoldOctreeNode* octree_node, struct Vector* vertices);
 void manifold_octree_process_cell(struct ManifoldOctreeNode* octree_node, struct Vector* indexes, float threshold);
-void manifold_octree_process_face(struct ManifoldOctreeNode* nodes[2], int direction, struct Vector* indexes, float threshold);
-void manifold_octree_process_edge(struct ManifoldOctreeNode* nodes[4], int direction, struct Vector* indexes, float threshold);
-void manifold_octree_process_indexes(struct ManifoldOctreeNode* nodes[4], int direction, struct Vector* indexes, float threshold);
-void manifold_octree_cluster_cell_base(struct ManifoldOctreeNode* octree_node, float error);
-static inline void manifold_octree_cluster_cell(struct ManifoldOctreeNode* octree_node, float error);
-static inline void manifold_octree_gather_vertices(struct ManifoldOctreeNode* n, struct ArrayList* dest, int* surface_index);
-static inline void manifold_octree_cluster_face(struct ManifoldOctreeNode* nodes[2], int direction, int* surface_index, struct ArrayList* collected_vertices);
-static inline void manifold_octree_cluster_edge(struct ManifoldOctreeNode* nodes[4], int direction, int* surface_index, struct ArrayList* collected_vertices);
-static inline void manifold_octree_cluster_indexes(struct ManifoldOctreeNode* nodes[8], int direction, int* max_surface_index, struct ArrayList* collected_vertices);
+void manifold_octree_cluster_cell_base(struct ManifoldOctreeNode* octree_node, float error, struct Vector* noises);
 
 #endif  // MANIFOLD_OCTREE_H

@@ -45,7 +45,7 @@ struct ManifoldDualContouring {
 void manifold_dual_contouring_init(struct ManifoldDualContouring* manifold_dual_contouring, struct GPUAPI* gpu_api, struct Shader* shader, int resolution, int size);
 void manifold_dual_contouring_delete(struct ManifoldDualContouring* manifold_dual_contouring, struct GPUAPI* gpu_api);
 void manifold_dual_contouring_recreate(struct ManifoldDualContouring* manifold_dual_contouring, struct GPUAPI* gpu_api);
-void manifold_dual_contouring_contour(struct ManifoldDualContouring* manifold_dual_contouring, struct GPUAPI* gpu_api, float threshold);
+void manifold_dual_contouring_contour(struct ManifoldDualContouring* manifold_dual_contouring, struct GPUAPI* gpu_api, struct Vector* noises, float threshold);
 void manifold_dual_contouring_construct_tree_grid(struct ManifoldOctreeNode* node);
 vec3 manifold_dual_contouring_get_normal_q(struct Vector* verts, int indexes[6], int index_length);
 

@@ -51,7 +51,6 @@ static inline void manifold_dual_contouring_setup_buffers(struct ManifoldDualCon
   graphics_utils_setup_descriptor(gpu_api->vulkan_state, manifold_dual_contouring->shader->descriptor_set_layout, manifold_dual_contouring->shader->descriptor_pool, &manifold_dual_contouring->descriptor_set);
 
   VkWriteDescriptorSet dcs[2] = {0};
-
   graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 0, &manifold_dual_contouring->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(sizeof(struct ManifoldDualContouringUniformBufferObject), &manifold_dual_contouring->dc_uniform_buffer)});
   graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 1, &manifold_dual_contouring->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(sizeof(struct LightingUniformBufferObject), &manifold_dual_contouring->lighting_uniform_buffer)});
 
@@ -63,14 +62,14 @@ void manifold_dual_contouring_recreate(struct ManifoldDualContouring* manifold_d
   manifold_dual_contouring_setup_buffers(manifold_dual_contouring, gpu_api);
 }
 
-void manifold_dual_contouring_contour(struct ManifoldDualContouring* manifold_dual_contouring, struct GPUAPI* gpu_api, float threshold) {
+void manifold_dual_contouring_contour(struct ManifoldDualContouring* manifold_dual_contouring, struct GPUAPI* gpu_api, struct Vector* noises, float threshold) {
   mesh_clear(manifold_dual_contouring->mesh);
   manifold_dual_contouring->tree = calloc(1, sizeof(struct ManifoldOctreeNode));
 
 #if MANIFOLD_BENCHMARK
   double start_time, end_time;
   start_time = engine_get_time();
-  manifold_octree_construct_base(manifold_dual_contouring->tree, manifold_dual_contouring->resolution, 0);
+  manifold_octree_construct_base(manifold_dual_contouring->tree, manifold_dual_contouring->resolution, noises);
   end_time = engine_get_time();
   printf("Construct base time taken: %lf\n", end_time - start_time);
   // ~1.0 start
@@ -78,10 +77,13 @@ void manifold_dual_contouring_contour(struct ManifoldDualContouring* manifold_du
   // 0.117
   // 0.075
   // Above is for 32 ^ 3 new standard is 64 ^ 3
+  // ~8.0 start untested by based off above start
   // 0.5
+  // 0.425
+  // 0.34
 
   start_time = engine_get_time();
-  manifold_octree_cluster_cell_base(manifold_dual_contouring->tree, 0);
+  manifold_octree_cluster_cell_base(manifold_dual_contouring->tree, 0, noises);
   end_time = engine_get_time();
   printf("Cluster cell base time taken: %lf\n", end_time - start_time);
   // 0.11 start
@@ -102,20 +104,19 @@ void manifold_dual_contouring_contour(struct ManifoldDualContouring* manifold_du
   // 0.027 start
   // 0.009
 
-  start_time = engine_get_time();
-  //manifold_octree_process_cell(manifold_dual_contouring->tree, manifold_dual_contouring->mesh->indices, threshold);
-  float STEP = 1.0 / 64.0f;
-  struct RidgedFractalNoise noise = {0};
-  ridged_fractal_noise_init(&noise);
-  noise.octave_count = 4;
-  noise.frequency = 1.0;
-  noise.lacunarity = 2.2324f;
-  noise.step = STEP;
-  //noise.parallel = true;
-  float* nopise = ridged_fractal_noise_eval_3d_avx2(&noise, 64, 64, 64);
-
-  end_time = engine_get_time();
-  printf("Gpu test: %lf\n", end_time - start_time);
+  //start_time = engine_get_time();
+  ////manifold_octree_process_cell(manifold_dual_contouring->tree, manifold_dual_contouring->mesh->indices, threshold);
+  //float STEP = 1.0 / 64.0f;
+  //struct RidgedFractalNoise noise = {0};
+  //ridged_fractal_noise_init(&noise);
+  //noise.octave_count = 4;
+  //noise.frequency = 1.0;
+  //noise.lacunarity = 2.2324f;
+  //noise.step = STEP;
+  ////noise.parallel = true;
+  //float* nopise = ridged_fractal_noise_eval_3d_avx2(&noise, 64, 64, 64);
+  //end_time = engine_get_time();
+  //printf("Gpu test: %lf\n", end_time - start_time);
 #else
   manifold_octree_construct_base(manifold_dual_contouring->tree, manifold_dual_contouring->resolution, 0);
   manifold_octree_cluster_cell_base(manifold_dual_contouring->tree, 0);
