@@ -19,7 +19,8 @@ static const bool enable_validation_layers = true;
 
 #define VULKAN_WAIT_SEMAPHORES 2
 #define VULKAN_VALIDATION_LAYER_COUNT 1
-static const char* const validation_layers[VULKAN_VALIDATION_LAYER_COUNT] = {"VK_LAYER_LUNARG_standard_validation"};
+//static const char* const validation_layers[VULKAN_VALIDATION_LAYER_COUNT] = {"VK_LAYER_LUNARG_standard_validation"};
+static const char* const validation_layers[VULKAN_VALIDATION_LAYER_COUNT] = {"VK_LAYER_KHRONOS_validation"};
 #define VULKAN_DEVICE_EXTENSION_COUNT 1
 static const char* const device_extensions[VULKAN_DEVICE_EXTENSION_COUNT] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 

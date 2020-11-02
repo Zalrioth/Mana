@@ -68,6 +68,9 @@ static void vulkan_core_destroy_debug_utils_messenger_ext(VkInstance instance, V
 }
 
 static int vulkan_core_create_instance(struct VulkanState* vulkan_state, const char** graphics_lbrary_extensions, uint32_t* graphics_library_extension_count) {
+  if (enable_validation_layers && !vulkan_core_check_validation_layer_support(vulkan_state))
+    return VULKAN_CORE_CREATE_INSTANCE_ERROR;
+
   VkApplicationInfo app_info = {0};
   app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
   // TODO: Pull name and version from engine
@@ -81,10 +84,14 @@ static int vulkan_core_create_instance(struct VulkanState* vulkan_state, const c
   create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
   create_info.pApplicationInfo = &app_info;
 
+  //auto extensions = getRequiredExtensions();
+
   if (enable_validation_layers) {
     graphics_lbrary_extensions[*graphics_library_extension_count] = VK_EXT_DEBUG_UTILS_EXTENSION_NAME;  //"VK_EXT_DEBUG_UTILS_EXTENSION_NAME\0";
     (*graphics_library_extension_count)++;
   }
+
+  //
 
   create_info.enabledExtensionCount = *graphics_library_extension_count;
   create_info.ppEnabledExtensionNames = graphics_lbrary_extensions;
@@ -95,7 +102,12 @@ static int vulkan_core_create_instance(struct VulkanState* vulkan_state, const c
   } else
     create_info.enabledLayerCount = 0;
 
-  if (vkCreateInstance(&create_info, NULL, &vulkan_state->instance) != VK_SUCCESS)
+  int vulkan_instance_status = vkCreateInstance(&create_info, NULL, &vulkan_state->instance);
+
+  if (vulkan_instance_status == VK_ERROR_INCOMPATIBLE_DRIVER)
+    fprintf(stderr, "GPU driver is incompatible with vulkan!\n");
+
+  if (vulkan_instance_status != VK_SUCCESS)
     return VULKAN_CORE_CREATE_INSTANCE_ERROR;
 
   return VULKAN_CORE_SUCCESS;

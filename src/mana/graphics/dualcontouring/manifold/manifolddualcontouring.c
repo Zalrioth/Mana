@@ -81,6 +81,7 @@ void manifold_dual_contouring_contour(struct ManifoldDualContouring* manifold_du
   // 0.5
   // 0.425
   // 0.34
+  // 0.15
 
   start_time = engine_get_time();
   manifold_octree_cluster_cell_base(manifold_dual_contouring->tree, 0, noises);
