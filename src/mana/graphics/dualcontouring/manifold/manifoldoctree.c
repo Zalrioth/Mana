@@ -121,182 +121,6 @@ void manifold_octree_generate_vertex_buffer(struct ManifoldOctreeNode* octree_no
     vector_delete(&vert_vectors[vector_num]);
 }
 
-// TODO: Try out job system following is mess of thread spaghetti
-//static unsigned long long times_ran = 0;
-/*static inline bool manifold_octree_construct_nodes_thread_split(struct ManifoldOctreeNode* octree_node, struct Vector* noises, float* noise_set, int* remaining_threads);
-static inline bool manifold_octree_construct_nodes_tree_dive(struct ManifoldOctreeNode* octree_node, struct Vector* noises, float* noise_set, int* remaining_threads, int child_size, int index) {
-  vec3 child_pos = TCornerDeltas[index];
-  struct ManifoldOctreeNode* new_node = calloc(1, sizeof(struct ManifoldOctreeNode));
-  octree_node_init(new_node, vec3_add(octree_node->position, vec3_scale(child_pos, (float)child_size)), child_size, MANIFOLD_NODE_INTERNAL);
-  octree_node->children[index] = new_node;
-  octree_node->children[index]->child_index = index;
-  if (manifold_octree_construct_nodes_thread_split(octree_node->children[index], noises, noise_set, remaining_threads))
-    return true;
-  else {
-    octree_node->children[index] = NULL;
-    free(new_node);
-  }
-
-  return false;
-}
-
-static inline bool manifold_octree_construct_nodes_thread_split(struct ManifoldOctreeNode* octree_node, struct Vector* noises, float* noise_set, int* remaining_threads) {
-  if (octree_node->size == 1)
-    return manifold_octree_construct_leaf(octree_node, noises, 64, noise_set);
-
-  octree_node->type = MANIFOLD_NODE_INTERNAL;
-  int child_size = octree_node->size / 2;
-  bool has_children = false;
-
-  if (*remaining_threads > 0) {
-    (*remaining_threads)--;
-    //#pragma omp parallel for schedule(dynamic) num_threads(*remaining_threads)
-    for (int index = 0; index < 8; index++) {
-      //printf("%d assigned to thread %d\n", index, omp_get_thread_num());
-      manifold_octree_construct_nodes_tree_dive(octree_node, noises, noise_set, remaining_threads, child_size, index);
-    }
-    (*remaining_threads)++;
-  } else {
-    for (int index = 0; index < 8; index++)
-      manifold_octree_construct_nodes_tree_dive(octree_node, noises, noise_set, remaining_threads, child_size, index);
-  }
-
-  return has_children;
-}
-
-static inline bool manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, struct Vector* noises, float* noise_set) {
-  // Literally if size 1 not likely to ever happen except for maybe empty?
-  //if (octree_node->size == 1)
-  //  return manifold_octree_construct_leaf(octree_node, noises, scale);
-
-  octree_node->type = MANIFOLD_NODE_INTERNAL;
-  // NOTE: Adjusting child size here will scale down terrain generation, just need to form one large octree for lod
-  int child_size = octree_node->size / 2;
-  bool has_children = false;
-
-  int remaining_threads = omp_get_max_threads() - 8;
-#pragma omp parallel for numthreads(8)
-  for (int index = 0; index < 8; index++)
-    has_children |= manifold_octree_construct_nodes_tree_dive(octree_node, noises, noise_set, &remaining_threads, child_size, index);
-  //for (int index = 0; index < 8; index++) {
-  //  manifold_octree_construct_nodes(struct ManifoldOctreeNode * octree_node, struct Vector * noises);
-  //  manifold_octree_construct_nodes_tree_dive(octree_node, noises, &remaining_threads, child_size, index, &has_children);
-  //}
-
-  return has_children;
-}*/
-
-//static inline int root(int input, int n) {
-//  return round(pow(input, 1. / n));
-//}
-//
-//#include <stdatomic.h>
-//atomic_int times_ran = 0;
-//static inline bool manifold_octree_construct_nodes_thread_split(struct ManifoldOctreeNode* octree_node, struct Vector* noises, int scale, float* noise_set);
-//static inline bool manifold_octree_construct_nodes_tree_dive(struct ManifoldOctreeNode* octree_node, struct Vector* noises, int child_size, int index, int scale, float* noise_set) {
-//  vec3 child_pos = TCornerDeltas[index];
-//  struct ManifoldOctreeNode* new_node = calloc(1, sizeof(struct ManifoldOctreeNode));
-//  octree_node_init(new_node, vec3_add(octree_node->position, vec3_scale(child_pos, (float)child_size)), child_size, MANIFOLD_NODE_INTERNAL);
-//  octree_node->children[index] = new_node;
-//  octree_node->children[index]->child_index = index;
-//  if (manifold_octree_construct_nodes_thread_split(octree_node->children[index], noises, scale, noise_set))
-//    return true;
-//  else {
-//    octree_node->children[index] = NULL;
-//    free(new_node);
-//    return false;
-//  }
-//}
-//
-//static inline bool manifold_octree_construct_nodes_thread_split(struct ManifoldOctreeNode* octree_node, struct Vector* noises, int scale, float* noise_set) {
-//  if (octree_node->size == 1)
-//    return manifold_octree_construct_leaf(octree_node, noises, scale, noise_set);
-//
-//  octree_node->type = MANIFOLD_NODE_INTERNAL;
-//  int child_size = octree_node->size / 2;
-//  bool has_children = false;
-//
-//  for (int index = 0; index < 8; index++)
-//    has_children |= manifold_octree_construct_nodes_tree_dive(octree_node, noises, child_size, index, scale, noise_set);
-//
-//  return has_children;
-//}
-
-// Node: Is an interesting idea and can be super parallelized easily but math is complex and bad memory use
-//static inline bool manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, struct Vector* noises, float* noise_set) {
-//  int levels = 0;
-//  for (int current_level = octree_node->size; current_level > 0; current_level /= 2)
-//    levels++;
-//
-//  if (levels == 0)
-//    return;
-//
-//  int memory_offset_table[levels] = {0};
-//
-//  int total_nodes = 0;
-//  for (int series_num = 0; series_num < levels; series_num++) {
-//    memory_offset_table[series_num] += total_nodes;
-//    total_nodes += pow(8, series_num);
-//  }
-//
-//  struct ManifoldOctreeNode* node_cache = calloc(total_nodes, sizeof(struct ManifoldOctreeNode));
-//
-//  // Must start from bottom level and work up
-//  for (int node_level = levels; node_level >= 0; node_level--) {
-//    int child_size = 64 / pow(2, levels);
-//    // omp here
-//    for (int node_num = 0; node_num < pow(8, node_level); node_num++) {
-//      int index = node_num % 8;
-//      vec3 child_pos = TCornerDeltas[index];
-//      struct ManifoldOctreeNode* new_node = node_cache[memory_offset_table[node_level] + node_num];
-//      octree_node_init(new_node, vec3_add(octree_node->position, vec3_scale(child_pos, (float)child_size)), child_size, MANIFOLD_NODE_INTERNAL);
-//      octree_node->children[index] = new_node;
-//      octree_node->children[index]->child_index = index;
-//      if (child_size == 2)
-//        manifold_octree_construct_leaf(octree_node, noises, 64);
-//    }
-//  }
-//
-//  //for (int node_num = 0; node_num < total_nodes; node_num++) {
-//  //  if (node_size == 1)
-//  //    manifold_octree_construct_leaf(octree_node, noises, scale);
-//  //}
-//
-//  ////////////////////////////////
-//
-//  if (octree_node->size == 1)
-//    manifold_octree_construct_leaf(octree_node, noises, scale);
-//
-//  octree_node->type = MANIFOLD_NODE_INTERNAL;
-//  // NOTE: Adjusting child size here will scale down terrain generation, just need to form one large octree for lod
-//  int child_size = octree_node->size / 2;
-//  bool has_children = false;
-//
-//  //int remaining_threads = omp_get_max_threads() - 8;
-//  //#pragma omp parallel for
-//  for (int index = 0; index < 8; index++) {
-//    vec3 child_pos = TCornerDeltas[index];
-//    struct ManifoldOctreeNode* new_node = calloc(1, sizeof(struct ManifoldOctreeNode));
-//    octree_node_init(new_node, vec3_add(octree_node->position, vec3_scale(child_pos, (float)child_size)), child_size, MANIFOLD_NODE_INTERNAL);
-//    octree_node->children[index] = new_node;
-//    octree_node->children[index]->child_index = index;
-//    if (manifold_octree_construct_nodes(octree_node->children[index], noises, noise_set))
-//      return true;
-//    else {
-//      octree_node->children[index] = NULL;
-//      free(new_node);
-//      return false;
-//    }
-//  }
-//  //has_children |= manifold_octree_construct_nodes(octree_node, noises, noise_set);
-//  //for (int index = 0; index < 8; index++) {
-//  //  manifold_octree_construct_nodes(struct ManifoldOctreeNode * octree_node, struct Vector * noises);
-//  //  manifold_octree_construct_nodes_tree_dive(octree_node, noises, &remaining_threads, child_size, index, &has_children);
-//  //}
-//
-//  return has_children;
-//}
-
 // Working
 /*bool manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, struct Vector* noises, float* noise_set) {
   if (octree_node->size == 1)
@@ -350,128 +174,6 @@ static inline bool manifold_octree_construct_nodes(struct ManifoldOctreeNode* oc
   }
 }*/
 
-// Something
-//struct ThreadPack {
-//  struct ManifoldOctreeNode* octree_node;
-//  struct Vector* noises;
-//  float* noise_set;
-//  int thread_pool_size;
-//  struct Threadz* thread_pool;
-//  int index;
-//  bool* has_children;
-//  int child_size;
-//};
-//
-//DWORD WINAPI manifold_octree_construct_nodes_octree_dive(LPVOID Param) {
-//  struct ThreadPack* unpack = (struct ThreadPack*)Param;
-//  vec3 child_pos = TCornerDeltas[unpack->index];
-//  struct ManifoldOctreeNode* new_node = calloc(1, sizeof(struct ManifoldOctreeNode));
-//  octree_node_init(new_node, vec3_add(unpack->octree_node->position, vec3_scale(child_pos, (float)unpack->child_size)), unpack->child_size, MANIFOLD_NODE_INTERNAL);
-//  unpack->octree_node->children[unpack->index] = new_node;
-//  unpack->octree_node->children[unpack->index]->child_index = unpack->index;
-//  if (manifold_octree_construct_nodes(unpack->octree_node->children[unpack->index], unpack->noises, unpack->noise_set, unpack->thread_pool_size, unpack->thread_pool))
-//    *(unpack->has_children) |= true;
-//  else {
-//    unpack->octree_node->children[unpack->index] = NULL;
-//    free(new_node);
-//  }
-//  return 0;
-//}
-//
-//bool manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, struct Vector* noises, float* noise_set, int thread_pool_size, struct Threadz thread_pool[]) {
-//  if (octree_node->size == 1)
-//    return manifold_octree_construct_leaf(octree_node, noises, 64, noise_set);
-//
-//  octree_node->type = MANIFOLD_NODE_INTERNAL;
-//  bool has_children = false;
-//  int child_size = octree_node->size / 2;
-//
-//  bool waiting_threads[12] = {0};
-//  bool multithreaded = false;
-//
-//  for (int index = 0; index < 8; index++) {
-//    struct ThreadPack pack = {octree_node, noises, noise_set, thread_pool_size, thread_pool, index, &has_children, child_size};
-//    for (int loop_num = 0; loop_num < 12; loop_num++) {
-//      if (thread_pool[loop_num].in_use == false) {
-//        thread_pool[loop_num].in_use = true;
-//        multithreaded = true;
-//        waiting_threads[loop_num] = true;
-//        thread_pool[loop_num].thread_handle = CreateThread(NULL, 0, manifold_octree_construct_nodes_octree_dive, &pack, 0, &thread_pool[loop_num].thread_id);
-//
-//        break;
-//      }
-//    }
-//    if (multithreaded == false)
-//      manifold_octree_construct_nodes_octree_dive(&pack);
-//  }
-//
-//  if (multithreaded == true) {
-//    for (int loop_num = 0; loop_num < 12; loop_num++) {
-//      if (waiting_threads[loop_num] == true) {
-//        WaitForSingleObject(thread_pool[loop_num].thread_handle, INFINITE);
-//        CloseHandle(thread_pool[loop_num].thread_handle);
-//        thread_pool[loop_num].in_use = false;
-//      }
-//    }
-//  }
-//
-//  return has_children;
-//}
-
-//bool manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, struct Vector* noises, float* noise_set, int* remaining_threads) {
-//  if (octree_node->size == 1)
-//    return manifold_octree_construct_leaf(octree_node, noises, 64, noise_set);
-//
-//  octree_node->type = MANIFOLD_NODE_INTERNAL;
-//  bool has_children = false;
-//  int child_size = octree_node->size / 2;
-//
-//  if (*remaining_threads > 0) {
-//    int threads_used = 0;
-//    if (*remaining_threads > 8) {
-//      threads_used = 8;
-//      *remaining_threads -= 8;
-//    } else {
-//      threads_used = 2;
-//      *remaining_threads -= 2;
-//    }
-//#pragma omp parallel for schedule(dynamic) num_threads(threads_used)
-//    for (int index = 0; index < 8; index++) {
-//      //printf("%d assigned to thread %d\n", index, omp_get_thread_num());
-//      vec3 child_pos = TCornerDeltas[index];
-//      struct ManifoldOctreeNode* new_node = calloc(1, sizeof(struct ManifoldOctreeNode));
-//      octree_node_init(new_node, vec3_add(octree_node->position, vec3_scale(child_pos, (float)child_size)), child_size, MANIFOLD_NODE_INTERNAL);
-//      octree_node->children[index] = new_node;
-//      octree_node->children[index]->child_index = index;
-//      if (manifold_octree_construct_nodes(octree_node->children[index], noises, noise_set, remaining_threads))
-//        has_children |= true;
-//      else {
-//        octree_node->children[index] = NULL;
-//        free(new_node);
-//      }
-//    }
-//    *remaining_threads += threads_used;
-//    //printf("Remaining threads %d\n", *remaining_threads);
-//  } else {
-//    for (int index = 0; index < 8; index++) {
-//      //printf("%d assigned to thread %d\n", index, omp_get_thread_num());
-//      vec3 child_pos = TCornerDeltas[index];
-//      struct ManifoldOctreeNode* new_node = calloc(1, sizeof(struct ManifoldOctreeNode));
-//      octree_node_init(new_node, vec3_add(octree_node->position, vec3_scale(child_pos, (float)child_size)), child_size, MANIFOLD_NODE_INTERNAL);
-//      octree_node->children[index] = new_node;
-//      octree_node->children[index]->child_index = index;
-//      if (manifold_octree_construct_nodes(octree_node->children[index], noises, noise_set, remaining_threads))
-//        has_children |= true;
-//      else {
-//        octree_node->children[index] = NULL;
-//        free(new_node);
-//      }
-//    }
-//  }
-//
-//  return has_children;
-//}
-
 /*bool manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, struct Vector* noises, float* noise_set) {
   if (octree_node->size == 1)
     return manifold_octree_construct_leaf(octree_node, noises, 64, noise_set);
@@ -500,13 +202,13 @@ static inline bool manifold_octree_construct_nodes(struct ManifoldOctreeNode* oc
   }
 }*/
 
-// Note: Extremely fast terrain generation done with multithreading and iteration, no joke came up with this while pooping
+// Note: Extremely fast terrain generation done with multithreading and iteration, no joke came up with this while on the toilet
 static inline void manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, struct Vector* noises, float* noise_set) {
   int levels = 0;
   for (int current_level = octree_node->size; current_level > 0; current_level /= 2)
     levels++;
 
-  if (levels == 0)
+  if (levels <= 1)
     return;
 
   struct ManifoldOctreeNode* node_cache[levels];
@@ -514,13 +216,16 @@ static inline void manifold_octree_construct_nodes(struct ManifoldOctreeNode* oc
   int total_nodes[levels];
   memset(total_nodes, 0, sizeof(int) * levels);
 
-  for (int series_num = 0; series_num < levels; series_num++) {
-    total_nodes[series_num] += pow(8, series_num);
+  total_nodes[0] = 1;
+  node_cache[0] = octree_node;
+  for (int series_num = 1; series_num < levels; series_num++) {
+    total_nodes[series_num] = pow(8, series_num);
     node_cache[series_num] = calloc(1, sizeof(struct ManifoldOctreeNode) * pow(8, series_num));
   }
 
+  // Note: Needed to calculate position of lowest level
   for (int node_level = 1; node_level < levels - 1; node_level++) {
-    const int child_size = 64 / pow(2, node_level);
+    const int child_size = octree_node->size / pow(2, node_level);
 #pragma omp parallel for schedule(dynamic) num_threads(omp_get_max_threads())
     for (int node_num = 0; node_num < total_nodes[node_level]; node_num++) {
       int index = node_num % 8;
@@ -530,139 +235,60 @@ static inline void manifold_octree_construct_nodes(struct ManifoldOctreeNode* oc
     }
   }
 
+// Note: Bulk of performance cost here, lowest level only
 #pragma omp parallel for schedule(dynamic) num_threads(omp_get_max_threads())
   for (int node_num = 0; node_num < total_nodes[levels - 1]; node_num++) {
     int index = node_num % 8;
     vec3 child_pos = TCornerDeltas[index];
     struct ManifoldOctreeNode* new_node = &node_cache[levels - 1][node_num];
     octree_node_init(new_node, vec3_add(node_cache[levels - 2][node_num / 8].position, vec3_scale(child_pos, 1)), 1, MANIFOLD_NODE_INTERNAL);
-    if (manifold_octree_construct_leaf(new_node, noises, 64, noise_set) == false)
+    if (manifold_octree_construct_leaf(new_node, noises, octree_node->size, noise_set) == false)
       new_node->type = MANIFOLD_NODE_NONE;
   }
 
-  for (int node_level = levels - 2; node_level > 0; node_level--) {
+  // Note: Below can be optomized with simd but already very fast probably not needed
+  for (int node_level = levels - 2; node_level >= 0; node_level--) {
 #pragma omp parallel for schedule(dynamic) num_threads(omp_get_max_threads())
     for (int node_num = 0; node_num < total_nodes[node_level]; node_num++) {
       int index = node_num % 8;
       bool has_children = false;
       struct ManifoldOctreeNode* got_node = &node_cache[node_level][node_num];
-      for (int index = 0; index < 8; index++) {
-        struct ManifoldOctreeNode* found_node = &node_cache[node_level + 1][(node_num * 8) + index];
-        if (found_node->type == MANIFOLD_NODE_NONE)
-          continue;
-        has_children |= true;
-        got_node->children[index] = found_node;
-        got_node->children[index]->child_index = index;
-      }
-      got_node->type = (has_children) ? MANIFOLD_NODE_INTERNAL : MANIFOLD_NODE_NONE;
-    }
-  }
-
-  octree_node->type = MANIFOLD_NODE_INTERNAL;
-  for (int index = 0; index < 8; index++) {
-    struct ManifoldOctreeNode* found_node = &node_cache[1][index];
-    if (found_node->type == MANIFOLD_NODE_NONE)
-      continue;
-    octree_node->children[index] = found_node;
-    octree_node->children[index]->child_index = index;
-  }
-
-  return;
-}
-// Almost works backup
-/*static inline void manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, struct Vector* noises, float* noise_set) {
-  int levels = 0;
-  for (int current_level = octree_node->size; current_level > 0; current_level /= 2)
-    levels++;
-
-  if (levels == 0)
-    return;
-
-  struct ManifoldOctreeNode* node_cache[levels];
-  memset(node_cache, 0, sizeof(struct ManifoldOctreeNode*) * levels);
-  int total_nodes[levels];
-  memset(total_nodes, 0, sizeof(int) * levels);
-
-  for (int series_num = 0; series_num < levels; series_num++) {
-    total_nodes[series_num] += pow(8, series_num);
-    node_cache[series_num] = calloc(1, sizeof(struct ManifoldOctreeNode) * pow(8, series_num));
-  }
-
-  // Must start from bottom level and work up
-  for (int node_level = levels - 1; node_level > 0; node_level--) {
-    int child_size = 64 / pow(2, node_level);
-    //#pragma omp parallel for num_threads(omp_get_max_threads())
-    for (int node_num = 0; node_num < total_nodes[node_level]; node_num++) {
-      int index = node_num % 8;
-      vec3 child_pos = TCornerDeltas[index];
-      struct ManifoldOctreeNode* new_node = &node_cache[node_level][node_num];
-      new_node->position = vec3_add(new_node->position, octree_node->position);
-      for (int loop_num = node_level - 1; loop_num > 0; loop_num--) {
-        new_node->position = vec3_add(new_node->position, TCornerDeltas[(node_num / (int)pow(8, loop_num)) % 8]);
-      }
-      octree_node_init(new_node, vec3_add(new_node->position, vec3_scale(child_pos, (float)child_size)), child_size, MANIFOLD_NODE_INTERNAL);
-      if (child_size == 1) {
-        if (manifold_octree_construct_leaf(new_node, noises, 64, noise_set) == false)
-          new_node->type = MANIFOLD_NODE_NONE;
-        else
-          asm("nop");
-      } else {
-        bool has_children = false;
+#pragma omp simd
+      {
         for (int index = 0; index < 8; index++) {
           struct ManifoldOctreeNode* found_node = &node_cache[node_level + 1][(node_num * 8) + index];
           if (found_node->type == MANIFOLD_NODE_NONE)
             continue;
           has_children |= true;
-          new_node->children[index] = found_node;
-          new_node->children[index]->child_index = index;
+          got_node->children[index] = found_node;
+          got_node->children[index]->child_index = index;
         }
-        if (has_children)
-          new_node->type = MANIFOLD_NODE_INTERNAL;
-        else
-          new_node->type = MANIFOLD_NODE_NONE;
-        //new_node->type = (has_children) ? MANIFOLD_NODE_INTERNAL : MANIFOLD_NODE_NONE;
       }
+      got_node->type = (has_children) ? MANIFOLD_NODE_INTERNAL : MANIFOLD_NODE_NONE;
     }
   }
 
-  octree_node->type = MANIFOLD_NODE_INTERNAL;
-  for (int index = 0; index < 8; index++) {
-    struct ManifoldOctreeNode* found_node = &node_cache[1][index];
-    if (found_node->type == MANIFOLD_NODE_NONE)
-      continue;
-    octree_node->children[index] = found_node;
-    octree_node->children[index]->child_index = index;
-  }
-
   return;
-}*/
+}
 
 // TODO: Optimize below as much as possible
 static inline bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* octree_node, struct Vector* noises, int scale, float* noise_set) {
-  //if (octree_node->size != 1)
-  //  return false;
-
   octree_node->type = MANIFOLD_NODE_LEAF;
   int corners = 0;
   float samples[8] = {0};
 
-  // TODO: Will need to keep this for ifdef non avx/sse or just reference
-  //for (int i = 0; i < 8; i++) {
-  //  if ((samples[i] = Sphere(vec3_add(octree_node->position, TCornerDeltas[i]))) < 0)
-  //    corners |= 1 << i;
-  //}
+// Start with this
+#pragma omp simd
+  {
+    for (int sample_num = 0; sample_num < 8; sample_num++) {
+      vec3 sample_position = vec3_add(octree_node->position, TCornerDeltas[sample_num]);
+      samples[sample_num] = noise_get(noise_set, scale, scale, scale, sample_position.x, sample_position.y, sample_position.z);
+      if (samples[sample_num] < 0)
+        corners |= 1 << sample_num;
+    }
+  }
 
-  //vec3 poss_pre[8] = {vec3_add(octree_node->position, TCornerDeltas[0]), vec3_add(octree_node->position, TCornerDeltas[1]), vec3_add(octree_node->position, TCornerDeltas[2]), vec3_add(octree_node->position, TCornerDeltas[3]), vec3_add(octree_node->position, TCornerDeltas[4]), vec3_add(octree_node->position, TCornerDeltas[5]), vec3_add(octree_node->position, TCornerDeltas[6]), vec3_add(octree_node->position, TCornerDeltas[7])};
-  //planet_sample((float(*)[3])poss_pre, samples, noises, scale);
-  //SphereSamples(poss, samples);
-  for (int loop_num = 0; loop_num < 8; loop_num++) {
-    vec3 possss = vec3_add(octree_node->position, TCornerDeltas[loop_num]);
-    samples[loop_num] = noise_get(noise_set, 64, 64, 64, possss.x, possss.y, possss.z);
-  }
-  for (int i = 0; i < 8; i++) {
-    if (samples[i] < 0)
-      corners |= 1 << i;
-  }
+  // Loop through all corners if all false then return
   octree_node->corners = (unsigned char)corners;
   if (corners == 0 || corners == 255)
     return false;
