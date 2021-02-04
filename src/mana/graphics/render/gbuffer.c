@@ -207,7 +207,8 @@ int gbuffer_start(struct GBuffer* gbuffer, struct VulkanState* vulkan_renderer) 
 
   // Should not be clearing color only normals and depth
   // http://ogldev.atspace.co.uk/www/tutorial51/tutorial51.html
-  VkClearColorValue multisample_clear_color = {{0.0f, 0.0f, 0.0f, 0.0f}};
+  //VkClearColorValue multisample_clear_color = {{0.0f, 0.0f, 0.0f, 0.0f}};
+  VkClearColorValue multisample_clear_color = {{0.529f, 0.808f, 0.922f, 0.0f}};
   clear_values[0].color = multisample_clear_color;
 
   VkClearColorValue multisample_clear_normals = {{0.0f, 0.0f, 0.0f, 0.0f}};
@@ -216,7 +217,8 @@ int gbuffer_start(struct GBuffer* gbuffer, struct VulkanState* vulkan_renderer) 
   VkClearDepthStencilValue clear_depth = {0.0f, 0};
   clear_values[2].depthStencil = clear_depth;
 
-  VkClearColorValue clear_color = {{0.0f, 0.0f, 0.0f, 0.0f}};
+  //VkClearColorValue clear_color = {{0.0f, 0.0f, 0.0f, 0.0f}};
+  VkClearColorValue clear_color = {{0.529f, 0.808f, 0.922f, 0.0f}};
   clear_values[3].color = clear_color;
 
   VkClearColorValue clear_normals = {{0.0f, 0.0f, 0.0f, 0.0f}};
