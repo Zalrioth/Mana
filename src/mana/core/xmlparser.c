@@ -40,6 +40,21 @@ struct XmlNode* xml_parser_load_node(char** scanner) {
 
   // Extract tag in line
   char* tag_end = strchr(remove_whitespace_line, '>');
+  // Note: Case if tag is spread over multiple lines like for geometry
+  if (tag_end == NULL || *tag_end != '>') {
+    tag_end = remove_whitespace_line;
+    while (tag_end == NULL || *tag_end != '>') {
+      tag_end++;
+      //tag_end = strchr(remove_whitespace_line, '\0') + 1;
+      //tag_end = strchr(tag_end, '>');
+      /*while (*tag_end != '>') {
+        // Remove yucky newlines
+        if (*tag_end == '\n')
+          *tag_end = ' ';
+        tag_end++;
+      }*/
+    }
+  }
   size_t tag_length = tag_end - (remove_whitespace_line + 1);
   char* tag = malloc(sizeof(char) * (tag_length + 1));
   snprintf(tag, tag_length + 1, "%s", remove_whitespace_line + 1);

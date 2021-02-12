@@ -173,12 +173,13 @@ static void glfw_framebuffer_resize_callback(GLFWwindow *window, int width, int 
   vulkan_state_handle->framebuffer_resized = true;
 }
 
+// TODO: Set window name much earlier not this poopoo hardcode
 int window_glfw_window_init(struct Window *window, struct Engine *engine, int width, int height) {
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   // TODO: Add setting to change window resizing
   glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-  engine->graphics_library.glfw_library.glfw_window = glfwCreateWindow(width, height, "Grindstone", NULL, NULL);
+  engine->graphics_library.glfw_library.glfw_window = glfwCreateWindow(width, height, "Mana 0.0.4", NULL, NULL);
 
   //glfwSetWindowUserPointer(engine->vulkan_api->glfw_window, &vulkan_api);
   glfwSetWindowUserPointer(engine->graphics_library.glfw_library.glfw_window, engine->gpu_api.vulkan_state);
