@@ -18,12 +18,35 @@ struct XmlNode* xml_parser_load_xml_file(char* xml_file_path) {
 
 struct XmlNode* xml_parser_load_node(char** scanner) {
   // Extract line
+  bool multiline = false;
   char* line_end = strchr(*scanner, '\n');
   if (line_end == NULL)
     line_end = strchr(*scanner, '\0');
-  size_t line_length = line_end - *scanner;
-  if (line_length == 0)
+  if (line_end == *scanner || line_end == NULL)
     return NULL;
+
+  if (strchr(line_end + 1, '\n') != NULL) {
+    multiline = true;
+    char* check_next_line = strchr(line_end + 1, '\n');
+    int line_length = check_next_line - line_end;
+    for (int char_num = 0; char_num < line_length; char_num++) {
+      if (line_end[char_num] == '<')
+        multiline = false;
+    }
+  }
+
+  while ((*(line_end - 1) != '>' && *(line_end - 2) != '>') || multiline) {
+    if (*(line_end + 1) == '<') {
+      *line_end = '0';
+      multiline = false;
+    } else
+      *line_end = ' ';
+    //int line_size = line_end;
+    line_end = strchr(line_end + 1, '\n');
+    //line_size = line_end - line_size;
+  }
+
+  size_t line_length = line_end - *scanner;
   char* line = malloc(sizeof(char) * (line_length + 1));
   snprintf(line, line_length + 1, "%s", *scanner);
   *scanner += line_length + 1;
@@ -40,21 +63,6 @@ struct XmlNode* xml_parser_load_node(char** scanner) {
 
   // Extract tag in line
   char* tag_end = strchr(remove_whitespace_line, '>');
-  // Note: Case if tag is spread over multiple lines like for geometry
-  if (tag_end == NULL || *tag_end != '>') {
-    tag_end = remove_whitespace_line;
-    while (tag_end == NULL || *tag_end != '>') {
-      tag_end++;
-      //tag_end = strchr(remove_whitespace_line, '\0') + 1;
-      //tag_end = strchr(tag_end, '>');
-      /*while (*tag_end != '>') {
-        // Remove yucky newlines
-        if (*tag_end == '\n')
-          *tag_end = ' ';
-        tag_end++;
-      }*/
-    }
-  }
   size_t tag_length = tag_end - (remove_whitespace_line + 1);
   char* tag = malloc(sizeof(char) * (tag_length + 1));
   snprintf(tag, tag_length + 1, "%s", remove_whitespace_line + 1);

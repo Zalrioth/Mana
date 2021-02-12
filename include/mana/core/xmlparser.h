@@ -5,6 +5,7 @@
 #include "mana/core/memoryallocator.h"
 //
 #include <ctype.h>
+#include <stdbool.h>
 
 #include "mana/core/corecommon.h"
 #include "mana/core/fileio.h"
