@@ -68,6 +68,10 @@ void geometry_loader_read_normals(struct ModelData* model_data, struct XmlNode* 
   struct XmlNode* material_node = xml_node_get_child(mesh_data, "polylist");
   if (material_node == NULL)
     material_node = xml_node_get_child(mesh_data, "triangles");
+  // Note: Not sure why but Maya exports sphere mesh incorrectly
+  //if (xml_node_get_child_with_attribute(material_node, "input", "semantic", "NORMAL") == NULL)
+  //  material_node = xml_node_get_child(mesh_data, "vertices");
+
   char* normals_id = xml_node_get_attribute(xml_node_get_child_with_attribute(material_node, "input", "semantic", "NORMAL"), "source") + 1;
   struct XmlNode* normals_data = xml_node_get_child(xml_node_get_child_with_attribute(mesh_data, "source", "id", normals_id), "float_array");
   int count = atoi(xml_node_get_attribute(normals_data, "count"));
@@ -95,6 +99,9 @@ void geometry_loader_read_texture_coordinates(struct ModelData* model_data, stru
   struct XmlNode* material_node = xml_node_get_child(mesh_data, "polylist");
   if (material_node == NULL)
     material_node = xml_node_get_child(mesh_data, "triangles");
+  //if (xml_node_get_child_with_attribute(material_node, "input", "semantic", "TEXCOORD") == NULL)
+  //  material_node = xml_node_get_child(mesh_data, "vertices");
+
   char* tex_coords_id = xml_node_get_attribute(xml_node_get_child_with_attribute(material_node, "input", "semantic", "TEXCOORD"), "source") + 1;
   struct XmlNode* tex_coords_data = xml_node_get_child(xml_node_get_child_with_attribute(mesh_data, "source", "id", tex_coords_id), "float_array");
   int count = atoi(xml_node_get_attribute(tex_coords_data, "count"));
@@ -119,6 +126,9 @@ void geometry_loader_read_colors(struct ModelData* model_data, struct XmlNode* m
   struct XmlNode* material_node = xml_node_get_child(mesh_data, "polylist");
   if (material_node == NULL)
     material_node = xml_node_get_child(mesh_data, "triangles");
+  //if (xml_node_get_child_with_attribute(material_node, "input", "semantic", "COLOR") == NULL)
+  //  material_node = xml_node_get_child(mesh_data, "vertices");
+
   struct XmlNode* colors_location = xml_node_get_child_with_attribute(material_node, "input", "semantic", "COLOR");
   if (colors_location == NULL) {
     vec3 color = (vec3){.r = 0.0, .g = 0.0, .b = 0.0};
@@ -163,6 +173,7 @@ void geometry_loader_assemble_vertices(struct ModelData* model_data, struct XmlN
   struct XmlNode* poly = xml_node_get_child(mesh_data, "polylist");
   if (poly == NULL)
     poly = xml_node_get_child(mesh_data, "triangles");
+
   struct XmlNode* index_data = xml_node_get_child(poly, "p");
   int type_count = array_list_size(xml_node_get_children(poly, "input"));
 
