@@ -36,15 +36,17 @@ struct AudioClip {
   float seconds_offset;
   float volume;
   int loop;
+  float start_offset;
   int remove;
 };
 
-static inline int audio_clip_init(struct AudioClip* audio_clip, struct AudioClipCache* audio_clip_cache, enum AudioClipType audio_clip_type, int loop, float volume) {
+static inline int audio_clip_init(struct AudioClip* audio_clip, struct AudioClipCache* audio_clip_cache, enum AudioClipType audio_clip_type, int loop, float volume, float start_offset) {
   audio_clip->audio_clip_cache = audio_clip_cache;
   audio_clip->audio_clip_type = audio_clip_type;
-  audio_clip->loop = loop;
-  audio_clip->remove = 0;
   audio_clip->volume = volume;
+  audio_clip->loop = loop;
+  audio_clip->start_offset = start_offset;
+  audio_clip->remove = 0;
 
   return 0;
 }

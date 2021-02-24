@@ -24,6 +24,8 @@ struct AudioManager {
   int alive;
 };
 
+// NOTE: CRASH OCCURS ON END RIGHT NOW
+//Exception thrown at 0x00007FFD97811655 (VkLayer_khronos_validation.dll) in DadnMe.exe: 0xC0000005: Access violation reading location 0x0000000000000000.
 static inline void write_callback(struct SoundIoOutStream* outstream, int frame_count_min, int frame_count_max) {
   // Needed to determine max output channels
   const struct SoundIoChannelLayout* layout = &outstream->layout;
@@ -97,13 +99,15 @@ static inline void write_callback(struct SoundIoOutStream* outstream, int frame_
 
       free(buff);
 
+      // This through memory exception error
       audio_clip->seconds_offset = audio_clip->seconds_offset + seconds_per_frame * readcount;
       if (readcount < frames_left && audio_clip->loop == 1)
         audio_clip->seconds_offset = 0.0f;
       // TEMP to fix overreading file
-      else if (readcount < frames_left && audio_clip->loop == 0)
+      else if (readcount < frames_left && audio_clip->loop == 0) {
+        audio_clip->seconds_offset = 0.0f;
         audio_clip->remove = 1;
-      else
+      } else
         break;
 
       frames_left -= readcount;
