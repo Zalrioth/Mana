@@ -4,6 +4,21 @@
 
 int texture_init(struct Texture *texture, struct GPUAPI *gpu_api, struct TextureSettings texture_settings) {
   VkFilter filter = (texture_settings.filter_type == FILTER_NEAREST) ? VK_FILTER_NEAREST : VK_FILTER_LINEAR;
+  VkSamplerAddressMode mode;
+  switch (texture_settings.mode_type) {
+    case (MODE_REPEAT):
+      mode = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+      break;
+    case (MODE_MIRRORED_REPEAT):
+      mode = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+      break;
+    case (MODE_CLAMP_TO_EDGE):
+      mode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+      break;
+    case (MODE_CLAMP_TO_BORDER):
+      mode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+      break;
+  }
   //texture->filter_type = filter;
   texture->path = strdup(texture_settings.path);
 
@@ -42,6 +57,9 @@ int texture_init(struct Texture *texture, struct GPUAPI *gpu_api, struct Texture
   stbi_us *pixels = stbi_load_16(texture->path, &tex_width, &tex_height, &tex_channels, STBI_rgb_alpha);
   VkDeviceSize image_size = tex_width * tex_height * 4 * 2;
 
+  texture->width = tex_width;
+  texture->height = tex_height;
+
   if (!pixels) {
     printf("failed to load texture image!\n");
     return -1;
@@ -59,6 +77,8 @@ int texture_init(struct Texture *texture, struct GPUAPI *gpu_api, struct Texture
   stbi_image_free(pixels);
 
   uint32_t mip_levels = (uint32_t)(floor(log2(MAX(tex_width, tex_height))));
+  if (texture_settings.mip_maps_enabled == 0)
+    mip_levels = 0;
 
   graphics_utils_create_image(gpu_api->vulkan_state->device, gpu_api->vulkan_state->physical_device, tex_width, tex_height, mip_levels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &texture->texture_image, &texture->texture_image_memory);
 
@@ -71,7 +91,7 @@ int texture_init(struct Texture *texture, struct GPUAPI *gpu_api, struct Texture
   graphics_utils_generate_mipmaps(gpu_api->vulkan_state->device, gpu_api->vulkan_state->physical_device, gpu_api->vulkan_state->graphics_queue, gpu_api->vulkan_state->command_pool, texture->texture_image, VK_FORMAT_R16G16B16A16_UNORM, tex_width, tex_height, mip_levels);
 
   graphics_utils_create_image_view(gpu_api->vulkan_state->device, texture->texture_image, VK_FORMAT_R16G16B16A16_UNORM, VK_IMAGE_ASPECT_COLOR_BIT, mip_levels, &texture->texture_image_view);
-  graphics_utils_create_sampler(gpu_api->vulkan_state->device, &texture->texture_sampler, mip_levels, filter);
+  graphics_utils_create_sampler(gpu_api->vulkan_state->device, &texture->texture_sampler, (struct SamplerSettings){.mip_levels = mip_levels, .filter = filter, .address_mode = mode});
 
   return 0;
 }

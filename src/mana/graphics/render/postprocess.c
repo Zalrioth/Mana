@@ -74,7 +74,7 @@ int post_process_init(struct PostProcess* post_process, struct GPUAPI* gpu_api) 
     vkCreateSemaphore(gpu_api->vulkan_state->device, &semaphore_info, NULL, &post_process->post_process_semaphores[ping_pong_target]);
   }
 
-  graphics_utils_create_sampler(gpu_api->vulkan_state->device, &post_process->texture_sampler, 0, VK_FILTER_LINEAR);
+  graphics_utils_create_sampler(gpu_api->vulkan_state->device, &post_process->texture_sampler, (struct SamplerSettings){.mip_levels = 0, .filter = VK_FILTER_LINEAR, .address_mode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE});
 
   // Post process command buffer
   VkCommandBufferAllocateInfo alloc_info_post_process = {0};

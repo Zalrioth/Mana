@@ -32,6 +32,9 @@ struct Sprite {
   VkBuffer uniform_buffer;
   VkDeviceMemory uniform_buffers_memory;
   VkDescriptorSet descriptor_set;
+
+  float width;
+  float height;
 };
 
 enum {

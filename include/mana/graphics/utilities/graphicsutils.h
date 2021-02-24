@@ -8,6 +8,12 @@
 
 #include "mana/graphics/graphicscommon.h"
 
+struct SamplerSettings {
+  uint32_t mip_levels;
+  VkFilter filter;
+  VkSamplerAddressMode address_mode;
+};
+
 static inline void graphics_utils_create_image_view(struct VkDevice_T *device, VkImage image, VkFormat format, VkImageAspectFlags aspect_flags, uint32_t mip_levels, VkImageView *image_view);
 static inline int graphics_utils_create_image(struct VkDevice_T *device, struct VkPhysicalDevice_T *physical_device, uint32_t width, uint32_t height, uint32_t mip_levels, VkSampleCountFlagBits num_samples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage *image, VkDeviceMemory *image_memory);
 static inline int graphics_utils_create_buffer(struct VkDevice_T *device, struct VkPhysicalDevice_T *physical_device, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer *buffer, VkDeviceMemory *buffer_memory);
@@ -15,7 +21,7 @@ static inline int graphics_utils_transition_image_layout(struct VkDevice_T *devi
 static inline uint32_t graphics_utils_find_memory_type(struct VkPhysicalDevice_T *physical_device, uint32_t typeFilter, VkMemoryPropertyFlags properties);
 static inline VkCommandBuffer graphics_utils_begin_single_time_commands(struct VkDevice_T *device, struct VkCommandPool_T *command_pool);
 static inline void graphics_utils_end_single_time_commands(struct VkDevice_T *device, struct VkQueue_T *graphics_queue, struct VkCommandPool_T *command_pool, VkCommandBuffer command_buffer);
-static inline int graphics_utils_create_sampler(struct VkDevice_T *device, VkSampler *texture_sampler, uint32_t mip_levels, VkFilter filter);
+static inline int graphics_utils_create_sampler(struct VkDevice_T *device, VkSampler *texture_sampler, struct SamplerSettings sampler_settings);
 static inline void graphics_utils_copy_buffer_to_image(struct VkDevice_T *device, struct VkQueue_T *graphics_queue, struct VkCommandPool_T *command_pool, VkBuffer *buffer, VkImage *image, uint32_t width, uint32_t height);
 static inline void graphics_utils_generate_mipmaps(struct VkDevice_T *device, VkPhysicalDevice physical_device, struct VkQueue_T *graphics_queue, struct VkCommandPool_T *command_pool, VkImage image, VkFormat format, int32_t tex_width, int32_t tex_height, uint32_t mip_levels);
 static inline VkFormat graphics_utils_find_depth_format(VkPhysicalDevice physical_device);
@@ -204,14 +210,15 @@ static inline void graphics_utils_end_single_time_commands(struct VkDevice_T *de
   vkFreeCommandBuffers(device, command_pool, 1, &command_buffer);
 }
 
-static inline int graphics_utils_create_sampler(struct VkDevice_T *device, VkSampler *texture_sampler, uint32_t mip_levels, VkFilter filter) {
+static inline int graphics_utils_create_sampler(struct VkDevice_T *device, VkSampler *texture_sampler, struct SamplerSettings sampler_settings) {
   VkSamplerCreateInfo sampler_info = {0};
   sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-  sampler_info.magFilter = filter;
-  sampler_info.minFilter = filter;
-  sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-  sampler_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-  sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+  sampler_info.magFilter = sampler_settings.filter;
+  sampler_info.minFilter = sampler_settings.filter;
+  // TODO: Let this be changeable
+  sampler_info.addressModeU = sampler_settings.address_mode;
+  sampler_info.addressModeV = sampler_settings.address_mode;
+  sampler_info.addressModeW = sampler_settings.address_mode;
   sampler_info.anisotropyEnable = VK_TRUE;
   sampler_info.maxAnisotropy = 16;
   sampler_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
@@ -220,7 +227,7 @@ static inline int graphics_utils_create_sampler(struct VkDevice_T *device, VkSam
   sampler_info.compareOp = VK_COMPARE_OP_ALWAYS;
   sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
   sampler_info.minLod = 0;
-  sampler_info.maxLod = (float)mip_levels;
+  sampler_info.maxLod = (float)(sampler_settings.mip_levels);
   sampler_info.mipLodBias = 0;
 
   if (vkCreateSampler(device, &sampler_info, NULL, texture_sampler) != VK_SUCCESS) {

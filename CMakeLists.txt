@@ -78,21 +78,45 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-pragma-pack -Wno-unused-function -Wno-u
 
 add_subdirectory(lib/chaos buildchaos)
 
+set(MI_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+set(MI_BUILD_OBJECT OFF CACHE BOOL "" FORCE)
+set(MI_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")
 add_subdirectory(lib/mimalloc buildmimalloc)
+string(REPLACE " -w" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+
+set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
+set(BUILD_PROGRAMS OFF CACHE BOOL "" FORCE)
+set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(ENABLE_CPACK OFF CACHE BOOL "" FORCE)
+set(ENABLE_EXPERIMENTAL OFF CACHE BOOL "" FORCE)
+set(ENABLE_BOW_DOCS OFF CACHE BOOL "" FORCE)
+set(ENABLE_PACKAGE_CONFIG OFF CACHE BOOL "" FORCE)
+set(INSTALL_PKGCONFIG_MODULE OFF CACHE BOOL "" FORCE)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")
+add_subdirectory(lib/libsndfile buildlibsndfile)
+string(REPLACE " -w" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+
+set(BUILD_DYNAMIC_LIBS OFF CACHE BOOL "" FORCE)
+set(BUILD_STATIC_LIBS ON CACHE BOOL "" FORCE)
+set(BUILD_EXAMPLE_PROGRAMS OFF CACHE BOOL "" FORCE)
+set(DOXYGEN_CONF_FILE OFF CACHE BOOL "" FORCE)
+set(BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")
+add_subdirectory(lib/libsoundio buildlibsoundio)
 string(REPLACE " -w" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-deprecated-declarations")
 
 # TODO: Link properly on Apple and Linux
-# On Windows link mimalloc statically for performance and dynamically for stability
-# Unix-like can static override instead
 set(MANA_BUILD_LIBRARIES mana
         vulkan
         glfw
         chaos
         #mimalloc
-        mimalloc-static)
+        mimalloc-static
+        sndfile
+        libsoundio_static)
 
 if (WIN32 AND CMAKE_C_COMPILER_ID MATCHES "Clang")
         STRING(REPLACE " " "\ " PATH_NO_SPACE "$ENV{ProgramFiles}")
@@ -112,6 +136,8 @@ set(includeList
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/Vulkan-Headers/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/chaos/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/mimalloc/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/libsndfile/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/libsoundio/soundio
         ${OpenMP_CXX_LIBRARIES})
 
 target_include_directories(mana PUBLIC ${includeList})

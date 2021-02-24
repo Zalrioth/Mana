@@ -17,15 +17,32 @@ int sprite_init(struct Sprite* sprite, struct GPUAPI* gpu_api, struct Shader* sh
   sprite->image_texture = texture;
   sprite->shader = shader;
 
-  vec3 pos1 = (vec3){.x = -0.5f, .y = -0.5f, .z = 0.0f};
-  vec3 pos2 = (vec3){.x = 0.5f, .y = -0.5f, .z = 0.0f};
-  vec3 pos3 = (vec3){.x = 0.5f, .y = 0.5f, .z = 0.0f};
-  vec3 pos4 = (vec3){.x = -0.5f, .y = 0.5f, .z = 0.0f};
+  float tex_norm_width = texture->width / 100.0f;
+  float tex_norm_height = texture->height / 100.0f;
 
-  vec2 uv1 = (vec2){.u = 1.0f, .v = 0.0f};
-  vec2 uv2 = (vec2){.u = 0.0f, .v = 0.0f};
-  vec2 uv3 = (vec2){.u = 0.0f, .v = 1.0f};
-  vec2 uv4 = (vec2){.u = 1.0f, .v = 1.0f};
+  float tex_norm_width_half = tex_norm_width / 2.0f;
+  float tex_norm_height_half = tex_norm_height / 2.0f;
+
+  float pixel_width = 1.0f - (((float)texture->width - 1) / (float)texture->width);
+  float pixel_height = 1.0f - (((float)texture->height - 1) / (float)texture->height);
+
+  sprite->width = tex_norm_width - pixel_width;
+  sprite->height = tex_norm_height - pixel_height;
+
+  vec3 pos1 = (vec3){.x = -tex_norm_width_half, .y = -tex_norm_height_half, .z = 0.0f};
+  vec3 pos2 = (vec3){.x = tex_norm_width_half, .y = -tex_norm_height_half, .z = 0.0f};
+  vec3 pos3 = (vec3){.x = tex_norm_width_half, .y = tex_norm_height_half, .z = 0.0f};
+  vec3 pos4 = (vec3){.x = -tex_norm_width_half, .y = tex_norm_height_half, .z = 0.0f};
+
+  vec2 uv1 = (vec2){.u = 1.0f - pixel_width, .v = 1.0f - pixel_height};
+  vec2 uv2 = (vec2){.u = 0.0f + pixel_width, .v = 1.0f - pixel_height};
+  vec2 uv3 = (vec2){.u = 0.0f + pixel_width, .v = 0.0f + pixel_height};
+  vec2 uv4 = (vec2){.u = 1.0f - pixel_width, .v = 0.0f + pixel_height};
+
+  //vec2 uv1 = (vec2){.u = 1.0f, .v = 1.0f};
+  //vec2 uv2 = (vec2){.u = 0.0f, .v = 1.0f};
+  //vec2 uv3 = (vec2){.u = 0.0f, .v = 0.0f};
+  //vec2 uv4 = (vec2){.u = 1.0f, .v = 0.0f};
 
   mesh_sprite_assign_vertex(sprite->image_mesh->vertices, pos1.x, pos1.y, pos1.z, uv1.u, uv1.v);
   mesh_sprite_assign_vertex(sprite->image_mesh->vertices, pos2.x, pos2.y, pos2.z, uv2.u, uv2.v);

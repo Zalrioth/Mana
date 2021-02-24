@@ -17,9 +17,18 @@ enum FilterType {
   FILTER_LINEAR
 };
 
+enum ModeType {
+  MODE_REPEAT = 0,
+  MODE_MIRRORED_REPEAT,
+  MODE_CLAMP_TO_EDGE,
+  MODE_CLAMP_TO_BORDER
+};
+
 struct TextureSettings {
   char *path;
   enum FilterType filter_type;
+  enum ModeType mode_type;
+  int mip_maps_enabled;
 };
 
 struct Texture {
@@ -33,6 +42,8 @@ struct Texture {
   VkImageView texture_image_view;       // Texture format
   VkSampler texture_sampler;            // Image sampling settings
   //VkFilter filter_type;
+  int width;
+  int height;
 };
 
 int texture_init(struct Texture *texture, struct GPUAPI *gpu_api, struct TextureSettings texture_settings);

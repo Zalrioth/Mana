@@ -136,8 +136,7 @@ int gbuffer_init(struct GBuffer* gbuffer, struct VulkanState* vulkan_renderer) {
   semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
   vkCreateSemaphore(vulkan_renderer->device, &semaphore_info, NULL, &gbuffer->gbuffer_semaphore);
-
-  graphics_utils_create_sampler(vulkan_renderer->device, &gbuffer->texture_sampler, 0, VK_FILTER_LINEAR);
+  graphics_utils_create_sampler(vulkan_renderer->device, &gbuffer->texture_sampler, (struct SamplerSettings){.mip_levels = 0, .filter = VK_FILTER_LINEAR, .address_mode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE});
 
   gbuffer->projection_matrix = MAT4_ZERO;
   gbuffer->view_matrix = MAT4_ZERO;
