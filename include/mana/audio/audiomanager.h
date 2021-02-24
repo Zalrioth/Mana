@@ -25,8 +25,6 @@ struct AudioManager {
 };
 
 static inline void write_callback(struct SoundIoOutStream* outstream, int frame_count_min, int frame_count_max) {
-  // Master volume
-  //soundio_outstream_set_volume(outstream, audio_clip->volume);
   // Needed to determine max output channels
   const struct SoundIoChannelLayout* layout = &outstream->layout;
   struct SoundIoChannelArea* areas;
@@ -38,15 +36,16 @@ static inline void write_callback(struct SoundIoOutStream* outstream, int frame_
   struct ArrayList* audio_clips = &audio_manager->audio_clips;
   struct ArrayList* add_audio_clips = &audio_manager->add_audio_clips;
 
-  for (int add_audio_clip_num = 0; add_audio_clip_num < array_list_size(add_audio_clips); add_audio_clip_num++)
-    array_list_add(audio_clips, array_list_get(add_audio_clips, add_audio_clip_num));
-  array_list_clear(add_audio_clips);
+  // Master volume
+  soundio_outstream_set_volume(outstream, audio_manager->master_volume);
 
-  for (int audio_clip_num = 0; audio_clip_num < array_list_size(audio_clips); audio_clip_num++) {
-    struct AudioClip* audio_clip = array_list_get(audio_clips, audio_clip_num);
-    if (audio_clip->remove == 1)
-      array_list_remove(audio_clips, audio_clip_num--);
+  int added_clip = 0;
+  for (int add_audio_clip_num = 0; add_audio_clip_num < array_list_size(add_audio_clips); add_audio_clip_num++) {
+    array_list_add(audio_clips, array_list_get(add_audio_clips, add_audio_clip_num));
+    added_clip++;
   }
+  if (added_clip > 0)
+    array_list_clear(add_audio_clips);
 
   int device_channels = layout->channel_count;
   int buffer_size = AUDIO_BUFFER;
@@ -67,14 +66,14 @@ static inline void write_callback(struct SoundIoOutStream* outstream, int frame_
 
   for (int audio_clip_num = 0; audio_clip_num < array_list_size(audio_clips); audio_clip_num++) {
     struct AudioClip* audio_clip = array_list_get(audio_clips, audio_clip_num);
-    SNDFILE* infile = audio_clip->infile;
-    SF_INFO sfinfo = audio_clip->sfinfo;
+    SNDFILE* infile = audio_clip->audio_clip_cache->infile;
+    SF_INFO sfinfo = audio_clip->audio_clip_cache->sfinfo;
 
     int channels = sfinfo.channels;
 
     int frames_left = AUDIO_BUFFER;
     int readcount = 0;
-    while (frames_left > 0) {
+    while (frames_left > 0 && audio_clip->remove == 0) {
       // * 2 is not needed here but prevents int/float rounding errors?
       float* buff = calloc(channels * frames_left * 2, sizeof(float));
       size_t seek_offset = audio_clip->seconds_offset * (float_sample_rate * ((float)sfinfo.samplerate / float_sample_rate));
@@ -115,10 +114,20 @@ static inline void write_callback(struct SoundIoOutStream* outstream, int frame_
     fprintf(stderr, "%s\n", soundio_strerror(err));
     exit(1);
   }
+
+  for (int audio_clip_num = array_list_size(audio_clips) - 1; audio_clip_num >= 0; audio_clip_num--) {
+    struct AudioClip* audio_clip = array_list_get(audio_clips, audio_clip_num);
+    if (audio_clip->remove == 1) {
+      audio_clip->remove = 0;
+      audio_clip->seconds_offset = 0.0f;
+      array_list_remove(audio_clips, audio_clip_num);
+    }
+  }
 }
 
 static inline int audio_manager_init(struct AudioManager* audio_manager) {
   audio_manager->alive = 1;
+  audio_manager->master_volume = 1.0f;
 
   int err;
   audio_manager->soundio = soundio_create();

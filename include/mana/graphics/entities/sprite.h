@@ -22,7 +22,10 @@ struct Sprite {
   struct Texture* image_texture;
 
   vec3 position;
+  vec3 scale;
   quat rotation;
+  float width;
+  float height;
 
   struct Shader* shader;
   VkBuffer vertex_buffer;
@@ -32,9 +35,6 @@ struct Sprite {
   VkBuffer uniform_buffer;
   VkDeviceMemory uniform_buffers_memory;
   VkDescriptorSet descriptor_set;
-
-  float width;
-  float height;
 };
 
 enum {
