@@ -78,7 +78,7 @@ int texture_init(struct Texture *texture, struct GPUAPI *gpu_api, struct Texture
 
   uint32_t mip_levels = (uint32_t)(floor(log2(MAX(tex_width, tex_height))));
   if (texture_settings.mip_maps_enabled == 0)
-    mip_levels = 0;
+    mip_levels = 1;
 
   graphics_utils_create_image(gpu_api->vulkan_state->device, gpu_api->vulkan_state->physical_device, tex_width, tex_height, mip_levels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R16G16B16A16_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &texture->texture_image, &texture->texture_image_memory);
 

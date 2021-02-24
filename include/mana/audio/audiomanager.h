@@ -77,7 +77,8 @@ static inline void write_callback(struct SoundIoOutStream* outstream, int frame_
     int readcount = 0;
     while (frames_left > 0 && audio_clip->remove == 0) {
       // * 2 is not needed here but prevents int/float rounding errors?
-      float* buff = calloc(channels * frames_left * 2, sizeof(float));
+      //float* buff = calloc(channels * frames_left * 2, sizeof(float));
+      float* buff = calloc((channels * AUDIO_BUFFER * 2) + 1, sizeof(float));
       size_t seek_offset = audio_clip->seconds_offset * (float_sample_rate * ((float)sfinfo.samplerate / float_sample_rate));
       sf_seek(infile, seek_offset, SEEK_SET);
       // buff causing crash?
