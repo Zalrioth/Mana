@@ -36,6 +36,8 @@ struct SpriteAnimation {
   float current_animation_time;
   int padding;
   float direction;
+  int animate;
+  int loop;
 
   struct Shader* shader;
   VkBuffer vertex_buffer;

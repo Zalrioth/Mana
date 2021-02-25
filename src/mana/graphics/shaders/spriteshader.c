@@ -25,7 +25,7 @@ int sprite_shader_init(struct SpriteShader* sprite_shader, struct GPUAPI* gpu_ap
   if (vkCreateDescriptorSetLayout(gpu_api->vulkan_state->device, &layout_info, NULL, &sprite_shader->shader.descriptor_set_layout) != VK_SUCCESS)
     return 0;
 
-  int sprite_descriptors = 64;
+  int sprite_descriptors = 256;
   VkDescriptorPoolSize pool_sizes[2] = {{0}};
   pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
   pool_sizes[0].descriptorCount = sprite_descriptors;  // Max number of uniform descriptors

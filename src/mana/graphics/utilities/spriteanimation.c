@@ -10,6 +10,8 @@ int sprite_animation_init(struct SpriteAnimation* sprite_animation, struct GPUAP
   sprite_animation->rotation = QUAT_DEFAULT;
   sprite_animation->frame_pos = VEC3_ZERO;
   sprite_animation->direction = 1.0f;
+  sprite_animation->animate = 1;
+  sprite_animation->loop = 1;
 
   sprite_animation->total_frames = frames;
   sprite_animation->frame_length = frame_length;
@@ -138,9 +140,14 @@ void sprite_animation_recreate(struct SpriteAnimation* sprite_animation, struct 
 }
 
 void sprite_animation_update(struct SpriteAnimation* sprite_animation, float delta_time) {
-  sprite_animation->current_animation_time += delta_time;
-  if (sprite_animation->current_animation_time > sprite_animation->total_animation_length)
-    sprite_animation->current_animation_time = 0.0f;
+  if (sprite_animation->animate == 1) {
+    sprite_animation->current_animation_time += delta_time;
+    if (sprite_animation->current_animation_time > sprite_animation->total_animation_length)
+      if (sprite_animation->loop == 1)
+        sprite_animation->current_animation_time = 0.0f;
+      else
+        sprite_animation->current_animation_time = 0.999f;
+  }
 
   sprite_animation->current_frame = (int)((sprite_animation->current_animation_time / sprite_animation->total_animation_length) * sprite_animation->total_frames);
   float offset = 0.0f;
