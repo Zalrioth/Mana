@@ -27,7 +27,11 @@ set_target_properties(mana
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx -mavx2")
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx -mavx2")
+# Compile with up to sse2
+#add_definitions(-DSIMD_SSE2=1) NOTE: THIS SHOULD BE ONE OF THOSE TOGGLE OVERRIDE THINGIES
+add_definitions(-DSIMD_SSE2=1)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2")
 
 # /MDd
 if (WIN32)
