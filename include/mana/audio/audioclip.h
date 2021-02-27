@@ -26,7 +26,7 @@ static inline int audio_clip_cache_init(struct AudioClipCache* audio_clip_cache,
   return 0;
 }
 
-static inline int audio_clip_cache_delete(struct AudioClipCache* audio_clip_cache) {
+static inline void audio_clip_cache_delete(struct AudioClipCache* audio_clip_cache) {
   sf_close(audio_clip_cache->infile);
 }
 

@@ -130,6 +130,14 @@ static inline void write_callback(struct SoundIoOutStream* outstream, int frame_
   }
 }
 
+static inline int audio_manager_start(struct AudioManager* audio_manager) {
+  printf("Starting audio thread!\n");
+  while (audio_manager->alive)
+    soundio_wait_events(audio_manager->soundio);
+
+  return 0;
+}
+
 static inline int audio_manager_init(struct AudioManager* audio_manager) {
   audio_manager->alive = 1;
   audio_manager->master_volume = 1.0f;
@@ -176,15 +184,21 @@ static inline int audio_manager_init(struct AudioManager* audio_manager) {
   audio_manager->outstream->write_callback = write_callback;
 
   if ((err = soundio_outstream_open(audio_manager->outstream))) {
-    fprintf(stderr, "unable to open device: %s", soundio_strerror(err));
+    fprintf(stderr, "Unable to open device: %s", soundio_strerror(err));
     return 1;
   }
 
   if (audio_manager->outstream->layout_error)
-    fprintf(stderr, "unable to set channel layout: %s\n", soundio_strerror(audio_manager->outstream->layout_error));
+    fprintf(stderr, "Unable to set channel layout: %s\n", soundio_strerror(audio_manager->outstream->layout_error));
 
   if ((err = soundio_outstream_start(audio_manager->outstream))) {
-    fprintf(stderr, "unable to start device: %s", soundio_strerror(err));
+    fprintf(stderr, "Unable to start device: %s", soundio_strerror(err));
+    return 1;
+  }
+
+  thrd_t t;
+  if (thrd_create(&t, audio_manager_start, audio_manager) != thrd_success) {
+    fprintf(stderr, "Error starting audio manager thread!");
     return 1;
   }
 
@@ -200,11 +214,6 @@ static inline void audio_manager_delete(struct AudioManager* audio_manager) {
 
   array_list_delete(&audio_manager->audio_clips);
   array_list_delete(&audio_manager->add_audio_clips);
-}
-
-static inline void audio_manager_start(struct AudioManager* audio_manager) {
-  while (audio_manager->alive)
-    soundio_wait_events(audio_manager->soundio);
 }
 
 static inline void audio_manager_play_audio_clip(struct AudioManager* audio_manager, struct AudioClip* audio_clip) {

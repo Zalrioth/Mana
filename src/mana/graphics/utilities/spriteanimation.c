@@ -92,7 +92,7 @@ void sprite_animation_delete(struct SpriteAnimation* sprite_animation, struct GP
   free(sprite_animation->image_mesh);
 }
 
-void sprite_animation_render(struct SpriteAnimation* sprite_animation, struct GPUAPI* gpu_api, float delta_time) {
+void sprite_animation_render(struct SpriteAnimation* sprite_animation, struct GPUAPI* gpu_api) {
   vkCmdBindPipeline(gpu_api->vulkan_state->gbuffer->gbuffer_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, sprite_animation->shader->graphics_pipeline);
 
   VkBuffer vertex_buffers[] = {sprite_animation->vertex_buffer};

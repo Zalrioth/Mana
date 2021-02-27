@@ -55,7 +55,7 @@ enum {
 
 int sprite_animation_init(struct SpriteAnimation* sprite_animation, struct GPUAPI* gpu_api, struct Shader* shader, struct Texture* texture, int frames, float frame_length, int padding);
 void sprite_animation_delete(struct SpriteAnimation* sprite_animation, struct GPUAPI* gpu_api);
-void sprite_animation_render(struct SpriteAnimation* sprite_animation, struct GPUAPI* gpu_api, float delta_time);
+void sprite_animation_render(struct SpriteAnimation* sprite_animation, struct GPUAPI* gpu_api);
 void sprite_animation_update_uniforms(struct SpriteAnimation* sprite_animation, struct GPUAPI* gpu_api);
 void sprite_animation_recreate(struct SpriteAnimation* sprite_animation, struct GPUAPI* gpu_api);
 void sprite_animation_set_frame(struct SpriteAnimation* sprite_animation, int frame);

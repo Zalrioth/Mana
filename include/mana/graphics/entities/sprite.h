@@ -43,7 +43,7 @@ enum {
 
 int sprite_init(struct Sprite* sprite, struct GPUAPI* gpu_api, struct Shader* shader, struct Texture* texture);
 void sprite_delete(struct Sprite* sprite, struct GPUAPI* gpu_api);
-void sprite_render(struct Sprite* sprite, struct GPUAPI* gpu_api, float delta_time);
+void sprite_render(struct Sprite* sprite, struct GPUAPI* gpu_api);
 void sprite_update_uniforms(struct Sprite* sprite, struct GPUAPI* gpu_api);
 void sprite_recreate(struct Sprite* sprite, struct GPUAPI* gpu_api);
 

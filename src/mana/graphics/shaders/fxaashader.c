@@ -2,6 +2,7 @@
 
 int fxaa_shader_init(struct FXAAShader* fxaa_shader, struct GPUAPI* gpu_api) {
   fxaa_shader->shader = calloc(1, sizeof(struct Shader));
+  fxaa_shader->fxaa_on = 1;
 
   VkDescriptorSetLayoutBinding sampler_layout_binding = {0};
   sampler_layout_binding.binding = 0;
@@ -111,6 +112,9 @@ void fxaa_shader_delete(struct FXAAShader* fxaa_shader, struct GPUAPI* gpu_api) 
 }
 
 void fxaa_shader_render(struct FXAAShader* fxaa_shader, struct GPUAPI* gpu_api) {
+  if (fxaa_shader->fxaa_on = 0)
+    return;
+
   post_process_start(gpu_api->vulkan_state->post_process, gpu_api);
 
   vkCmdBindPipeline(gpu_api->vulkan_state->post_process->post_process_command_buffers[gpu_api->vulkan_state->post_process->ping_pong], VK_PIPELINE_BIND_POINT_GRAPHICS, fxaa_shader->shader->graphics_pipeline);
