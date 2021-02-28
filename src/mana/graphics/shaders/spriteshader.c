@@ -62,7 +62,7 @@ int sprite_shader_init(struct SpriteShader* sprite_shader, struct GPUAPI* gpu_ap
   for (int pipeline_attachment_num = 0; pipeline_attachment_num < SPRITE_SHADER_COLOR_ATTACHEMENTS; pipeline_attachment_num++) {
     color_blend_attachments[pipeline_attachment_num].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
     color_blend_attachments[pipeline_attachment_num].blendEnable = VK_TRUE;
-    color_blend_attachments[pipeline_attachment_num].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+    color_blend_attachments[pipeline_attachment_num].srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
     color_blend_attachments[pipeline_attachment_num].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
     color_blend_attachments[pipeline_attachment_num].colorBlendOp = VK_BLEND_OP_ADD;
     color_blend_attachments[pipeline_attachment_num].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
