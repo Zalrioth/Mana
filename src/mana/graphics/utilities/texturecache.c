@@ -18,6 +18,9 @@ void texture_cache_delete(struct TextureCache* texture_cache, struct GPUAPI* gpu
 }
 
 void texture_cache_add(struct TextureCache* texture_cache, struct GPUAPI* gpu_api, size_t n_textures, ...) {
+  if (n_textures <= 0)
+    return;
+
   va_list args;
   va_start(args, n_textures);
 
@@ -29,6 +32,18 @@ void texture_cache_add(struct TextureCache* texture_cache, struct GPUAPI* gpu_ap
   }
 
   va_end(args);
+}
+
+void texture_cache_add_bulk(struct TextureCache* texture_cache, struct GPUAPI* gpu_api, size_t n_textures, struct TextureSettings* bulk_texture_settings) {
+  if (n_textures <= 0)
+    return;
+
+  while (n_textures-- > 0) {
+    struct TextureSettings texture_settings = bulk_texture_settings[n_textures];
+    struct Texture* texture = malloc(sizeof(struct Texture));
+    texture_init(texture, gpu_api, texture_settings);
+    map_set(&texture_cache->textures, texture_settings.path, &texture);  // Store full path in case of models having same texture name like diffuse
+  }
 }
 
 struct Texture* texture_cache_get(struct TextureCache* texture_cache, char* texture_name) {
