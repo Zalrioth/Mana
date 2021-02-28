@@ -13,7 +13,7 @@ struct SpriteAnimationShader {
   struct Shader shader;
 };
 
-int sprite_animation_shader_init(struct SpriteAnimationShader* sprite_animation_shader, struct GPUAPI* gpu_api);
+int sprite_animation_shader_init(struct SpriteAnimationShader* sprite_animation_shader, struct GPUAPI* gpu_api, int depth_test);
 void sprite_animation_shader_delete(struct SpriteAnimationShader* sprite_animation_shader, struct GPUAPI* gpu_api);
 
 #endif  // SPRITE_ANIMATION_SHADER_H

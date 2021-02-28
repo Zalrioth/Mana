@@ -1,6 +1,6 @@
 #include "mana/graphics/shaders/spriteshader.h"
 
-int sprite_shader_init(struct SpriteShader* sprite_shader, struct GPUAPI* gpu_api) {
+int sprite_shader_init(struct SpriteShader* sprite_shader, struct GPUAPI* gpu_api, int depth_test) {
   VkDescriptorSetLayoutBinding ubo_layout_binding = {0};
   ubo_layout_binding.binding = 0;
   ubo_layout_binding.descriptorCount = 1;
@@ -81,7 +81,7 @@ int sprite_shader_init(struct SpriteShader* sprite_shader, struct GPUAPI* gpu_ap
   color_blending.blendConstants[2] = 0.0f;
   color_blending.blendConstants[3] = 0.0f;
 
-  shader_init(&sprite_shader->shader, gpu_api->vulkan_state, "./assets/shaders/spirv/sprite.vert.spv", "./assets/shaders/spirv/sprite.frag.spv", NULL, vertex_input_info, gpu_api->vulkan_state->gbuffer->render_pass, color_blending, VK_FRONT_FACE_CLOCKWISE, VK_TRUE, gpu_api->vulkan_state->msaa_samples, true);
+  shader_init(&sprite_shader->shader, gpu_api->vulkan_state, "./assets/shaders/spirv/sprite.vert.spv", "./assets/shaders/spirv/sprite.frag.spv", NULL, vertex_input_info, gpu_api->vulkan_state->gbuffer->render_pass, color_blending, VK_FRONT_FACE_CLOCKWISE, depth_test, gpu_api->vulkan_state->msaa_samples, true);
 
   return 1;
 }
