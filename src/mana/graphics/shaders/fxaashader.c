@@ -112,7 +112,7 @@ void fxaa_shader_delete(struct FXAAShader* fxaa_shader, struct GPUAPI* gpu_api) 
 }
 
 void fxaa_shader_render(struct FXAAShader* fxaa_shader, struct GPUAPI* gpu_api) {
-  if (fxaa_shader->fxaa_on = 0)
+  if (fxaa_shader->fxaa_on == 0)
     return;
 
   post_process_start(gpu_api->vulkan_state->post_process, gpu_api);

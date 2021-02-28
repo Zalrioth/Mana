@@ -29,6 +29,7 @@ struct TextureSettings {
   enum FilterType filter_type;
   enum ModeType mode_type;
   int mip_maps_enabled;
+  int premultiplied_alpha;  // Does the image already have premultiplied alphas, 0: No 1: Yes
 };
 
 struct Texture {
