@@ -65,9 +65,12 @@ int texture_init(struct Texture *texture, struct GPUAPI *gpu_api, struct Texture
     return -1;
   }
 
-  // Using omp for this but really should mix of omp and intrinsics
+  // Guaranteed to be multiple of 4
+  // ifndef avx512 -> ifndef avx2 -> ifndef avx -> ifndef sse2 -> ifndef neon -> fallback
   if (texture_settings.premultiplied_alpha == 0) {
-#pragma omp parallel for
+// Note: Let openmp take care of simd for now, outside of texture uses parallel for inside used parallel simd
+//https://stackoverflow.com/questions/14674049/parallel-for-vs-omp-simd-when-to-use-each
+#pragma omp simd
     for (int pixel_group_num = 0; pixel_group_num < tex_width * tex_height * tex_channels; pixel_group_num += 4) {
       unsigned short alpha_value = pixels[pixel_group_num + 3];
       pixels[pixel_group_num] *= ((float)alpha_value / USHRT_MAX);
@@ -75,6 +78,27 @@ int texture_init(struct Texture *texture, struct GPUAPI *gpu_api, struct Texture
       pixels[pixel_group_num + 2] *= ((float)alpha_value / USHRT_MAX);
     }
   }
+  //  int total_pixels = tex_width * tex_height * tex_channels;
+  //#ifdef __AVX__
+  //  for (int iterations = total_pixels / 4;;)
+  //    ;
+  //  if (total_pixels % 4 != 0) {
+  //    unsigned short alpha_value = pixels[total_pixels - 1];
+  //    pixels[total_pixels - 4] *= ((float)alpha_value / USHRT_MAX);
+  //    pixels[total_pixels - 3] *= ((float)alpha_value / USHRT_MAX);
+  //    pixels[total_pixels - 2] *= ((float)alpha_value / USHRT_MAX);
+  //  }
+  //#else
+  //  if (texture_settings.premultiplied_alpha == 0) {
+  //#pragma omp parallel for
+  //    for (int pixel_group_num = 0; pixel_group_num < tex_width * tex_height * tex_channels; pixel_group_num += 4) {
+  //      unsigned short alpha_value = pixels[pixel_group_num + 3];
+  //      pixels[pixel_group_num] *= ((float)alpha_value / USHRT_MAX);
+  //      pixels[pixel_group_num + 1] *= ((float)alpha_value / USHRT_MAX);
+  //      pixels[pixel_group_num + 2] *= ((float)alpha_value / USHRT_MAX);
+  //    }
+  //  }
+  //#endif
   VkBuffer staging_buffer = {0};
   VkDeviceMemory staging_buffer_memory = {0};
   graphics_utils_create_buffer(gpu_api->vulkan_state->device, gpu_api->vulkan_state->physical_device, image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &staging_buffer, &staging_buffer_memory);

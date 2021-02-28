@@ -31,7 +31,7 @@ set_target_properties(mana
 # Compile with up to sse2
 #add_definitions(-DSIMD_SSE2=1) NOTE: THIS SHOULD BE ONE OF THOSE TOGGLE OVERRIDE THINGIES
 add_definitions(-DSIMD_SSE2=1)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx")
 
 # /MDd
 if (WIN32)
