@@ -130,8 +130,9 @@ static inline void write_callback(struct SoundIoOutStream* outstream, int frame_
   }
 }
 
-static inline int audio_manager_start(struct AudioManager* audio_manager) {
+static inline int audio_manager_start(void* a_arg) {
   printf("Starting audio thread!\n");
+  struct AudioManager* audio_manager = (struct AudioManager*)a_arg;
   while (audio_manager->alive)
     soundio_wait_events(audio_manager->soundio);
 
