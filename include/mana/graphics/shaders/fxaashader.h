@@ -17,7 +17,7 @@ struct FXAAShader {
   struct Shader* shader;
   VkDescriptorSet descriptor_sets[2];
   struct FullscreenTriangle* fullscreen_triangle;
-  int fxaa_on;
+  int on;
 };
 
 int fxaa_shader_init(struct FXAAShader* fxaa_shader, struct GPUAPI* gpu_api);
