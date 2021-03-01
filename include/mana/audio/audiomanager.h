@@ -103,7 +103,7 @@ static inline void write_callback(struct SoundIoOutStream* outstream, int frame_
       // This through memory exception error
       audio_clip->seconds_offset = audio_clip->seconds_offset + seconds_per_frame * readcount;
       if (readcount < frames_left && audio_clip->loop == 1)
-        audio_clip->seconds_offset = 0.0f;
+        audio_clip->seconds_offset = audio_clip->start_offset;
       // TEMP to fix overreading file
       else if (readcount < frames_left && audio_clip->loop == 0) {
         audio_clip->seconds_offset = 0.0f;
