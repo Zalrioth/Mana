@@ -34,3 +34,6 @@
 [submodule "lib/libsoundio"]
 	path = lib/libsoundio
 	url = https://github.com/andrewrk/libsoundio
+[submodule "lib/cxml-parser"]
+	path = lib/cxml-parser
+	url = https://github.com/nickbedner/cxml-parser
