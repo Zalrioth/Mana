@@ -19,7 +19,6 @@ int texture_init(struct Texture *texture, struct GPUAPI *gpu_api, struct Texture
       mode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
       break;
   }
-  //texture->filter_type = filter;
   texture->path = strdup(texture_settings.path);
 
   char *name_location = strrchr(texture_settings.path, '/');
@@ -61,8 +60,8 @@ int texture_init(struct Texture *texture, struct GPUAPI *gpu_api, struct Texture
   texture->height = tex_height;
 
   if (!pixels) {
-    printf("failed to load texture image!\n");
-    return -1;
+    printf("Failed to load texture image!\n");
+    return 1;
   }
 
   // Guaranteed to be multiple of 4

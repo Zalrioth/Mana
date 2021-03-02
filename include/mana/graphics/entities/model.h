@@ -7,7 +7,6 @@
 #include <mana/core/gpuapi.h>
 
 #include "mana/core/vulkancore.h"
-#include "mana/core/xmlparser.h"
 #include "mana/graphics/graphicscommon.h"
 #include "mana/graphics/render/vulkanrenderer.h"
 #include "mana/graphics/shaders/shader.h"
@@ -18,6 +17,7 @@
 #include "mana/graphics/utilities/collada/modelskinning.h"
 #include "mana/graphics/utilities/mesh.h"
 #include "mana/graphics/utilities/texture.h"
+#include "xmlparser.h"
 
 #define MAX_JOINTS 50
 

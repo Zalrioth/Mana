@@ -142,6 +142,7 @@ set(includeList
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/mimalloc/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/libsndfile/include
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/libsoundio/soundio
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/cxml-parser/include
         ${OpenMP_CXX_LIBRARIES})
 
 target_include_directories(mana PUBLIC ${includeList})

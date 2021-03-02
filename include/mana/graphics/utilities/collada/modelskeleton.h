@@ -7,7 +7,7 @@
 #include <cstorage/cstorage.h>
 #include <ubermath/ubermath.h>
 
-#include "mana/core/xmlnode.h"
+#include "xmlnode.h"
 
 struct JointData {
   int index;

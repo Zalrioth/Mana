@@ -8,9 +8,9 @@
 #include <ubermath/ubermath.h>
 
 #include "mana/core/corecommon.h"
-#include "mana/core/xmlnode.h"
 #include "mana/graphics/entities/model.h"
 #include "mana/graphics/utilities/mesh.h"
+#include "xmlnode.h"
 
 struct AnimationData {
   float length_seconds;

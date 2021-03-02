@@ -8,7 +8,7 @@
 #include <stdint.h>
 
 #include "mana/core/corecommon.h"
-#include "mana/core/xmlnode.h"
+#include "xmlnode.h"
 
 struct VertexSkinData {
   struct Vector* joint_ids;
