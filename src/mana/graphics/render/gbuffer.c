@@ -1,25 +1,14 @@
 #include "mana/graphics/render/gbuffer.h"
 
-// TODO: Clean up and let user select 8 bit, 10 bit, hdr
 // TODO: Implement sample shading
 // https://vulkan-tutorial.com/Multisampling
 int gbuffer_init(struct GBuffer* gbuffer, struct VulkanState* vulkan_renderer) {
-  // Note: For standard rendering
-  //VK_FORMAT_R8G8B8A8_SRGB
-  // Note: For 10 bit rendering
-  //VK_FORMAT_A2B10G10R10_UNORM_PACK32
-  // Note: For hdr rendering
-  //VkFormat image_format = VK_FORMAT_R16G16B16A16_SFLOAT;
-  VkFormat image_format = VK_FORMAT_R8G8B8A8_SRGB;
+  VkFormat image_format = VK_FORMAT_R16G16B16A16_SFLOAT;
   VkImageUsageFlags image_usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
   VkFormat depth_format = graphics_utils_find_depth_format(vulkan_renderer->physical_device);
 
   uint32_t gbuffer_width = vulkan_renderer->swap_chain->swap_chain_extent.width * vulkan_renderer->swap_chain->supersample_scale;
   uint32_t gbuffer_height = vulkan_renderer->swap_chain->swap_chain_extent.height * vulkan_renderer->swap_chain->supersample_scale;
-
-  // TODO: If no antialiasing, no need to use resolve
-  // "validation layer: vkCreateRenderPass():  Subpass 0 requests multisample resolve from attachment 0 which has VK_SAMPLE_COUNT_1_BIT. The Vulkan spec states: If pResolveAttachments is not NULL,
-  // for each resolve attachment that is not VK_ATTACHMENT_UNUSED, the corresponding color attachment must not have a sample count of VK_SAMPLE_COUNT_1_BIT (https://www.khronos.org/registry/vulkan/specs/1.1-extensions/html/vkspec.html#VUID-VkSubpassDescription-pResolveAttachments-00848)"
 
   // Resolve or standard if not multisampling
   graphics_utils_create_image(vulkan_renderer->device, vulkan_renderer->physical_device, gbuffer_width, gbuffer_height, 1, VK_SAMPLE_COUNT_1_BIT, image_format, VK_IMAGE_TILING_OPTIMAL, image_usage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &gbuffer->color_image, &gbuffer->color_image_memory);
