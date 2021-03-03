@@ -58,5 +58,6 @@ struct Engine {
 int engine_init(struct Engine* engine, struct EngineSettings engine_settings);
 void engine_delete(struct Engine* engine);
 double engine_get_time();
+int engine_get_max_omp_threads();
 
 #endif  // ENGINE_H

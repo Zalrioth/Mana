@@ -44,3 +44,13 @@ double engine_get_time() {
   double time = (double)current_time.tv_sec + (double)current_time.tv_nsec / 1000000000;
   return time;
 }
+
+int engine_get_max_omp_threads() {
+  int max_omp_threads = 1;
+#pragma omp parallel
+  {
+#pragma omp single
+    max_omp_threads = omp_get_num_threads();
+  }
+  return max_omp_threads;
+}

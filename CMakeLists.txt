@@ -33,28 +33,6 @@ set_target_properties(mana
 add_definitions(-DSIMD_SSE2=1)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx")
 
-# /MDd
-if (WIN32)
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Xclang -fopenmp")
-endif ()
-
-# -fsanitize=address
-if(APPLE)
-        add_subdirectory(lib/MoltenVK buildmoltenvk)
-        find_package(OpenMP)
-        if (OPENMP_FOUND)
-                set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-        endif()
-endif()
-
-if(UNIX AND NOT APPLE)
-        # for Linux, BSD, Solaris, Minix
-        find_package(OpenMP)
-        if (OPENMP_FOUND)
-                set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-        endif()
-endif()
-
 #if(CMAKE_BUILD_TYPE MATCHES Debug)
 #        add_definitions(-DDEBUG)
 #        message("Debug build.")
@@ -79,8 +57,6 @@ add_subdirectory(lib/glfw buildglfw)
 
 string(REPLACE " -w" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-pragma-pack -Wno-unused-function -Wno-unused-variable")
-
-add_subdirectory(lib/chaos buildchaos)
 
 set(MI_BUILD_SHARED OFF CACHE BOOL "" FORCE)
 set(MI_BUILD_OBJECT OFF CACHE BOOL "" FORCE)
@@ -110,6 +86,30 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")
 add_subdirectory(lib/libsoundio buildlibsoundio)
 string(REPLACE " -w" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 
+# /MDd
+if (WIN32)
+        #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Xclang -fopenmp -qopenmp-link=static")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Xclang -fopenmp")
+endif ()
+
+# -fsanitize=address
+if(APPLE)
+        add_subdirectory(lib/MoltenVK buildmoltenvk)
+        find_package(OpenMP)
+        if (OPENMP_FOUND)
+                set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+        endif()
+endif()
+
+if(UNIX AND NOT APPLE)
+        # for Linux, BSD, Solaris, Minix
+        find_package(OpenMP)
+        if (OPENMP_FOUND)
+                set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+        endif()
+endif()
+
+add_subdirectory(lib/chaos buildchaos)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-deprecated-declarations")
 
 # TODO: Link properly on Apple and Linux
@@ -124,7 +124,7 @@ set(MANA_BUILD_LIBRARIES mana
 
 if (WIN32 AND CMAKE_C_COMPILER_ID MATCHES "Clang")
         STRING(REPLACE " " "\ " PATH_NO_SPACE "$ENV{ProgramFiles}")
-        set(MANA_BUILD_LIBRARIES ${MANA_BUILD_LIBRARIES} "${PATH_NO_SPACE}/LLVM/lib/libomp.lib")
+        set(MANA_BUILD_LIBRARIES ${MANA_BUILD_LIBRARIES} "${PATH_NO_SPACE}/LLVM/lib/libomp.lib" "${PATH_NO_SPACE}/LLVM/lib/libiomp5md.lib")
 endif ()
 
 target_link_libraries(${MANA_BUILD_LIBRARIES})
