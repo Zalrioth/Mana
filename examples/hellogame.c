@@ -72,7 +72,7 @@ int game_init(struct Game* game) {
       return GAME_MANA_ERROR;
   }
 
-  window_init(&game->window, &game->mana.engine, 1280, 720);
+  window_init(&game->window, &game->mana.engine, 1280, 720, 1);
 
   struct GPUAPI* gpu_api = &game->mana.engine.gpu_api;
 

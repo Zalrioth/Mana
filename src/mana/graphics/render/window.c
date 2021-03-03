@@ -1,6 +1,6 @@
 #include "mana/graphics/render/window.h"
 
-int window_init(struct Window *window, struct Engine *engine, int width, int height) {
+int window_init(struct Window *window, struct Engine *engine, int width, int height, int msaa_samples) {
   window->input_manager = calloc(1, sizeof(struct InputManager));
   input_manager_init(window->input_manager);
 
@@ -32,7 +32,7 @@ int window_init(struct Window *window, struct Engine *engine, int width, int hei
 
   switch (engine->gpu_api.type) {
     case (VULKAN_API):
-      switch (vulkan_renderer_init(&engine->gpu_api, width, height)) {
+      switch (vulkan_renderer_init(&engine->gpu_api, width, height, msaa_samples)) {
         default:
           return WINDOW_SUCCESS;
           break;

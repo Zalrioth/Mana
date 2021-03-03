@@ -43,7 +43,7 @@ enum VULKAN_RENDERER_STATUS {
   VULKAN_RENDERER_LAST_ERROR
 };
 
-int vulkan_renderer_init(struct GPUAPI* gpu_api, int width, int height);
+int vulkan_renderer_init(struct GPUAPI* gpu_api, int width, int height, int msaa_samples);
 void vulkan_renderer_delete(struct GPUAPI* gpu_api);
 void vulkan_renderer_recreate_swap_chain(struct GPUAPI* gpu_api, struct GraphicsLibrary* graphics_library, int* width_handle, int* height_handle);
 

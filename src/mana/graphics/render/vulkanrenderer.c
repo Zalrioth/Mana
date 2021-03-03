@@ -5,11 +5,11 @@ static VkSampleCountFlagBits vulkan_renderer_get_max_usable_sample_count(struct 
 static bool vulkan_renderer_device_can_present(struct GPUAPI* gpu_api, VkPhysicalDevice device);
 
 // TODO: Add error checking
-int vulkan_renderer_init(struct GPUAPI* gpu_api, int width, int height) {
+int vulkan_renderer_init(struct GPUAPI* gpu_api, int width, int height, int msaa_samples) {
   gpu_api->vulkan_state->swap_chain = malloc(sizeof(struct SwapChain));
   gpu_api->vulkan_state->gbuffer = malloc(sizeof(struct GBuffer));
   gpu_api->vulkan_state->post_process = malloc(sizeof(struct PostProcess));
-  gpu_api->vulkan_state->msaa_samples = vulkan_renderer_get_max_usable_sample_count(gpu_api);
+  gpu_api->vulkan_state->msaa_samples = msaa_samples;  //vulkan_renderer_get_max_usable_sample_count(gpu_api);
 
   // TODO: If device cannot render, check for new device that can then recreate core?
   if (!vulkan_renderer_device_can_present(gpu_api, gpu_api->vulkan_state->physical_device))

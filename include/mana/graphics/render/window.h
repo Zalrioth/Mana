@@ -26,7 +26,7 @@ enum {
   WINDOW_SUCCESS = 1
 };
 
-int window_init(struct Window* window, struct Engine* engine, int width, int height);
+int window_init(struct Window* window, struct Engine* engine, int width, int height, int msaa_samples);
 void window_delete(struct Window* window);
 void window_set_title(struct Window* window, char* title);
 bool window_should_close(struct Window* window);
