@@ -44,10 +44,16 @@ int sprite_init(struct Sprite* sprite, struct GPUAPI* gpu_api, struct Shader* sh
   //vec2 uv3 = (vec2){.u = 0.0f + pixel_width, .v = 0.0f + pixel_height};
   //vec2 uv4 = (vec2){.u = 1.0f - pixel_width, .v = 0.0f + pixel_height};
 
-  vec2 uv1 = (vec2){.u = 1.0f, .v = 1.0f};
-  vec2 uv2 = (vec2){.u = 0.0f, .v = 1.0f};
-  vec2 uv3 = (vec2){.u = 0.0f, .v = 0.0f};
-  vec2 uv4 = (vec2){.u = 1.0f, .v = 0.0f};
+  // Note: Depends on front face culling
+  //vec2 uv1 = (vec2){.u = 1.0f, .v = 1.0f};
+  //vec2 uv2 = (vec2){.u = 0.0f, .v = 1.0f};
+  //vec2 uv3 = (vec2){.u = 0.0f, .v = 0.0f};
+  //vec2 uv4 = (vec2){.u = 1.0f, .v = 0.0f};
+
+  vec2 uv1 = (vec2){.u = 0.0f, .v = 1.0f};
+  vec2 uv2 = (vec2){.u = 1.0f, .v = 1.0f};
+  vec2 uv3 = (vec2){.u = 1.0f, .v = 0.0f};
+  vec2 uv4 = (vec2){.u = 0.0f, .v = 0.0f};
 
   mesh_sprite_assign_vertex(sprite->image_mesh->vertices, pos1.x, pos1.y, pos1.z, uv1.u, uv1.v);
   mesh_sprite_assign_vertex(sprite->image_mesh->vertices, pos2.x, pos2.y, pos2.z, uv2.u, uv2.v);
