@@ -29,6 +29,7 @@ enum {
 int window_init(struct Window* window, struct Engine* engine, int width, int height, int msaa_samples);
 void window_delete(struct Window* window);
 void window_set_title(struct Window* window, char* title);
+void window_set_icon(struct Window* window, char* icon);
 bool window_should_close(struct Window* window);
 void window_prepare_frame(struct Window* window);
 void window_end_frame(struct Window* window);
