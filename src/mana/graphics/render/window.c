@@ -194,7 +194,7 @@ int window_glfw_window_init(struct Window *window, struct Engine *engine, int wi
   // TODO: Add setting to change window resizing
   glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-  engine->graphics_library.glfw_library.glfw_window = glfwCreateWindow(width, height, "Dad n' Me", NULL, NULL);
+  engine->graphics_library.glfw_library.glfw_window = glfwCreateWindow(width, height, "", NULL, NULL);
 
   //glfwSetWindowUserPointer(engine->vulkan_api->glfw_window, &vulkan_api);
   glfwSetWindowUserPointer(engine->graphics_library.glfw_library.glfw_window, engine->gpu_api.vulkan_state);
