@@ -35,14 +35,10 @@ struct ModelUniformBufferObject {
   alignas(16) mat4 view;
   alignas(16) mat4 proj;
   alignas(16) vec3 camera_pos;
-  alignas(16) mat4 joint_transforms[MAX_JOINTS];
 };
 
-struct ModelStaticUniformBufferObject {
-  alignas(16) mat4 model;
-  alignas(16) mat4 view;
-  alignas(16) mat4 proj;
-  alignas(16) vec3 camera_pos;
+struct ModelAnimationUniformBufferObject {
+  alignas(16) mat4 joint_transforms[MAX_JOINTS];
 };
 
 struct ModelJoint {
@@ -106,13 +102,16 @@ struct Model {
   quat rotation;
   vec3 scale;
 
-  size_t ubo_buffer_size;
   VkBuffer vertex_buffer;
   VkDeviceMemory vertex_buffer_memory;
   VkBuffer index_buffer;
   VkDeviceMemory index_buffer_memory;
   VkBuffer uniform_buffer;
   VkDeviceMemory uniform_buffers_memory;
+
+  VkBuffer uniform_animation_buffer;
+  VkDeviceMemory uniform_animation_buffers_memory;
+
   VkBuffer lighting_uniform_buffer;
   VkDeviceMemory lighting_uniform_buffers_memory;
   VkDescriptorSet descriptor_set;

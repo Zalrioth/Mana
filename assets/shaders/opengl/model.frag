@@ -4,15 +4,11 @@
 
 #include "modelcommon.glsl"
 
-const int MAX_JOINTS = 50;
-const int MAX_WEIGHTS = 3;
-
 layout(binding = 0) uniform ModelUniformBufferObject {
   mat4 model;
   mat4 view;
   mat4 proj;
   vec3 camera_pos;
-	mat4 joint_transforms[MAX_JOINTS];
 } ubo;
 layout(binding = 1) uniform Lighting {
   Light light;
