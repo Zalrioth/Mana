@@ -78,13 +78,21 @@ struct ModelSettings {
   char* path;
   int max_weights;
   struct Shader* shader;
-  struct Texture* texture;
+  struct Texture* diffuse_texture;
+  struct Texture* normal_texture;
+  struct Texture* metallic_texture;
+  struct Texture* roughness_texture;
+  struct Texture* ao_texture;
 };
 
 struct Model {
   struct Shader* shader_handle;
   struct Mesh* model_mesh;
-  struct Texture* model_texture;
+  struct Texture* model_diffuse_texture;
+  struct Texture* model_normal_texture;
+  struct Texture* model_metallic_texture;
+  struct Texture* model_roughness_texture;
+  struct Texture* model_ao_texture;
   struct SkeletonData* joints;
   struct ModelJoint* root_joint;
   struct Animator* animator;
