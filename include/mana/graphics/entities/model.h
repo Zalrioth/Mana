@@ -35,14 +35,10 @@ struct ModelUniformBufferObject {
   alignas(16) mat4 view;
   alignas(16) mat4 proj;
   alignas(16) vec3 camera_pos;
-  alignas(16) mat4 joint_transforms[MAX_JOINTS];
 };
 
-struct ModelStaticUniformBufferObject {
-  alignas(16) mat4 model;
-  alignas(16) mat4 view;
-  alignas(16) mat4 proj;
-  alignas(16) vec3 camera_pos;
+struct ModelAnimationUniformBufferObject {
+  alignas(16) mat4 joint_transforms[MAX_JOINTS];
 };
 
 struct ModelJoint {
@@ -78,13 +74,21 @@ struct ModelSettings {
   char* path;
   int max_weights;
   struct Shader* shader;
-  struct Texture* texture;
+  struct Texture* diffuse_texture;
+  struct Texture* normal_texture;
+  struct Texture* metallic_texture;
+  struct Texture* roughness_texture;
+  struct Texture* ao_texture;
 };
 
 struct Model {
   struct Shader* shader_handle;
   struct Mesh* model_mesh;
-  struct Texture* model_texture;
+  struct Texture* model_diffuse_texture;
+  struct Texture* model_normal_texture;
+  struct Texture* model_metallic_texture;
+  struct Texture* model_roughness_texture;
+  struct Texture* model_ao_texture;
   struct SkeletonData* joints;
   struct ModelJoint* root_joint;
   struct Animator* animator;
@@ -98,13 +102,16 @@ struct Model {
   quat rotation;
   vec3 scale;
 
-  size_t ubo_buffer_size;
   VkBuffer vertex_buffer;
   VkDeviceMemory vertex_buffer_memory;
   VkBuffer index_buffer;
   VkDeviceMemory index_buffer_memory;
   VkBuffer uniform_buffer;
   VkDeviceMemory uniform_buffers_memory;
+
+  VkBuffer uniform_animation_buffer;
+  VkDeviceMemory uniform_animation_buffers_memory;
+
   VkBuffer lighting_uniform_buffer;
   VkDeviceMemory lighting_uniform_buffers_memory;
   VkDescriptorSet descriptor_set;

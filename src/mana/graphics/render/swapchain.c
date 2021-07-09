@@ -44,9 +44,7 @@ int swap_chain_init(struct SwapChain* swap_chain, struct GPUAPI* gpu_api, int wi
     }
   }
 
-  // Testing 10 bit swapchain output
-  // Seems to work on Nvidia Studio Driver
-  // TODO: if 10_bit_enabled
+  // TODO: Clean up and let user select 8 bit or 10 bit
   //surface_format.format = VK_FORMAT_A2B10G10R10_UNORM_PACK32;
 
   VkPresentModeKHR present_mode = {0};

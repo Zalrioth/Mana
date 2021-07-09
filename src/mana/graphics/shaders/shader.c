@@ -1,6 +1,6 @@
 #include "mana/graphics/shaders/shader.h"
 
-int shader_init(struct Shader* shader, struct VulkanState* vulkan_renderer, char* vertex_shader, char* fragment_shader, char* geometry_shader, VkPipelineVertexInputStateCreateInfo vertex_input_info, VkRenderPass render_pass, VkPipelineColorBlendStateCreateInfo color_blending, VkFrontFace direction, bool depth_test, VkSampleCountFlagBits num_samples, bool supersampled) {
+int shader_init(struct Shader* shader, struct VulkanState* vulkan_renderer, char* vertex_shader, char* fragment_shader, char* compute_shader, VkPipelineVertexInputStateCreateInfo vertex_input_info, VkRenderPass render_pass, VkPipelineColorBlendStateCreateInfo color_blending, VkFrontFace direction, bool depth_test, VkSampleCountFlagBits num_samples, bool supersampled) {
   int vertex_length = 0;
   int fragment_length = 0;
 
@@ -115,6 +115,40 @@ int shader_init(struct Shader* shader, struct VulkanState* vulkan_renderer, char
 
   vkDestroyShaderModule(vulkan_renderer->device, frag_shader_module, NULL);
   vkDestroyShaderModule(vulkan_renderer->device, vert_shader_module, NULL);
+
+  return VULKAN_RENDERER_SUCCESS;
+}
+
+int shader_init_comp(struct Shader* shader, struct VulkanState* vulkan_renderer, char* compute_shader) {
+  int compute_length = 0;
+
+  char* compute_shader_code = read_file(compute_shader, &compute_length);
+
+  VkShaderModule comp_shader_module = shader_create_shader_module(vulkan_renderer, compute_shader_code, compute_length);
+
+  free(compute_shader_code);
+
+  VkPipelineLayoutCreateInfo pipeline_layout_create_info = {0};
+  pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+  pipeline_layout_create_info.setLayoutCount = 1;
+  pipeline_layout_create_info.pSetLayouts = &shader->descriptor_set_layout;
+
+  if (vkCreatePipelineLayout(vulkan_renderer->device, &pipeline_layout_create_info, NULL, &shader->pipeline_layout))
+    return -1;
+
+  VkComputePipelineCreateInfo pipeline_info = {0};
+  pipeline_info.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+  pipeline_info.stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  pipeline_info.stage.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+  pipeline_info.stage.module = comp_shader_module;
+
+  pipeline_info.stage.pName = "main";
+  pipeline_info.layout = shader->pipeline_layout;
+
+  if (vkCreateComputePipelines(vulkan_renderer->device, VK_NULL_HANDLE, 1, &pipeline_info, NULL, &shader->graphics_pipeline) != VK_SUCCESS)
+    return VULKAN_RENDERER_CREATE_GRAPHICS_PIPELINE_ERROR;
+
+  vkDestroyShaderModule(vulkan_renderer->device, comp_shader_module, NULL);
 
   return VULKAN_RENDERER_SUCCESS;
 }

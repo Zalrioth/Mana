@@ -4,7 +4,6 @@ int model_init(struct Model* model, struct GPUAPI* gpu_api, struct ModelSettings
   struct XmlNode* collada_node = xml_parser_load_xml_file(model_settings.path);
   struct XmlNode* library_controllers_node = xml_node_get_child(collada_node, "library_controllers");  // If texture is null, use custom 8x8 ubo color palette
   model->animated = !(library_controllers_node == NULL || library_controllers_node->child_nodes == NULL || library_controllers_node->child_nodes->num_buckets == 0);
-  model->ubo_buffer_size = model->animated ? sizeof(struct ModelUniformBufferObject) : sizeof(struct ModelStaticUniformBufferObject);
 
   struct SkinningData* skinning_data = NULL;
   if (model->animated) {
@@ -70,7 +69,11 @@ int model_init(struct Model* model, struct GPUAPI* gpu_api, struct ModelSettings
     model->model_mesh = geometry_loader_extract_model_data(xml_node_get_child(collada_node, "library_geometries"), NULL, model->animated);
 
   model->path = strdup(model_settings.path);
-  model->model_texture = model_settings.texture;
+  model->model_diffuse_texture = model_settings.diffuse_texture;
+  model->model_normal_texture = model_settings.normal_texture;
+  model->model_metallic_texture = model_settings.metallic_texture;
+  model->model_roughness_texture = model_settings.roughness_texture;
+  model->model_ao_texture = model_settings.ao_texture;
   model->shader_handle = model_settings.shader;
 
   xml_parser_delete(collada_node);
@@ -176,40 +179,32 @@ void model_update_uniforms(struct Model* model, struct GPUAPI* gpu_api, vec3 pos
   light_ubo.specular_colour = light_specular;
 
   void* data;
+
+  struct ModelUniformBufferObject ubom = {{{0}}};
+
+  ubom.proj = gpu_api->vulkan_state->gbuffer->projection_matrix;
+  ubom.proj.vecs[1].data[1] *= -1;
+
+  ubom.view = gpu_api->vulkan_state->gbuffer->view_matrix;
+
+  ubom.model = mat4_translate(MAT4_IDENTITY, model->position);
+  ubom.model = mat4_mul(ubom.model, quaternion_to_mat4(quaternion_normalise(model->rotation)));
+  ubom.model = mat4_scale(ubom.model, model->scale);
+
+  ubom.camera_pos = position;
+
+  vkMapMemory(gpu_api->vulkan_state->device, model->uniform_buffers_memory, 0, sizeof(struct ModelUniformBufferObject), 0, &data);
+  memcpy(data, &ubom, sizeof(struct ModelUniformBufferObject));
+  vkUnmapMemory(gpu_api->vulkan_state->device, model->uniform_buffers_memory);
+
   if (model->animated) {
-    struct ModelUniformBufferObject ubom = {{{0}}};
-    ubom.proj = gpu_api->vulkan_state->gbuffer->projection_matrix;
-    ubom.proj.vecs[1].data[1] *= -1;
+    struct ModelAnimationUniformBufferObject uboa = {{{0}}};
+    model_get_joint_transforms(model->root_joint, uboa.joint_transforms);
 
-    ubom.view = gpu_api->vulkan_state->gbuffer->view_matrix;
-
-    ubom.model = mat4_translate(MAT4_IDENTITY, model->position);
-    ubom.model = mat4_mul(ubom.model, quaternion_to_mat4(quaternion_normalise(model->rotation)));
-    ubom.model = mat4_scale(ubom.model, model->scale);
-
-    ubom.camera_pos = position;
-
-    model_get_joint_transforms(model->root_joint, ubom.joint_transforms);
-
-    vkMapMemory(gpu_api->vulkan_state->device, model->uniform_buffers_memory, 0, sizeof(struct ModelUniformBufferObject), 0, &data);
-    memcpy(data, &ubom, sizeof(struct ModelUniformBufferObject));
-    vkUnmapMemory(gpu_api->vulkan_state->device, model->uniform_buffers_memory);
-  } else {
-    struct ModelStaticUniformBufferObject ubom = {{{0}}};
-    ubom.proj = gpu_api->vulkan_state->gbuffer->projection_matrix;
-    ubom.proj.vecs[1].data[1] *= -1;
-
-    ubom.view = gpu_api->vulkan_state->gbuffer->view_matrix;
-
-    ubom.model = mat4_translate(MAT4_IDENTITY, model->position);
-    ubom.model = mat4_mul(ubom.model, quaternion_to_mat4(quaternion_normalise(model->rotation)));
-    ubom.model = mat4_scale(ubom.model, model->scale);
-
-    ubom.camera_pos = position;
-
-    vkMapMemory(gpu_api->vulkan_state->device, model->uniform_buffers_memory, 0, sizeof(struct ModelStaticUniformBufferObject), 0, &data);
-    memcpy(data, &ubom, sizeof(struct ModelStaticUniformBufferObject));
-    vkUnmapMemory(gpu_api->vulkan_state->device, model->uniform_buffers_memory);
+    void* animation_data;
+    vkMapMemory(gpu_api->vulkan_state->device, model->uniform_animation_buffers_memory, 0, sizeof(struct ModelAnimationUniformBufferObject), 0, &animation_data);
+    memcpy(animation_data, &uboa, sizeof(struct ModelAnimationUniformBufferObject));
+    vkUnmapMemory(gpu_api->vulkan_state->device, model->uniform_animation_buffers_memory);
   }
 
   void* lighting_data;
@@ -272,15 +267,34 @@ struct Model* model_get_clone(struct Model* model, struct GPUAPI* gpu_api) {
 
   graphics_utils_setup_vertex_buffer(gpu_api->vulkan_state, new_model->model_mesh->vertices, &new_model->vertex_buffer, &new_model->vertex_buffer_memory);
   graphics_utils_setup_index_buffer(gpu_api->vulkan_state, new_model->model_mesh->indices, &new_model->index_buffer, &new_model->index_buffer_memory);
-  graphics_utils_setup_uniform_buffer(gpu_api->vulkan_state, new_model->ubo_buffer_size, &new_model->uniform_buffer, &new_model->uniform_buffers_memory);
+  graphics_utils_setup_uniform_buffer(gpu_api->vulkan_state, sizeof(struct ModelUniformBufferObject), &new_model->uniform_buffer, &new_model->uniform_buffers_memory);
   graphics_utils_setup_uniform_buffer(gpu_api->vulkan_state, sizeof(struct LightingUniformBufferObject), &new_model->lighting_uniform_buffer, &new_model->lighting_uniform_buffers_memory);
+  if (model->animated)
+    graphics_utils_setup_uniform_buffer(gpu_api->vulkan_state, sizeof(struct ModelAnimationUniformBufferObject), &new_model->uniform_animation_buffer, &new_model->uniform_animation_buffers_memory);
   graphics_utils_setup_descriptor(gpu_api->vulkan_state, new_model->shader_handle->descriptor_set_layout, new_model->shader_handle->descriptor_pool, &new_model->descriptor_set);
 
-  VkWriteDescriptorSet dcs[3] = {0};
-  graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 0, &new_model->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(new_model->ubo_buffer_size, &new_model->uniform_buffer)});
-  graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 1, &new_model->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(sizeof(struct LightingUniformBufferObject), &new_model->lighting_uniform_buffer)});
-  graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 2, &new_model->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&new_model->model_texture->texture_image_view, &new_model->model_texture->texture_sampler)});
-  vkUpdateDescriptorSets(gpu_api->vulkan_state->device, 3, dcs, 0, NULL);
+  if (model->animated) {
+    VkWriteDescriptorSet dcs[8] = {0};
+    graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 0, &new_model->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(sizeof(struct ModelUniformBufferObject), &new_model->uniform_buffer)});
+    graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 1, &new_model->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(sizeof(struct LightingUniformBufferObject), &new_model->lighting_uniform_buffer)});
+    graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 2, &new_model->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&new_model->model_diffuse_texture->texture_image_view, &new_model->model_diffuse_texture->texture_sampler)});
+    graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 3, &new_model->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&new_model->model_normal_texture->texture_image_view, &new_model->model_normal_texture->texture_sampler)});
+    graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 4, &new_model->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&new_model->model_metallic_texture->texture_image_view, &new_model->model_metallic_texture->texture_sampler)});
+    graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 5, &new_model->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&new_model->model_roughness_texture->texture_image_view, &new_model->model_roughness_texture->texture_sampler)});
+    graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 6, &new_model->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&new_model->model_ao_texture->texture_image_view, &new_model->model_ao_texture->texture_sampler)});
+    graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 7, &new_model->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(sizeof(struct ModelAnimationUniformBufferObject), &new_model->uniform_animation_buffer)});
+    vkUpdateDescriptorSets(gpu_api->vulkan_state->device, 8, dcs, 0, NULL);
+  } else {
+    VkWriteDescriptorSet dcs[7] = {0};
+    graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 0, &new_model->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(sizeof(struct ModelUniformBufferObject), &new_model->uniform_buffer)});
+    graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 1, &new_model->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(sizeof(struct LightingUniformBufferObject), &new_model->lighting_uniform_buffer)});
+    graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 2, &new_model->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&new_model->model_diffuse_texture->texture_image_view, &new_model->model_diffuse_texture->texture_sampler)});
+    graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 3, &new_model->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&new_model->model_normal_texture->texture_image_view, &new_model->model_normal_texture->texture_sampler)});
+    graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 4, &new_model->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&new_model->model_metallic_texture->texture_image_view, &new_model->model_metallic_texture->texture_sampler)});
+    graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 5, &new_model->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&new_model->model_roughness_texture->texture_image_view, &new_model->model_roughness_texture->texture_sampler)});
+    graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 6, &new_model->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&new_model->model_ao_texture->texture_image_view, &new_model->model_ao_texture->texture_sampler)});
+    vkUpdateDescriptorSets(gpu_api->vulkan_state->device, 7, dcs, 0, NULL);
+  }
 
   return new_model;
 }
@@ -332,15 +346,34 @@ void model_recreate(struct Model* model, struct GPUAPI* gpu_api) {
 
   graphics_utils_setup_vertex_buffer(gpu_api->vulkan_state, model->model_mesh->vertices, &model->vertex_buffer, &model->vertex_buffer_memory);
   graphics_utils_setup_index_buffer(gpu_api->vulkan_state, model->model_mesh->indices, &model->index_buffer, &model->index_buffer_memory);
-  graphics_utils_setup_uniform_buffer(gpu_api->vulkan_state, model->ubo_buffer_size, &model->uniform_buffer, &model->uniform_buffers_memory);
+  graphics_utils_setup_uniform_buffer(gpu_api->vulkan_state, sizeof(struct ModelUniformBufferObject), &model->uniform_buffer, &model->uniform_buffers_memory);
   graphics_utils_setup_uniform_buffer(gpu_api->vulkan_state, sizeof(struct LightingUniformBufferObject), &model->lighting_uniform_buffer, &model->lighting_uniform_buffers_memory);
+  if (model->animated)
+    graphics_utils_setup_uniform_buffer(gpu_api->vulkan_state, sizeof(struct ModelAnimationUniformBufferObject), &model->uniform_buffer, &model->uniform_buffers_memory);
   graphics_utils_setup_descriptor(gpu_api->vulkan_state, model->shader_handle->descriptor_set_layout, model->shader_handle->descriptor_pool, &model->descriptor_set);
 
-  VkWriteDescriptorSet dcs[3] = {0};
-  graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 0, &model->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(model->ubo_buffer_size, &model->uniform_buffer)});
-  graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 1, &model->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(sizeof(struct LightingUniformBufferObject), &model->lighting_uniform_buffer)});
-  graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 2, &model->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&model->model_texture->texture_image_view, &model->model_texture->texture_sampler)});
-  vkUpdateDescriptorSets(gpu_api->vulkan_state->device, 3, dcs, 0, NULL);
+  if (model->animated) {
+    VkWriteDescriptorSet dcs[8] = {0};
+    graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 0, &model->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(sizeof(struct ModelUniformBufferObject), &model->uniform_buffer)});
+    graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 1, &model->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(sizeof(struct LightingUniformBufferObject), &model->lighting_uniform_buffer)});
+    graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 2, &model->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&model->model_diffuse_texture->texture_image_view, &model->model_diffuse_texture->texture_sampler)});
+    graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 3, &model->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&model->model_normal_texture->texture_image_view, &model->model_normal_texture->texture_sampler)});
+    graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 4, &model->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&model->model_metallic_texture->texture_image_view, &model->model_metallic_texture->texture_sampler)});
+    graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 5, &model->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&model->model_roughness_texture->texture_image_view, &model->model_roughness_texture->texture_sampler)});
+    graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 6, &model->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&model->model_ao_texture->texture_image_view, &model->model_ao_texture->texture_sampler)});
+    graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 7, &model->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(sizeof(struct ModelAnimationUniformBufferObject), &model->uniform_buffer)});
+    vkUpdateDescriptorSets(gpu_api->vulkan_state->device, 8, dcs, 0, NULL);
+  } else {
+    VkWriteDescriptorSet dcs[7] = {0};
+    graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 0, &model->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(sizeof(struct ModelUniformBufferObject), &model->uniform_buffer)});
+    graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 1, &model->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(sizeof(struct LightingUniformBufferObject), &model->lighting_uniform_buffer)});
+    graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 2, &model->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&model->model_diffuse_texture->texture_image_view, &model->model_diffuse_texture->texture_sampler)});
+    graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 3, &model->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&model->model_normal_texture->texture_image_view, &model->model_normal_texture->texture_sampler)});
+    graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 4, &model->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&model->model_metallic_texture->texture_image_view, &model->model_metallic_texture->texture_sampler)});
+    graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 5, &model->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&model->model_roughness_texture->texture_image_view, &model->model_roughness_texture->texture_sampler)});
+    graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 6, &model->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&model->model_ao_texture->texture_image_view, &model->model_ao_texture->texture_sampler)});
+    vkUpdateDescriptorSets(gpu_api->vulkan_state->device, 7, dcs, 0, NULL);
+  }
 }
 
 // TODO: Maybe get instanced/batched where specific vertex data is not needed

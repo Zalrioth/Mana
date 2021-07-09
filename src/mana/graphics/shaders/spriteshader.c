@@ -25,7 +25,7 @@ int sprite_shader_init(struct SpriteShader* sprite_shader, struct GPUAPI* gpu_ap
   if (vkCreateDescriptorSetLayout(gpu_api->vulkan_state->device, &layout_info, NULL, &sprite_shader->shader.descriptor_set_layout) != VK_SUCCESS)
     return 0;
 
-  int sprite_descriptors = 256;
+  int sprite_descriptors = 2048;
   VkDescriptorPoolSize pool_sizes[2] = {{0}};
   pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
   pool_sizes[0].descriptorCount = sprite_descriptors;  // Max number of uniform descriptors
@@ -81,7 +81,7 @@ int sprite_shader_init(struct SpriteShader* sprite_shader, struct GPUAPI* gpu_ap
   color_blending.blendConstants[2] = 0.0f;
   color_blending.blendConstants[3] = 0.0f;
 
-  shader_init(&sprite_shader->shader, gpu_api->vulkan_state, "./assets/shaders/spirv/sprite.vert.spv", "./assets/shaders/spirv/sprite.frag.spv", NULL, vertex_input_info, gpu_api->vulkan_state->gbuffer->render_pass, color_blending, VK_FRONT_FACE_CLOCKWISE, depth_test, gpu_api->vulkan_state->msaa_samples, true);
+  shader_init(&sprite_shader->shader, gpu_api->vulkan_state, "./assets/shaders/spirv/sprite.vert.spv", "./assets/shaders/spirv/sprite.frag.spv", NULL, vertex_input_info, gpu_api->vulkan_state->gbuffer->render_pass, color_blending, VK_FRONT_FACE_COUNTER_CLOCKWISE, depth_test, gpu_api->vulkan_state->msaa_samples, true);
 
   return 1;
 }

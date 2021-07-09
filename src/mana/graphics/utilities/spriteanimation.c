@@ -1,5 +1,6 @@
 #include "mana/graphics/utilities/spriteanimation.h"
 
+// TODO: Move this to entities?
 int sprite_animation_init(struct SpriteAnimation* sprite_animation, struct GPUAPI* gpu_api, struct Shader* shader, struct Texture* texture, int frames, float frame_length, int padding) {
   sprite_animation->image_mesh = calloc(1, sizeof(struct Mesh));
   mesh_sprite_init(sprite_animation->image_mesh);
@@ -151,7 +152,7 @@ void sprite_animation_update(struct SpriteAnimation* sprite_animation, float del
 
   sprite_animation->current_frame = (int)((sprite_animation->current_animation_time / sprite_animation->total_animation_length) * sprite_animation->total_frames);
   float offset = 0.0f;
-  if (sprite_animation->direction < 0.0f)
+  if (sprite_animation->direction > 0.0f)
     offset = 1.0f / sprite_animation->total_frames;
   sprite_animation->frame_pos = (vec3){.x = ((float)sprite_animation->current_frame / sprite_animation->total_frames) + offset, .y = 0.0f, .z = sprite_animation->direction};
 }

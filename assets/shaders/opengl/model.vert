@@ -9,8 +9,11 @@ layout(binding = 0) uniform ModelUniformBufferObject {
   mat4 view;
   mat4 proj;
 	vec3 camera_pos;
-	mat4 joint_transforms[MAX_JOINTS];
 } ubo;
+
+layout(binding = 7) uniform ModelAnimationUniformBufferObject {
+	mat4 joint_transforms[MAX_JOINTS];
+} uboa;
 
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
@@ -29,7 +32,7 @@ void main(void){
 	vec4 total_normal = vec4(0.0);
 	
 	for(int i = 0; i < MAX_WEIGHTS; i++){
-		mat4 joint_transform = ubo.joint_transforms[joints_ids[i]];
+		mat4 joint_transform = uboa.joint_transforms[joints_ids[i]];
 		vec4 pose_position = joint_transform * vec4(position, 1.0);
 		total_local_pos += pose_position * weights[i];
 		

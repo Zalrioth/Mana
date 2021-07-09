@@ -94,6 +94,21 @@ void window_set_title(struct Window *window, char *title) {
   }
 }
 
+void window_set_icon(struct Window *window, char *icon) {
+  switch (window->engine->graphics_library.type) {
+    case (NO_LIBRARY):
+      break;
+    case (GLFW_LIBRARY):
+      GLFWimage images[1];
+      images[0].pixels = stbi_load(icon, &images[0].width, &images[0].height, 0, 4);
+      glfwSetWindowIcon(window->engine->graphics_library.glfw_library.glfw_window, 1, images);
+      stbi_image_free(images[0].pixels);
+      break;
+    case (MOLTENVK_LIBRARY):
+      break;
+  }
+}
+
 bool window_should_close(struct Window *window) {
   if (glfwWindowShouldClose(window->engine->graphics_library.glfw_library.glfw_window))
     return true;
@@ -179,7 +194,7 @@ int window_glfw_window_init(struct Window *window, struct Engine *engine, int wi
   // TODO: Add setting to change window resizing
   glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-  engine->graphics_library.glfw_library.glfw_window = glfwCreateWindow(width, height, "Dad n' Me", NULL, NULL);
+  engine->graphics_library.glfw_library.glfw_window = glfwCreateWindow(width, height, "", NULL, NULL);
 
   //glfwSetWindowUserPointer(engine->vulkan_api->glfw_window, &vulkan_api);
   glfwSetWindowUserPointer(engine->graphics_library.glfw_library.glfw_window, engine->gpu_api.vulkan_state);
