@@ -54,37 +54,23 @@ int grass_shader_init(struct GrassShader* grass_shader, struct GPUAPI* gpu_api) 
   }
 
   // Allocate buffers
-  VkDeviceSize requiredMemorySize = 0;
-  uint32_t typeFilter = 0;
-
   for (int buff = 0; buff < 3; buff++) {
     VkMemoryRequirements bufferMemoryRequirements = {0};
     vkGetBufferMemoryRequirements(gpu_api->vulkan_state->device, grass_shader->grass_compute_buffers[buff], &bufferMemoryRequirements);
-    requiredMemorySize += bufferMemoryRequirements.size;
-    typeFilter |= bufferMemoryRequirements.memoryTypeBits;
-  }
+    uint32_t typeFilter = bufferMemoryRequirements.memoryTypeBits;
 
-  uint32_t memoryTypeIndex = findMemoryType(gpu_api, typeFilter, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    uint32_t memoryTypeIndex = findMemoryType(gpu_api, typeFilter, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-  VkMemoryAllocateInfo allocateInfo = {0};
-  allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-  allocateInfo.allocationSize = requiredMemorySize;
-  allocateInfo.memoryTypeIndex = memoryTypeIndex;
+    VkMemoryAllocateInfo allocateInfo = {0};
+    allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocateInfo.allocationSize = bufferMemoryRequirements.size;
+    allocateInfo.memoryTypeIndex = memoryTypeIndex;
 
-  if (vkAllocateMemory(gpu_api->vulkan_state->device, &allocateInfo, NULL, &grass_shader->grass_compute_memory) != VK_SUCCESS)
-    return 1;
-
-  VkDeviceSize offset = 0;
-
-  for (int buff = 0; buff < 3; buff++) {
-    VkMemoryRequirements bufferMemoryRequirements = {0};
-    vkGetBufferMemoryRequirements(gpu_api->vulkan_state->device, grass_shader->grass_compute_buffers[buff], &bufferMemoryRequirements);
-    requiredMemorySize += bufferMemoryRequirements.size;
-
-    if (vkBindBufferMemory(gpu_api->vulkan_state->device, grass_shader->grass_compute_buffers[buff], grass_shader->grass_compute_memory, offset) != VK_SUCCESS)
+    if (vkAllocateMemory(gpu_api->vulkan_state->device, &allocateInfo, NULL, &grass_shader->grass_compute_memory[buff]) != VK_SUCCESS)
       return 1;
 
-    offset += bufferMemoryRequirements.size;
+    if (vkBindBufferMemory(gpu_api->vulkan_state->device, grass_shader->grass_compute_buffers[buff], grass_shader->grass_compute_memory[buff], 0) != VK_SUCCESS)
+      return 1;
   }
 
   // Allocate descriptors

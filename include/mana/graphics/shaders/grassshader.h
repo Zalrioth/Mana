@@ -18,7 +18,8 @@ struct GrassShader {
   int buf_size[3];
 
   VkBuffer grass_compute_buffers[3];
-  VkDeviceMemory grass_compute_memory;
+  VkDeviceMemory grass_compute_memory[3];
+
   VkDescriptorSet descriptorSet;
   VkCommandPool commandPool;
   VkCommandBuffer commandBuffer;

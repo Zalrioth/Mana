@@ -83,14 +83,18 @@ void grass_render(struct Grass* grass, struct GPUAPI* gpu_api) {
   vkCmdDispatch(grass->grass_shader.commandBuffer, elements, 1, 1);
   vkEndCommandBuffer(grass->grass_shader.commandBuffer);
 
-  void* data = NULL;
-  vkMapMemory(gpu_api->vulkan_state->device, grass->grass_shader.grass_compute_memory, 0, VK_WHOLE_SIZE, 0, &data);
+  void* data1 = NULL;
+  vkMapMemory(gpu_api->vulkan_state->device, grass->grass_shader.grass_compute_memory[0], 0, VK_WHOLE_SIZE, 0, &data1);
 
-  *(int*)(data) = 3;
+  void* data2 = NULL;
+  vkMapMemory(gpu_api->vulkan_state->device, grass->grass_shader.grass_compute_memory[1], 0, VK_WHOLE_SIZE, 0, &data2);
 
-  //struct in_grass_vertices* d_a = data;
-  //struct out_draw_grass_vertices* d_b = data + elements;
-  //struct out_draw_grass_indices* d_c = data + 2 * elements;
+  void* data3 = NULL;
+  vkMapMemory(gpu_api->vulkan_state->device, grass->grass_shader.grass_compute_memory[2], 0, VK_WHOLE_SIZE, 0, &data3);
+
+  struct in_grass_vertices* d_a = data1;
+  struct out_draw_grass_vertices* d_b = data2;
+  struct out_draw_grass_indices* d_c = data3;
 
   //d_a->total_grass_vertices = 1;
   //vec3 pos = {1.0, 1.0, 1.0};
@@ -101,7 +105,9 @@ void grass_render(struct Grass* grass, struct GPUAPI* gpu_api) {
   //  d_c[i] = 0.0;
   //}
 
-  vkUnmapMemory(gpu_api->vulkan_state->device, grass->grass_shader.grass_compute_memory);
+  vkUnmapMemory(gpu_api->vulkan_state->device, grass->grass_shader.grass_compute_memory[0]);
+  vkUnmapMemory(gpu_api->vulkan_state->device, grass->grass_shader.grass_compute_memory[1]);
+  vkUnmapMemory(gpu_api->vulkan_state->device, grass->grass_shader.grass_compute_memory[2]);
 
   // Return stuff
   VkSubmitInfo submitInfo = {0};
@@ -112,18 +118,22 @@ void grass_render(struct Grass* grass, struct GPUAPI* gpu_api) {
   // but we can simply wait for all the work to be done
   vkQueueWaitIdle(gpu_api->vulkan_state->graphics_queue);
 
-  data = NULL;
-  vkMapMemory(gpu_api->vulkan_state->device, grass->grass_shader.grass_compute_memory, 0, VK_WHOLE_SIZE, 0, &data);
+  data1 = NULL;
+  vkMapMemory(gpu_api->vulkan_state->device, grass->grass_shader.grass_compute_memory[0], 0, VK_WHOLE_SIZE, 0, &data1);
 
-  //d_a = data;
-  //d_b = data + elements;
-  //d_c = data + 2 * elements;
+  data2 = NULL;
+  vkMapMemory(gpu_api->vulkan_state->device, grass->grass_shader.grass_compute_memory[1], 0, VK_WHOLE_SIZE, 0, &data2);
 
-  int d1 = *(int*)(data);
-  int d2 = *(int*)(data + sizeof(struct in_grass_vertices));
-  int d3 = *(int*)(data + sizeof(struct in_grass_vertices) + sizeof(struct out_draw_grass_vertices));
+  data3 = NULL;
+  vkMapMemory(gpu_api->vulkan_state->device, grass->grass_shader.grass_compute_memory[2], 0, VK_WHOLE_SIZE, 0, &data3);
 
-  vkUnmapMemory(gpu_api->vulkan_state->device, grass->grass_shader.grass_compute_memory);
+  d_a = data1;
+  d_b = data2;
+  d_c = data3;
+
+  vkUnmapMemory(gpu_api->vulkan_state->device, grass->grass_shader.grass_compute_memory[0]);
+  vkUnmapMemory(gpu_api->vulkan_state->device, grass->grass_shader.grass_compute_memory[1]);
+  vkUnmapMemory(gpu_api->vulkan_state->device, grass->grass_shader.grass_compute_memory[2]);
 
   // Other render stuff
   graphics_utils_update_vertex_buffer(gpu_api->vulkan_state, grass->mesh->vertices, &grass->vertex_buffer, &grass->vertex_buffer_memory);
