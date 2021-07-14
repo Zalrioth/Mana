@@ -58,11 +58,7 @@ struct VertexManifoldDualContouring {
 };
 
 struct VertexGrass {
-  vec3 position;
-  vec3 color;
-  vec3 normal;
-  vec3 wind_pos;
-  float trample_value;
+  vec4 position_color;
 };
 
 struct Mesh {
@@ -108,7 +104,7 @@ static inline VkVertexInputBindingDescription mesh_manifold_dual_contouring_get_
 static inline void mesh_manifold_dual_contouring_get_attribute_descriptions(VkVertexInputAttributeDescription* attribute_descriptions);
 
 static inline void mesh_grass_init(struct Mesh* mesh);
-static inline void mesh_grass_assign_vertex(struct Vector* vector, float x1, float y1, float z1, float r1, float g1, float b1, float r2, float g2, float b2, float x2, float y2, float z2, float val);
+static inline void mesh_grass_assign_vertex(struct Vector* vector, float x, float y, float z, float w);
 static inline VkVertexInputBindingDescription mesh_grass_get_binding_description();
 static inline void mesh_grass_get_attribute_descriptions(VkVertexInputAttributeDescription* attribute_descriptions);
 
@@ -513,25 +509,12 @@ static inline void mesh_grass_init(struct Mesh* mesh) {
   vector_init(mesh->indices, sizeof(uint32_t));
 }
 
-static inline void mesh_grass_assign_vertex(struct Vector* vector, float x1, float y1, float z1, float r1, float g1, float b1, float r2, float g2, float b2, float x2, float y2, float z2, float val) {
+static inline void mesh_grass_assign_vertex(struct Vector* vector, float x, float y, float z, float w) {
   struct VertexGrass vertex = {{0}};
-  vertex.position.x = x1;
-  vertex.position.y = y1;
-  vertex.position.z = z1;
-
-  vertex.color.r = r1;
-  vertex.color.g = g1;
-  vertex.color.b = b1;
-
-  vertex.normal.r = r2;
-  vertex.normal.g = g2;
-  vertex.normal.b = b2;
-
-  vertex.wind_pos.r = x2;
-  vertex.wind_pos.g = y2;
-  vertex.wind_pos.b = z2;
-
-  vertex.trample_value = val;
+  vertex.position_color.x = x;
+  vertex.position_color.y = y;
+  vertex.position_color.z = z;
+  vertex.position_color.w = w;
 
   vector_push_back(vector, &vertex);
 }
@@ -549,27 +532,7 @@ static inline void mesh_grass_get_attribute_descriptions(VkVertexInputAttributeD
   attribute_descriptions[0].binding = 0;
   attribute_descriptions[0].location = 0;
   attribute_descriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-  attribute_descriptions[0].offset = offsetof(struct VertexGrass, position);
-
-  attribute_descriptions[1].binding = 0;
-  attribute_descriptions[1].location = 1;
-  attribute_descriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-  attribute_descriptions[1].offset = offsetof(struct VertexGrass, color);
-
-  attribute_descriptions[2].binding = 0;
-  attribute_descriptions[2].location = 2;
-  attribute_descriptions[2].format = VK_FORMAT_R32G32B32_SFLOAT;
-  attribute_descriptions[2].offset = offsetof(struct VertexGrass, normal);
-
-  attribute_descriptions[3].binding = 0;
-  attribute_descriptions[3].location = 3;
-  attribute_descriptions[3].format = VK_FORMAT_R32G32B32_SFLOAT;
-  attribute_descriptions[3].offset = offsetof(struct VertexGrass, wind_pos);
-
-  attribute_descriptions[4].binding = 0;
-  attribute_descriptions[4].location = 4;
-  attribute_descriptions[4].format = VK_FORMAT_R32_SFLOAT;
-  attribute_descriptions[4].offset = offsetof(struct VertexGrass, trample_value);
+  attribute_descriptions[0].offset = offsetof(struct VertexGrass, position_color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

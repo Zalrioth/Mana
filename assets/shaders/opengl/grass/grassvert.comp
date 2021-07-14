@@ -14,24 +14,22 @@ struct DrawGrass {
 
 layout(std430, set=0, binding=0) buffer in_grass_vertices {
 		int total_grass_vertices; 
-		vec3 grass_vertices[];
+		vec4 grass_vertices[];
 	};
 
 layout(std430, set=0, binding=1) buffer out_draw_grass_vertices {
 		uint total_draw_grass_vertices;
-		vec3 draw_grass_vertices[];
+		vec4 draw_grass_vertices[];
 	};
 layout(std430, set=0, binding=2) buffer out_draw_grass_indices {
 		uint total_draw_grass_indices;
 		uint draw_grass_indices[];
 };
 
-
+// https://github.com/Zhylkaaa/vulkan-compute-examples/blob/master/vector_add/shaders/vector_add.comp
+// https://stackoverflow.com/questions/19956906/aligning-structures-to-std140-cpu-side
 void main(){
-	//const uint i = gl_GlobalInvocationID.x;
-	//result[i] = a[i] + b[i];
-
-	total_grass_vertices = 3;
+	vec4 grass_vertex = grass_vertices[gl_GlobalInvocationID.x];
 
 	uint total_vertices = 3;
 	uint total_indices = 3;
@@ -39,17 +37,12 @@ void main(){
 	uint vertex_start = atomicAdd(total_draw_grass_vertices, total_vertices);
 	uint indice_start = atomicAdd(total_draw_grass_indices, total_indices);
 
-//
-	//uint vertex_start = 0;
-	//uint indice_start = 0;
-//
-	//total_grass_vertices = total_grass_vertices + 1;
-//
-	//draw_grass_vertices[vertex_start] = vec3(-1.0, 1.0, 0.0);
-	//draw_grass_vertices[vertex_start + 1] = vec3(-1.0, -2.0, 0.0);
-	//draw_grass_vertices[vertex_start + 2] = vec3(2.0, 1.0, 0.0);
-//
-	//draw_grass_indices[indice_start] = 0;
-	//draw_grass_indices[indice_start + 1] = 1;
-	//draw_grass_indices[indice_start + 2] = 2;
+	// Color value is pallete xpos
+	draw_grass_vertices[vertex_start] = grass_vertex + vec4(-1.0, 1.0, 0.0, 0.0);
+	draw_grass_vertices[vertex_start + 1] = grass_vertex + vec4(-1.0, -2.0, 0.0, 0.0);
+	draw_grass_vertices[vertex_start + 2] = grass_vertex + vec4(2.0, 1.0, 0.0, 0.0);
+
+	draw_grass_indices[indice_start] = indice_start;
+	draw_grass_indices[indice_start + 1] = indice_start + 1;
+	draw_grass_indices[indice_start + 2] = indice_start + 2;
 }

@@ -8,8 +8,22 @@
 
 // Effect for drawing grass
 
-#define GRASS_SHADER_COLOR_ATTACHEMENTS 2
-#define GRASS_SHADER_VERTEX_ATTRIBUTES 5
+#define GRASS_SHADER_COLOR_ATTACHMENTS 2
+#define GRASS_SHADER_VERTEX_ATTRIBUTES 1
+
+struct in_grass_vertices {
+  alignas(16) int total_grass_vertices;
+  alignas(16) vec4 grass_vertices[1024];
+};
+
+struct out_draw_grass_vertices {
+  alignas(16) unsigned int total_draw_grass_vertices;
+  alignas(16) vec4 draw_grass_vertices[1024];
+};
+struct out_draw_grass_indices {
+  unsigned int total_draw_grass_indices;
+  unsigned int draw_grass_indices[1024];
+};
 
 struct GrassShader {
   struct Shader grass_compute_shader;

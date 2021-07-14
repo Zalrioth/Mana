@@ -35,9 +35,9 @@ int grass_shader_init(struct GrassShader* grass_shader, struct GPUAPI* gpu_api) 
 
   shader_init_comp(&grass_shader->grass_compute_shader, gpu_api->vulkan_state, "./assets/shaders/spirv/grassvert.comp.spv");
 
-  grass_shader->buf_size[0] = sizeof(int) + sizeof(vec3) * 1024;
-  grass_shader->buf_size[1] = sizeof(unsigned int) + sizeof(vec3) * 1024;
-  grass_shader->buf_size[2] = sizeof(unsigned int) + sizeof(unsigned int) * 1024;
+  grass_shader->buf_size[0] = sizeof(struct in_grass_vertices);
+  grass_shader->buf_size[1] = sizeof(struct out_draw_grass_vertices);
+  grass_shader->buf_size[2] = sizeof(struct out_draw_grass_indices);
 
   // Create buffers
   for (int buff = 0; buff < 3; buff++) {
@@ -125,7 +125,7 @@ int grass_shader_init(struct GrassShader* grass_shader, struct GPUAPI* gpu_api) 
   // Create compute command buffer
   VkCommandPoolCreateInfo commandPoolCreateInfo = {0};
   commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-  commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+  commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
   commandPoolCreateInfo.queueFamilyIndex = gpu_api->vulkan_state->indices.graphics_family;
 
   if (vkCreateCommandPool(gpu_api->vulkan_state->device, &commandPoolCreateInfo, NULL, &grass_shader->commandPool) != VK_SUCCESS)
@@ -190,9 +190,9 @@ int grass_shader_init(struct GrassShader* grass_shader, struct GPUAPI* gpu_api) 
   vertex_input_info.pVertexAttributeDescriptions = attribute_descriptions;
 
   // Note: Independent blending is for certain devices only, all attachments must blend the same otherwise
-  VkPipelineColorBlendAttachmentState color_blend_attachments[GRASS_SHADER_COLOR_ATTACHEMENTS];
-  memset(color_blend_attachments, 0, sizeof(VkPipelineColorBlendAttachmentState) * GRASS_SHADER_COLOR_ATTACHEMENTS);
-  for (int pipeline_attachment_num = 0; pipeline_attachment_num < GRASS_SHADER_COLOR_ATTACHEMENTS; pipeline_attachment_num++) {
+  VkPipelineColorBlendAttachmentState color_blend_attachments[GRASS_SHADER_COLOR_ATTACHMENTS];
+  memset(color_blend_attachments, 0, sizeof(VkPipelineColorBlendAttachmentState) * GRASS_SHADER_COLOR_ATTACHMENTS);
+  for (int pipeline_attachment_num = 0; pipeline_attachment_num < GRASS_SHADER_COLOR_ATTACHMENTS; pipeline_attachment_num++) {
     color_blend_attachments[pipeline_attachment_num].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
     color_blend_attachments[pipeline_attachment_num].blendEnable = VK_TRUE;
     color_blend_attachments[pipeline_attachment_num].srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
@@ -207,14 +207,14 @@ int grass_shader_init(struct GrassShader* grass_shader, struct GPUAPI* gpu_api) 
   color_blending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
   color_blending.logicOpEnable = VK_FALSE;
   color_blending.logicOp = VK_LOGIC_OP_COPY;
-  color_blending.attachmentCount = GRASS_SHADER_COLOR_ATTACHEMENTS;
+  color_blending.attachmentCount = GRASS_SHADER_COLOR_ATTACHMENTS;
   color_blending.pAttachments = color_blend_attachments;
   color_blending.blendConstants[0] = 0.0f;
   color_blending.blendConstants[1] = 0.0f;
   color_blending.blendConstants[2] = 0.0f;
   color_blending.blendConstants[3] = 0.0f;
 
-  shader_init(&grass_shader->grass_render_shader, gpu_api->vulkan_state, "./assets/shaders/spirv/grass.vert.spv", "./assets/shaders/spirv/grass.frag.spv", NULL, vertex_input_info, gpu_api->vulkan_state->gbuffer->render_pass, color_blending, VK_FRONT_FACE_COUNTER_CLOCKWISE, 1, gpu_api->vulkan_state->msaa_samples, true);
+  shader_init(&grass_shader->grass_render_shader, gpu_api->vulkan_state, "./assets/shaders/spirv/grass.vert.spv", "./assets/shaders/spirv/grass.frag.spv", NULL, vertex_input_info, gpu_api->vulkan_state->gbuffer->render_pass, color_blending, VK_FRONT_FACE_COUNTER_CLOCKWISE, 1, gpu_api->vulkan_state->msaa_samples, true, VK_CULL_MODE_NONE);
 
   return 1;
 }
