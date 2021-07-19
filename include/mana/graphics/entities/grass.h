@@ -6,6 +6,10 @@
 //
 #include "mana/graphics/shaders/grassshader.h"
 
+// Each chunk has its own grass buffer and render pass
+// LOD based on chunk distance
+// Should be fast to copy memory chunks
+
 struct GrassUniformBufferObject {
   alignas(16) mat4 model;
   alignas(16) mat4 view;
@@ -15,16 +19,16 @@ struct GrassUniformBufferObject {
 struct Grass {
   struct GrassShader grass_shader;
 
-  struct Mesh* mesh;
   VkBuffer vertex_buffer;
-  VkDeviceMemory vertex_buffer_memory;
   VkBuffer index_buffer;
-  VkDeviceMemory index_buffer_memory;
   VkBuffer uniform_buffer;
   VkDeviceMemory uniform_buffers_memory;
   VkDescriptorSet descriptor_set;
 
   struct Vector grass_nodes;
+
+  int compute_once;
+  unsigned int index_size;
 };
 
 int grass_init(struct Grass* grass, struct GPUAPI* gpu_api);

@@ -11,18 +11,21 @@
 #define GRASS_SHADER_COLOR_ATTACHMENTS 2
 #define GRASS_SHADER_VERTEX_ATTRIBUTES 1
 
+#define GRASS_LIMIT 10000  // Chunk limit?
+#define MAX_GRASS_NUMS 15 * GRASS_LIMIT
+
 struct in_grass_vertices {
-  alignas(16) int total_grass_vertices;
-  alignas(16) vec4 grass_vertices[1024];
+  alignas(16) unsigned int total_grass_vertices;
+  unsigned int total_draw_grass_vertices;
+  unsigned int total_draw_grass_indices;
+  alignas(16) vec4 grass_vertices[MAX_GRASS_NUMS];
 };
 
 struct out_draw_grass_vertices {
-  alignas(16) unsigned int total_draw_grass_vertices;
-  alignas(16) vec4 draw_grass_vertices[1024];
+  vec4 draw_grass_vertices[MAX_GRASS_NUMS];
 };
 struct out_draw_grass_indices {
-  unsigned int total_draw_grass_indices;
-  unsigned int draw_grass_indices[1024];
+  unsigned int draw_grass_indices[MAX_GRASS_NUMS];
 };
 
 struct GrassShader {

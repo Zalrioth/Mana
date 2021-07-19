@@ -44,7 +44,7 @@ int grass_shader_init(struct GrassShader* grass_shader, struct GPUAPI* gpu_api) 
     VkBufferCreateInfo bufferCreateInfo = {0};
     bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     bufferCreateInfo.size = grass_shader->buf_size[buff];  // TODO: Do correct size
-    bufferCreateInfo.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+    bufferCreateInfo.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     bufferCreateInfo.queueFamilyIndexCount = 1;
     bufferCreateInfo.pQueueFamilyIndices = (&gpu_api->vulkan_state->indices)->graphics_family;

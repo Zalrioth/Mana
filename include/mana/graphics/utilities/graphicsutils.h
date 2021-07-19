@@ -28,6 +28,7 @@ static inline VkFormat graphics_utils_find_depth_format(VkPhysicalDevice physica
 static inline void graphics_utils_create_color_attachment(VkFormat image_format, struct VkAttachmentDescription *color_attachment);
 static inline void graphics_utils_create_depth_attachment(VkPhysicalDevice physical_device, struct VkAttachmentDescription *depth_attachment);
 static inline void graphics_utisl_copy_buffer(struct VulkanState *vulkan_state, VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size);
+static inline void graphics_utisl_copy_buffer_offset(struct VulkanState *vulkan_state, VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size, unsigned int offset);
 static inline void graphics_utils_setup_vertex_buffer(struct VulkanState *vulkan_state, struct Vector *vertices, VkBuffer *vertex_buffer, VkDeviceMemory *vertex_buffer_memory);
 static inline void graphics_utils_setup_vertex_buffer_pool(struct VulkanState *vulkan_state, struct Vector *vertices, int total_pool_elements, VkBuffer *vertex_buffer, VkDeviceMemory *vertex_buffer_memory);
 static inline void graphics_utils_update_vertex_buffer(struct VulkanState *vulkan_state, struct Vector *vertices, VkBuffer *vertex_buffer, VkDeviceMemory *vertex_buffer_memory);
@@ -378,6 +379,17 @@ static inline void graphics_utisl_copy_buffer(struct VulkanState *vulkan_state, 
 
   VkBufferCopy copy_region = {0};
   copy_region.size = size;
+  vkCmdCopyBuffer(command_buffer, src_buffer, dst_buffer, 1, &copy_region);
+
+  graphics_utils_end_single_time_commands(vulkan_state->device, vulkan_state->graphics_queue, vulkan_state->command_pool, command_buffer);
+}
+
+static inline void graphics_utisl_copy_buffer_offset(struct VulkanState *vulkan_state, VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size, unsigned int offset) {
+  VkCommandBuffer command_buffer = graphics_utils_begin_single_time_commands(vulkan_state->device, vulkan_state->command_pool);
+
+  VkBufferCopy copy_region = {0};
+  copy_region.size = size;
+  copy_region.srcOffset = offset;
   vkCmdCopyBuffer(command_buffer, src_buffer, dst_buffer, 1, &copy_region);
 
   graphics_utils_end_single_time_commands(vulkan_state->device, vulkan_state->graphics_queue, vulkan_state->command_pool, command_buffer);
